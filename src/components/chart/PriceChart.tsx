@@ -94,7 +94,7 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     })
     chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } })
 
-    const ma20 = chart.addSeries(LineSeries, { color: '#f5a623', lineWidth: 1, priceLineVisible: false })
+    const ma20 = chart.addSeries(LineSeries, { color: '#fbbf24', lineWidth: 1, priceLineVisible: false })
     const ma50 = chart.addSeries(LineSeries, { color: '#a367f5', lineWidth: 1, priceLineVisible: false })
 
     chartRef.current = chart

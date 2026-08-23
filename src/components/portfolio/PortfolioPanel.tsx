@@ -5,7 +5,7 @@ import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
 
 type Tab = 'positions' | 'structure'
 
-const ASSET_COLORS = ['#3b82f6', '#26a65b', '#f5a623', '#a367f5', '#e0473b']
+const ASSET_COLORS = ['#3b82f6', '#10b981', '#fbbf24', '#a367f5', '#f87171']
 
 interface PortfolioPanelProps {
   onRemove?: () => void

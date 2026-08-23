@@ -10,25 +10,25 @@
    ========================================================================== */
 :root,
 [data-theme='dark'] {
-  --bg-base: #0b0e14;
-  --bg-panel: #10141c;
-  --bg-elevated: #161b26;
-  --bg-hover: #1c2230;
+  --bg-base: #0f111a;
+  --bg-panel: #161922;
+  --bg-elevated: #1a1d28;
+  --bg-hover: #1e2330;
 
-  --border-color: #232a38;
-  --border-subtle: #1a202c;
+  --border-color: #2a2d3a;
+  --border-subtle: #1e2330;
 
-  --text-primary: #e6e9ef;
-  --text-secondary: #9aa4b6;
-  --text-muted: #626d82;
+  --text-primary: #ffffff;
+  --text-secondary: #8e96a8;
+  --text-muted: #565d6d;
 
   --accent: #3b82f6;
   --accent-hover: #5b93f7;
 
-  --buy: #26a65b;
-  --buy-bg: rgba(38, 166, 91, 0.12);
-  --sell: #e0473b;
-  --sell-bg: rgba(224, 71, 59, 0.12);
+  --buy: #10b981;
+  --buy-bg: rgba(16, 185, 129, 0.12);
+  --sell: #f87171;
+  --sell-bg: rgba(248, 113, 113, 0.12);
 
   --flash-color: rgba(59, 130, 246, 0.25);
 
@@ -51,10 +51,10 @@
   --accent: #2563eb;
   --accent-hover: #1d4fd1;
 
-  --buy: #0f9d58;
-  --buy-bg: rgba(15, 157, 88, 0.08);
-  --sell: #d93025;
-  --sell-bg: rgba(217, 48, 37, 0.08);
+  --buy: #0ea472;
+  --buy-bg: rgba(16, 185, 129, 0.1);
+  --sell: #e2554f;
+  --sell-bg: rgba(248, 113, 113, 0.1);
 
   --flash-color: rgba(37, 99, 235, 0.15);
 

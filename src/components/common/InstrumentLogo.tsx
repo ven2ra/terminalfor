@@ -7,7 +7,7 @@ interface InstrumentLogoProps {
   className?: string
 }
 
-const AVATAR_COLORS = ['#3b82f6', '#26a65b', '#f5a623', '#a367f5', '#e0473b', '#0ea5e9', '#ec4899', '#14b8a6']
+const AVATAR_COLORS = ['#3b82f6', '#10b981', '#fbbf24', '#a367f5', '#f87171', '#0ea5e9', '#ec4899', '#14b8a6']
 
 function colorForTicker(ticker: string): string {
   let hash = 0
