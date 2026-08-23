@@ -20,13 +20,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Sofia Sans Condensed вместо Hanken Grotesk/Bricolage Grotesque — у тех
-        // не было реальной поддержки кириллицы (только cyrillic-ext в метаданных
-        // Google Fonts), и весь русский текст в приложении молча падал на
-        // системный шрифт. Sofia Sans Condensed — одна гарнитура на всё, только
-        // вес меняется между текстом и заголовками
-        sans: ['"Sofia Sans Condensed"', 'system-ui', 'sans-serif'],
-        display: ['"Sofia Sans Condensed"', 'system-ui', 'sans-serif'],
+        // Onest — современный геометрический гротеск с полной поддержкой
+        // кириллицы (предыдущие Hanken Grotesk/Bricolage Grotesque её не имели,
+        // текст молча падал на системный шрифт; Sofia Sans Condensed после
+        // проверки оказалась слишком узкой/сплющенной). Одна гарнитура на всё,
+        // только вес меняется между текстом и заголовками
+        sans: ['Onest', 'system-ui', 'sans-serif'],
+        display: ['Onest', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', '"Roboto Mono"', 'monospace'],
       },
       colors: {

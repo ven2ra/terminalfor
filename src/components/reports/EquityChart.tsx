@@ -25,7 +25,7 @@ export function EquityChart({ points }: EquityChartProps) {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: readCssVar('--text-secondary'),
-        fontFamily: 'Sofia Sans Condensed, sans-serif',
+        fontFamily: 'Onest, sans-serif',
         fontSize: 11,
         attributionLogo: false,
       },

@@ -117,7 +117,7 @@ body,
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: 'Sofia Sans Condensed', system-ui, sans-serif;
+  font-family: 'Onest', system-ui, sans-serif;
   font-feature-settings: 'cv11', 'ss01', 'tnum';
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
@@ -134,10 +134,10 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* Фирменное начертание для логотипа и заголовков разделов — тот же Sofia Sans
-   Condensed, что и в теле текста (единая гарнитура, отличие только в весе) */
+/* Фирменное начертание для логотипа и заголовков разделов — тот же Onest,
+   что и в теле текста (единая гарнитура, отличие только в весе) */
 .font-display {
-  font-family: 'Sofia Sans Condensed', system-ui, sans-serif;
+  font-family: 'Onest', system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
