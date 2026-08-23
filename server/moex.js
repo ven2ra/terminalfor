@@ -1,5 +1,10 @@
 import { cached } from './cache.js'
-import { tinvestEnabled, getLastPrices as getTinvestLastPrices, getLastTrades as getTinvestLastTrades } from './tinvest.js'
+import {
+  tinvestEnabled,
+  getLastPrices as getTinvestLastPrices,
+  getClosePrices as getTinvestClosePrices,
+  getLastTrades as getTinvestLastTrades,
+} from './tinvest.js'
 import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
 
 const BOARD = 'TQBR' // основной режим торгов акциями на МосБирже
@@ -56,17 +61,19 @@ async function loadSecurities() {
 
   // MOEX ISS без авторизации отдаёт котировки акций с задержкой ~15 минут —
   // это политика биржи для анонимного доступа, не наш баг. При наличии токена
-  // T-Invest API подменяем last price на реальные (без задержки) котировки,
-  // пересчитывая изменение от той же базовой цены закрытия предыдущего дня.
+  // T-Invest API подменяем last price на реальные (без задержки) котировки.
+  // Базу для дневного % тоже берём у T-Invest (GetClosePrices), а не из ISS:
+  // по выходным у них идёт сессия выходного дня, и "закрытие предыдущего
+  // дня" для них — цена субботней OTC-сессии, которой у биржи нет вовсе.
   if (tinvestEnabled()) {
     try {
-      const live = await getTinvestLastPrices(instruments.map((i) => i.ticker))
+      const tickers = instruments.map((i) => i.ticker)
+      const [live, closePrices] = await Promise.all([getTinvestLastPrices(tickers), getTinvestClosePrices(tickers)])
       for (const inst of instruments) {
         const quote = live.get(inst.ticker)
-        if (!quote) continue
-        const prevPrice = inst.lastPrice - inst.change // база закрытия, уже посчитанная выше
-        inst.lastPrice = quote.price
-        inst.change = quote.price - prevPrice
+        if (quote) inst.lastPrice = quote.price
+        const prevPrice = closePrices.get(inst.ticker) ?? inst.lastPrice - inst.change
+        inst.change = inst.lastPrice - prevPrice
         inst.changePercent = prevPrice !== 0 ? (inst.change / prevPrice) * 100 : 0
       }
     } catch (err) {

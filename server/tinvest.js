@@ -82,6 +82,39 @@ export async function getLastPrices(tickers) {
 }
 
 /**
+ * Официальная цена закрытия предыдущей торговой сессии ПО ВЕРСИИ T-Invest.
+ * Нужна отдельно от ISS: по выходным у Т-Инвестиций идёт сессия выходного
+ * дня (внебиржевые OTC-торги), которой у MOEX вообще нет — поэтому их
+ * "закрытие предыдущего дня" может быть ценой субботней OTC-сессии, а не
+ * пятничным официальным закрытием биржи (PREVLEGALCLOSEPRICE из ISS). Если
+ * считать дневной % от биржевого закрытия, он не совпадёт с тем, что
+ * показывают брокерские приложения по выходным.
+ */
+export async function getClosePrices(tickers) {
+  if (!tinvestEnabled() || tickers.length === 0) return new Map()
+  const figiMap = await getFigiMap()
+  const figiToTicker = new Map()
+  const instruments = []
+  for (const t of tickers) {
+    const figi = figiMap.get(t)
+    if (figi) {
+      figiToTicker.set(figi, t)
+      instruments.push({ instrumentId: figi })
+    }
+  }
+  if (instruments.length === 0) return new Map()
+
+  const json = await post('MarketDataService', 'GetClosePrices', { instruments })
+  const result = new Map()
+  for (const c of json.closePrices ?? []) {
+    const ticker = figiToTicker.get(c.figi)
+    const price = quotationToNumber(c.price)
+    if (ticker && price != null) result.set(ticker, price)
+  }
+  return result
+}
+
+/**
  * Реальная (без задержки) лента последних сделок по одной бумаге.
  * Возвращает [] если T-Invest не сконфигурирован, бумага не найдена в
  * карте FIGI или сделок за окно не было — вызывающий код в этом случае
