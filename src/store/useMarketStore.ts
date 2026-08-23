@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Instrument, OrderBookData, Trade } from '@/types'
 import { fetchSecurities, fetchTrades, SecurityDto } from '@/api/client'
 import { synthesizeOrderBook } from '@/mock/orderbook'
+import { isOrderBookOpen } from '@/lib/tradingHours'
 
 export const DEFAULT_TICKER = 'SBER'
 
@@ -66,6 +67,10 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   refreshOrderBook: () => {
+    // По выходным вне окна 09:50–19:00 МСК у нашего брокера нет OTC-торгов
+    // (в отличие от Т-Инвестиций) — стакан замораживаем на последнем известном
+    // состоянии и просто не опрашиваем дальше (UI показывает "Торги закрыты")
+    if (!isOrderBookOpen()) return
     const { instruments, selectedTicker } = get()
     const inst = currentInstrument(instruments, selectedTicker)
     if (!inst?.bid || !inst?.offer) return
@@ -83,7 +88,9 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   selectTicker: (ticker) => {
-    set({ selectedTicker: ticker, trades: [] })
+    // Стакан прошлого тикера не должен "просвечивать" под новым, пока не
+    // придёт свежий (или пока не покажется оверлей "Торги закрыты")
+    set({ selectedTicker: ticker, trades: [], orderBook: { bids: [], asks: [] } })
     get().refreshOrderBook()
     get().loadTrades()
   },

@@ -4,6 +4,7 @@ import { Panel } from '@/components/common/Panel'
 import { OrderBookDepthChart } from './OrderBookDepthChart'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { formatPrice } from '@/lib/format'
+import { isOrderBookOpen } from '@/lib/tradingHours'
 
 interface OrderBookProps {
   onRemove?: () => void
@@ -15,6 +16,9 @@ export function OrderBook({ onRemove }: OrderBookProps) {
   const { setDraftFromBook } = useOrderDraftStore()
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
+  // По выходным вне 09:50–19:00 МСК у брокера нет внебиржевых торгов (в
+  // отличие от Т-Инвестиций) — стакан заморожен, показываем это явно
+  const bookOpen = isOrderBookOpen()
 
   const maxTotal = Math.max(
     orderBook.bids[orderBook.bids.length - 1]?.total ?? 1,
@@ -23,7 +27,13 @@ export function OrderBook({ onRemove }: OrderBookProps) {
 
   return (
     <Panel title="Стакан заявок" noPadding draggable={!!onRemove} onRemove={onRemove}>
-      <div className="flex h-full flex-col text-xs">
+      <div className="relative flex h-full flex-col text-xs">
+        {!bookOpen && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel/90 text-center">
+            <span className="font-medium text-text-secondary">Торги закрыты</span>
+            <span className="text-[11px] text-text-muted">По выходным биржевой стакан работает с 09:50 до 19:00 МСК</span>
+          </div>
+        )}
         <div className="shrink-0 border-b border-border-subtle px-2 pt-2">
           <OrderBookDepthChart bids={orderBook.bids} asks={orderBook.asks} />
         </div>
