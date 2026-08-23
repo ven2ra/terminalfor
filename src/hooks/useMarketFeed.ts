@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
+import { useEquityHistoryStore } from '@/store/useEquityHistoryStore'
 
 const SECURITIES_POLL_MS = 1500
 const EXTRA_SECURITIES_POLL_MS = 20000 // облигации/фьючерсы обновляются реже — список тяжёлый для ISS
@@ -13,7 +14,8 @@ const BOOK_AND_TRADES_POLL_MS = 1500
  */
 export function useMarketFeed() {
   const { loadSecurities, loadExtraSecurities, refreshOrderBook, loadTrades, instruments } = useMarketStore()
-  const { revalue } = usePortfolioStore()
+  const { revalue, account } = usePortfolioStore()
+  const recordEquity = useEquityHistoryStore((s) => s.record)
 
   useEffect(() => {
     loadSecurities()
@@ -41,4 +43,9 @@ export function useMarketFeed() {
     const prices = Object.fromEntries(instruments.map((i) => [i.ticker, i.lastPrice]))
     revalue(prices)
   }, [instruments, revalue])
+
+  useEffect(() => {
+    if (!account.equity) return
+    recordEquity(account.equity)
+  }, [account.equity, recordEquity])
 }
