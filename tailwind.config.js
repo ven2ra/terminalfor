@@ -21,7 +21,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', '"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', '"Hanken Grotesk"', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', '"Roboto Mono"', 'monospace'],
       },
       colors: {

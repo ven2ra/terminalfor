@@ -43,6 +43,10 @@ export const useDashboardStore = create<DashboardState>()(
 
       resetLayout: () => set({ widgets: DEFAULT_WIDGETS, layout: buildDefaultLayout() }),
     }),
-    { name: 'terminalfor-dashboard-v3' }
+    // v4: сетка сжата с 12 до 10 колонок и Watchlist убран из виджетов
+    // (стал постоянной панелью) — координаты старых сохранённых раскладок
+    // больше не совместимы, поэтому версия хранилища бампнута, чтобы у всех
+    // пользователей раскладка пересобралась из новых дефолтов, а не наложилась
+    { name: 'terminalfor-dashboard-v4' }
   )
 )

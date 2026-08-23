@@ -108,11 +108,7 @@ body,
 }
 
 body {
-  /* Едва заметная точечная сетка на фоне — читается как "приборная панель",
-     а не плоская закраска, которую невозможно отличить от любого другого SaaS */
   background-color: var(--bg-base);
-  background-image: radial-gradient(circle, var(--border-subtle) 1px, transparent 1px);
-  background-size: 28px 28px;
   color: var(--text-primary);
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-feature-settings: 'cv11', 'ss01', 'tnum';
@@ -133,7 +129,7 @@ body {
 
 /* Фирменное начертание для логотипа и заголовков разделов */
 .font-display {
-  font-family: 'Space Grotesk', 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
 
