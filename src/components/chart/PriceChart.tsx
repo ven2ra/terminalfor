@@ -133,6 +133,12 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
   useEffect(() => {
     if (!candleSeriesRef.current || !volumeSeriesRef.current || candles.length === 0) return
 
+    // setData() полностью пересоздаёт ряд, поэтому нужно самим запомнить,
+    // смотрел ли пользователь на правый край (актуальное время) ДО обновления —
+    // иначе новые бары просто формируются за пределами видимой области незаметно
+    const timeScale = chartRef.current?.timeScale()
+    const wasAtRealTime = (timeScale?.scrollPosition() ?? 0) >= -2
+
     const candleData: CandlestickData[] = candles.map((c) => ({
       time: c.time as never,
       open: c.open,
@@ -154,11 +160,15 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     ma50SeriesRef.current?.setData(ma50Data)
 
     // Автоподгонка масштаба — только при смене инструмента/таймфрейма, а не на
-    // каждый периодический опрос (иначе зум/прокрутку пользователя сбрасывало бы каждые пару секунд)
+    // каждый периодический опрос (иначе зум/прокрутку пользователя сбрасывало бы каждые пару секунд).
+    // Если же пользователь и так смотрел на актуальное время — доскролливаем к новым барам,
+    // чтобы график продолжал жить, а не замирал за пределами видимой области.
     const fitKey = `${selectedTicker}:${timeframe.interval}`
     if (fittedKeyRef.current !== fitKey) {
       fittedKeyRef.current = fitKey
-      chartRef.current?.timeScale().fitContent()
+      timeScale?.fitContent()
+    } else if (wasAtRealTime) {
+      timeScale?.scrollToRealTime()
     }
   }, [candles, selectedTicker, timeframe.interval])
 

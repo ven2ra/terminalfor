@@ -94,20 +94,24 @@ function candleWindow(interval) {
     intraday,
     fromYearsBack: intraday ? 0 : 30,
     fromDaysBack: intraday ? 5 : 0, // с запасом на длинные выходные/праздники
-    maxPages: intraday ? 10 : 16, // 16×500 ≈ 8000 дневных баров — с запасом на 30+ лет истории
     keepLast: intraday ? 500 : 8000,
   }
 }
 
+const BATCH_SIZE = 8 // страниц за один параллельный залп
+const MAX_BATCHES = 6 // 6×8×500 = 24000 строк — с большим запасом на любой реальный диапазон
+
 /**
  * Свечи по бумаге. MOEX ISS отдаёт не больше 500 строк за запрос, считая от
  * начала запрошенного диапазона — при широком окне (год-десятилетия для
- * дневных, либо просто чтобы перекрыть выходные для интрадей) это утыкается
- * в самое старое, а не в актуальное. Поэтому досылаем страницы через
- * `start=` параллельно, пока не выберем всё доступное.
+ * дневных, либо просто чтобы перекрыть выходные/вечернюю сессию для интрадей)
+ * это утыкается в самое старое, а не в актуальное. Поэтому досылаем страницы
+ * через `start=` батчами по несколько параллельных запросов, пока очередной
+ * батч не вернёт страницу короче полной (это и есть конец доступных данных) —
+ * так не нужно заранее угадывать, сколько страниц реально понадобится.
  */
 async function loadCandles(ticker, interval) {
-  const { fromYearsBack, fromDaysBack, maxPages, keepLast } = candleWindow(interval)
+  const { fromYearsBack, fromDaysBack, keepLast } = candleWindow(interval)
   const till = new Date()
   const from = new Date(till)
   from.setUTCFullYear(from.getUTCFullYear() - fromYearsBack)
@@ -118,13 +122,23 @@ async function loadCandles(ticker, interval) {
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities/${ticker}/candles.json` +
     `?interval=${interval}&from=${fmt(from)}&till=${fmt(till)}&iss.meta=off`
 
-  // Страницы независимы друг от друга — забираем все параллельно, а не по одной.
-  // Если отдельная страница не задалась даже с ретраем — просто пропускаем её
-  // (в ряду останется небольшой пробел), а не роняем весь ответ.
-  const pages = await Promise.allSettled(
-    Array.from({ length: maxPages }, (_, page) => fetchJson(`${baseUrl}&start=${page * PAGE_SIZE}`))
-  )
-  const rows = pages.filter((p) => p.status === 'fulfilled').flatMap((p) => rowsToObjects(p.value.candles))
+  const rows = []
+  let page = 0
+  for (let batchNum = 0; batchNum < MAX_BATCHES; batchNum++) {
+    const batchPages = await Promise.allSettled(
+      Array.from({ length: BATCH_SIZE }, (_, i) => fetchJson(`${baseUrl}&start=${(page + i) * PAGE_SIZE}`))
+    )
+    page += BATCH_SIZE
+
+    let reachedEnd = false
+    for (const p of batchPages) {
+      if (p.status !== 'fulfilled') continue // страница не задалась даже с ретраем — пропускаем, будет небольшой пробел
+      const pageRows = rowsToObjects(p.value.candles)
+      rows.push(...pageRows)
+      if (pageRows.length < PAGE_SIZE) reachedEnd = true
+    }
+    if (reachedEnd) break
+  }
 
   // Время МосБиржи в ISS приходит в MSK (UTC+3) без указания зоны
   return rows.slice(-keepLast).map((r) => ({
