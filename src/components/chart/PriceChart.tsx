@@ -460,10 +460,10 @@ export function PriceChart({
         <div>
           <div className="flex items-center gap-2">
             <InstrumentLogo ticker={selectedTicker} isin={instrument?.isin ?? null} size={22} />
-            <span className="text-lg font-bold text-text-primary">{instrument?.ticker ?? selectedTicker}</span>
-            <span className="text-xs text-text-muted">
-              {instrument?.name ?? '…'} · {instrument?.exchange ?? 'MOEX'}
-            </span>
+            <span className="text-lg font-bold text-text-primary">{instrument?.name ?? '…'}</span>
+          </div>
+          <div className="text-xs text-text-muted">
+            {instrument?.ticker ?? selectedTicker} · {instrument?.exchange ?? 'MOEX'}
           </div>
           <div className="flex items-baseline gap-2">
             <span
