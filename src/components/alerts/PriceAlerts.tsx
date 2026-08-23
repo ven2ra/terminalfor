@@ -135,7 +135,9 @@ export function PriceAlerts({ onRemove }: PriceAlertsProps) {
               {triggered.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between rounded-md bg-buy-bg px-2.5 py-2 text-xs"
+                  className={`flex items-center justify-between rounded-md px-2.5 py-2 text-xs ${
+                    a.condition === 'above' ? 'bg-buy-bg' : 'bg-sell-bg'
+                  }`}
                 >
                   <div>
                     <span className="font-semibold text-text-primary">{a.ticker}</span>{' '}

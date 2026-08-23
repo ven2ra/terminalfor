@@ -99,8 +99,19 @@ export function TickerTape() {
                 setAddMenu(null)
                 setItemMenu({ x: clampMenuX(e.clientX, 200), y: e.clientY, symbol })
               }}
+              onClick={(e) => {
+                // Раньше убрать тикер из ленты можно было только правым
+                // кликом — с клавиатуры (Tab + Enter/Space) действие было
+                // недостижимо. Клик/Enter/Space открывает то же меню, но по
+                // границам самой кнопки — координаты мыши для активации с
+                // клавиатуры не заданы (0,0)
+                e.stopPropagation()
+                const rect = e.currentTarget.getBoundingClientRect()
+                setAddMenu(null)
+                setItemMenu({ x: clampMenuX(rect.left, 200), y: rect.bottom, symbol })
+              }}
               className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-4 text-xs"
-              title="ПКМ — убрать из ленты"
+              title="Клик или ПКМ — убрать из ленты"
             >
               <span className="font-semibold text-text-secondary">{q?.name ?? symbol}</span>
               {q ? (
@@ -122,10 +133,14 @@ export function TickerTape() {
         onClick={(e) => {
           e.stopPropagation()
           setItemMenu(null)
-          setAddMenu({ x: clampMenuX(e.clientX, 256), y: e.clientY })
+          const rect = e.currentTarget.getBoundingClientRect()
+          setAddMenu({ x: clampMenuX(rect.left, 256), y: rect.bottom })
         }}
         title="Добавить котировку"
-        className="ml-auto flex h-full shrink-0 items-center gap-1 border-l border-border-subtle bg-bg-base px-3 text-text-muted opacity-0 transition-opacity hover:text-text-primary group-hover:opacity-100"
+        aria-label="Добавить котировку в ленту"
+        // Как и звезда избранного в Watchlist — opacity-0 без [@media(hover:hover)]
+        // прятал кнопку насовсем на тач-устройствах, где hover не существует
+        className="ml-auto flex h-full shrink-0 items-center gap-1 border-l border-border-subtle bg-bg-base px-3 text-text-muted opacity-100 transition-opacity hover:text-text-primary [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
       >
         <Plus size={13} />
       </button>

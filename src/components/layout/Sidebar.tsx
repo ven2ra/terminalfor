@@ -3,8 +3,9 @@ import { CalendarBlank, ChartBar, Bell, ChartLine, FileText, SquaresFour, Moon, 
 import { useThemeStore } from '@/store/useThemeStore'
 import { useViewStore } from '@/store/useViewStore'
 import { useAlertsStore } from '@/store/useAlertsStore'
+import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { ViewMode } from '@/types'
-import { formatPrice } from '@/lib/format'
+import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
 
 const NAV_ITEMS: Array<{ value: ViewMode; label: string; icon: typeof SquaresFour }> = [
   { value: 'terminal', label: 'Терминал', icon: SquaresFour },
@@ -24,7 +25,10 @@ export function Sidebar() {
   const { theme, toggleTheme } = useThemeStore()
   const { view, setView } = useViewStore()
   const { alerts, removeAlert, markAllSeen } = useAlertsStore()
+  const { account } = usePortfolioStore()
   const [notifOpen, setNotifOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const pnlPositive = account.todayPnl >= 0
 
   const triggeredAlerts = alerts
     .filter((a) => a.triggeredAt != null)
@@ -116,13 +120,36 @@ export function Sidebar() {
           )}
         </div>
 
-        <button
-          title="Аккаунт"
-          aria-label="Аккаунт"
-          className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-accent-contrast transition-transform active:scale-90 hover:brightness-110"
-        >
-          КК
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setAccountOpen((v) => !v)}
+            title="Аккаунт"
+            aria-label="Аккаунт"
+            aria-expanded={accountOpen}
+            className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-accent-contrast transition-transform active:scale-90 hover:brightness-110"
+          >
+            КК
+          </button>
+
+          {accountOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setAccountOpen(false)} />
+              <div className="absolute bottom-0 left-full z-40 ml-2 w-56 overflow-hidden border border-border-color bg-bg-elevated shadow-panel">
+                <div className="border-b border-border-subtle px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  Аккаунт
+                </div>
+                <div className="px-3 py-2.5">
+                  <div className="text-[11px] uppercase tracking-wide text-text-muted">Капитал</div>
+                  <div className="font-tabular text-base font-bold text-text-primary">{formatMoney(account.equity)}</div>
+                  <div className={`mt-1 font-tabular text-xs font-medium ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
+                    {pnlPositive ? '+' : ''}
+                    {formatMoney(account.todayPnl)} ({formatPercent(account.todayPnlPercent)}) сегодня
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </aside>
   )

@@ -58,12 +58,21 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
         }}
         aria-label={inst.isFavorite ? `Убрать ${inst.ticker} из избранного` : `Добавить ${inst.ticker} в избранное`}
         aria-pressed={inst.isFavorite}
-        className="shrink-0 active:scale-90"
+        // Прежде звезда пряталась через opacity-0 + group-hover — на тач-экранах
+        // (тот же список рендерится в MobileDashboard) hover не существует, и
+        // добавить бумагу в избранное было нечем — ни видно, ни нажать было
+        // некуда. [@media(hover:hover)] ограничивает "прятать по умолчанию"
+        // только устройствами, где реально есть наведение.
+        className="shrink-0 p-1.5 active:scale-90"
       >
         <Star
           size={14}
           weight={inst.isFavorite ? 'fill' : 'regular'}
-          className={inst.isFavorite ? 'text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100'}
+          className={
+            inst.isFavorite
+              ? 'text-accent'
+              : 'text-text-muted opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
+          }
         />
       </button>
       <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
