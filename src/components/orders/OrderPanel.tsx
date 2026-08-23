@@ -59,6 +59,15 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   const commission = total * COMMISSION_RATE
   const estimatedTotal = side === 'buy' ? total + commission : total - commission
   const step = instrument?.lotSize ?? 1
+  const priceError = type !== 'market' && price.trim() !== '' && numericPrice <= 0 ? 'Цена должна быть больше нуля' : null
+  const sizeError =
+    size.trim() === ''
+      ? null
+      : numericSize <= 0
+        ? 'Количество должно быть больше нуля'
+        : numericSize % step !== 0
+          ? `Кратно лоту: ${step} шт.`
+          : null
 
   const adjustSize = (delta: number) => {
     const next = Math.max(step, (Number(size) || 0) + delta)
@@ -167,13 +176,26 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
               value={type === 'market' ? lastPrice.toFixed(2) : price}
               onChange={(e) => setPrice(e.target.value)}
               inputMode="decimal"
-              className="mt-1 w-full rounded-md border border-border-color bg-bg-base px-2.5 py-1.5 font-tabular text-sm text-text-primary focus:border-accent focus:outline-none disabled:opacity-60"
+              aria-invalid={!!priceError}
+              aria-describedby={priceError ? 'order-price-error' : undefined}
+              className={`mt-1 w-full rounded-md border bg-bg-base px-2.5 py-1.5 font-tabular text-sm text-text-primary focus:outline-none disabled:opacity-60 ${
+                priceError ? 'border-sell focus:border-sell' : 'border-border-color focus:border-accent'
+              }`}
             />
+            {priceError && (
+              <span id="order-price-error" className="mt-1 block text-[11px] font-normal text-sell">
+                {priceError}
+              </span>
+            )}
           </label>
 
           <label className="block text-xs text-text-muted">
             Количество, шт.
-            <div className="mt-1 flex items-stretch overflow-hidden rounded-md border border-border-color focus-within:border-accent">
+            <div
+              className={`mt-1 flex items-stretch overflow-hidden rounded-md border focus-within:border-accent ${
+                sizeError ? 'border-sell' : 'border-border-color'
+              }`}
+            >
               <button
                 type="button"
                 onClick={() => adjustSize(-step)}
@@ -186,6 +208,8 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 inputMode="decimal"
+                aria-invalid={!!sizeError}
+                aria-describedby={sizeError ? 'order-size-error' : undefined}
                 className="min-w-0 flex-1 bg-bg-base px-2 py-1.5 text-center font-tabular text-sm text-text-primary focus:outline-none"
               />
               <button
@@ -197,6 +221,11 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
                 <Plus size={13} />
               </button>
             </div>
+            {sizeError && (
+              <span id="order-size-error" className="mt-1 block text-[11px] font-normal text-sell">
+                {sizeError}
+              </span>
+            )}
           </label>
 
           <div className="flex gap-1.5">
@@ -229,7 +258,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
 
           <button
             onClick={() => setConfirming(true)}
-            disabled={!instrument || numericSize <= 0}
+            disabled={!instrument || numericSize <= 0 || !!priceError || !!sizeError}
             className={`rounded-md py-2.5 text-sm font-bold text-white transition-transform active:scale-[0.98] disabled:opacity-50 ${
               side === 'buy' ? 'bg-buy hover:brightness-110' : 'bg-sell hover:brightness-110'
             }`}

@@ -1,4 +1,5 @@
-import { ClipboardList, X } from 'lucide-react'
+import { useState } from 'react'
+import { Check, ClipboardList, X } from 'lucide-react'
 import { useOrderStore } from '@/store/useOrderStore'
 import { Panel } from '@/components/common/Panel'
 import { formatPrice } from '@/lib/format'
@@ -11,6 +12,8 @@ interface ActiveOrdersPanelProps {
 export function ActiveOrdersPanel({ onRemove }: ActiveOrdersPanelProps) {
   const { orders, cancelOrder } = useOrderStore()
   const activeOrders = orders.filter((o) => o.status === 'new' || o.status === 'partial')
+  // Отмена заявки необратима (нужно выставлять заново) — требуем повторного клика для подтверждения
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   return (
     <Panel
@@ -47,9 +50,35 @@ export function ActiveOrdersPanel({ onRemove }: ActiveOrdersPanelProps) {
                 <td className="px-3 py-2 text-right font-tabular text-text-secondary">{o.size}</td>
                 <td className="px-3 py-2 text-right text-text-muted">Новая</td>
                 <td className="px-3 py-2 text-right">
-                  <button onClick={() => cancelOrder(o.id)} className="text-text-muted hover:text-sell">
-                    <X size={13} />
-                  </button>
+                  {confirmingId === o.id ? (
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          cancelOrder(o.id)
+                          setConfirmingId(null)
+                        }}
+                        title="Подтвердить отмену"
+                        className="rounded bg-sell-bg p-0.5 text-sell hover:brightness-110"
+                      >
+                        <Check size={13} />
+                      </button>
+                      <button
+                        onClick={() => setConfirmingId(null)}
+                        title="Не отменять"
+                        className="rounded p-0.5 text-text-muted hover:text-text-secondary"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmingId(o.id)}
+                      title="Отменить заявку"
+                      className="text-text-muted hover:text-sell"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

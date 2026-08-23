@@ -8,6 +8,8 @@ export function AddWidgetMenu() {
   const { widgets, addWidget, resetLayout } = useDashboardStore()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  // Сброс стирает всю пользовательскую раскладку — необратимо, требуем повторного клика
+  const [confirmingReset, setConfirmingReset] = useState(false)
 
   const available = (Object.keys(WIDGET_REGISTRY) as WidgetType[]).filter((t) => !widgets.includes(t))
 
@@ -18,6 +20,13 @@ export function AddWidgetMenu() {
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
+
+  // Автосброс состояния подтверждения, если пользователь передумал и не кликнул повторно
+  useEffect(() => {
+    if (!confirmingReset) return
+    const t = setTimeout(() => setConfirmingReset(false), 3000)
+    return () => clearTimeout(t)
+  }, [confirmingReset])
 
   return (
     <div className="flex items-center gap-2">
@@ -48,11 +57,22 @@ export function AddWidgetMenu() {
         )}
       </div>
       <button
-        onClick={resetLayout}
-        title="Сбросить раскладку"
-        className="flex items-center gap-1.5 rounded-md border border-border-color px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+        onClick={() => {
+          if (confirmingReset) {
+            resetLayout()
+            setConfirmingReset(false)
+          } else {
+            setConfirmingReset(true)
+          }
+        }}
+        title={confirmingReset ? 'Точно сбросить всю раскладку? Нажмите ещё раз' : 'Сбросить раскладку'}
+        className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+          confirmingReset
+            ? 'border-sell bg-sell-bg text-sell'
+            : 'border-border-color text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+        }`}
       >
-        <RotateCcw size={13} /> Сбросить
+        <RotateCcw size={13} /> {confirmingReset ? 'Точно сбросить?' : 'Сбросить'}
       </button>
     </div>
   )
