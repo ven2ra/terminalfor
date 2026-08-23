@@ -1,0 +1,9 @@
+services:
+  terminalfor:
+    build: .
+    container_name: terminalfor
+    restart: unless-stopped
+    ports:
+      # слева — порт на хосте, который сейчас смотрит наружу (nginx/прокси/domain).
+      # если старый проект уже занимал 80/3000 — сюда впиши тот же порт.
+      - "3000:80"
