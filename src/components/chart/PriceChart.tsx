@@ -75,6 +75,7 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
         timeVisible: true,
         secondsVisible: false,
         tickMarkFormatter,
+        minBarSpacing: 0.001,
       },
       localization: { timeFormatter: crosshairTimeFormatter },
       autoSize: true,
@@ -166,7 +167,10 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     const fitKey = `${selectedTicker}:${timeframe.interval}`
     if (fittedKeyRef.current !== fitKey) {
       fittedKeyRef.current = fitKey
-      timeScale?.fitContent()
+      // fitContent() при очень большом числе баров (тысячи дневных/недельных
+      // свечей) не всегда растягивает вид на всю историю — явно задаём
+      // логический диапазон от первого до последнего бара.
+      timeScale?.setVisibleLogicalRange({ from: -0.5, to: candles.length - 0.5 })
     } else if (wasAtRealTime) {
       timeScale?.scrollToRealTime()
     }
@@ -258,7 +262,9 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
             <BarChart3 size={13} /> Объём
           </button>
           <button
-            onClick={() => chartRef.current?.timeScale().fitContent()}
+            onClick={() =>
+              chartRef.current?.timeScale().setVisibleLogicalRange({ from: -0.5, to: candles.length - 0.5 })
+            }
             title="Сбросить масштаб"
             className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover"
           >

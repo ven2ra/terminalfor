@@ -157,7 +157,7 @@ export function getCandles(ticker, interval) {
   // Дневные+ бары не нужно перепроверять каждые несколько секунд — там
   // меняется максимум текущий незакрытый бар, а сам запрос тяжёлый (до 16
   // страниц на всю историю)
-  const ttl = interval <= 60 ? 8000 : 60000
+  const ttl = MINUTE_INTERVALS.has(interval) ? 8000 : 60000
   return cached(`candles:${ticker}:${interval}`, ttl, () => loadCandles(ticker, interval))
 }
 
