@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   CandlestickData,
@@ -12,9 +12,9 @@ import {
   LineSeries,
   createChart,
 } from 'lightweight-charts'
-import { BarChart3, Maximize2, TrendingUp, Waves, Activity, Minus as MinusIcon, Expand, Shrink } from 'lucide-react'
+import { BarChart3, Maximize2, TrendingUp, Waves, Activity, Minus as MinusIcon, Expand, Shrink, GitCompare, X } from 'lucide-react'
 import { Candle } from '@/types'
-import { CandleInterval } from '@/api/client'
+import { CandleInterval, fetchCandles } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useThemeStore } from '@/store/useThemeStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
@@ -63,6 +63,7 @@ export function PriceChart({
   const bollLowerRef = useRef<ISeriesApi<'Line'> | null>(null)
   const vwapSeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
   const srLinesRef = useRef<IPriceLine[]>([])
+  const compareSeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
   // Ключ (тикер+таймфрейм), на который масштаб уже подгонялся — чтобы не
   // сбрасывать зум/скролл пользователя при каждом периодическом обновлении данных
   const fittedKeyRef = useRef<string>('')
@@ -88,6 +89,10 @@ export function PriceChart({
   const [showLevels, setShowLevels] = useState(false)
   const [alertFlash, setAlertFlash] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [compareTicker, setCompareTicker] = useState<string | null>(null)
+  const [compareCandles, setCompareCandles] = useState<Candle[]>([])
+  const [compareOpen, setCompareOpen] = useState(false)
+  const [compareQuery, setCompareQuery] = useState('')
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
@@ -177,6 +182,20 @@ export function PriceChart({
       visible: false,
     })
 
+    // Сравнение с другим инструментом — своя (скрытая) шкала цен в процентах
+    // от начала видимого периода, чтобы форма движения была сопоставима
+    // независимо от абсолютной цены сравниваемых бумаг
+    const compare = chart.addSeries(LineSeries, {
+      color: '#f97316',
+      lineWidth: 2,
+      priceScaleId: 'compare',
+      priceFormat: { type: 'custom', formatter: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`, minMove: 0.01 },
+      priceLineVisible: false,
+      lastValueVisible: false,
+      visible: false,
+    })
+    chart.priceScale('compare').applyOptions({ visible: false })
+
     chartRef.current = chart
     candleSeriesRef.current = candleSeries
     volumeSeriesRef.current = volumeSeries
@@ -186,6 +205,7 @@ export function PriceChart({
     bollMiddleRef.current = bollMiddle
     bollLowerRef.current = bollLower
     vwapSeriesRef.current = vwap
+    compareSeriesRef.current = compare
 
     // Довыгрузка старой истории при прокрутке к левому краю загруженных данных
     const LOAD_MORE_THRESHOLD = 30 // баров до начала видимого диапазона
@@ -328,6 +348,39 @@ export function PriceChart({
     vwapSeriesRef.current?.applyOptions({ visible: showVWAP })
   }, [showVWAP])
 
+  // Загрузка свечей инструмента для сравнения — тем же таймфреймом, что и основной график
+  useEffect(() => {
+    if (!compareTicker) {
+      setCompareCandles([])
+      return
+    }
+    let cancelled = false
+    fetchCandles(compareTicker, timeframe.interval)
+      .then((data) => {
+        if (!cancelled) setCompareCandles(data)
+      })
+      .catch(() => {
+        if (!cancelled) setCompareCandles([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [compareTicker, timeframe.interval])
+
+  useEffect(() => {
+    compareSeriesRef.current?.applyOptions({ visible: !!compareTicker })
+    if (!compareTicker || compareCandles.length === 0) {
+      compareSeriesRef.current?.setData([])
+      return
+    }
+    const base = compareCandles[0].close
+    const data: LineData[] = compareCandles.map((c) => ({
+      time: c.time as never,
+      value: base > 0 ? ((c.close - base) / base) * 100 : 0,
+    }))
+    compareSeriesRef.current?.setData(data)
+  }, [compareTicker, compareCandles])
+
   // Уровни поддержки/сопротивления — рисуем как ценовые линии на свечном ряде,
   // пересчитываем при каждом обновлении свечей, пока включен показ
   useEffect(() => {
@@ -363,6 +416,14 @@ export function PriceChart({
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [isFullscreen])
+
+  const compareMatches = useMemo(() => {
+    const q = compareQuery.trim().toLowerCase()
+    if (!q) return []
+    return instruments
+      .filter((i) => i.ticker !== selectedTicker && (i.ticker.toLowerCase().includes(q) || i.name.toLowerCase().includes(q)))
+      .slice(0, 8)
+  }, [instruments, compareQuery, selectedTicker])
 
   const positive = (instrument?.change ?? 0) >= 0
   // Официальные HIGH/LOW сессии с биржи — не считаем сами по загруженным
@@ -482,6 +543,57 @@ export function PriceChart({
           >
             <MinusIcon size={13} /> S/R
           </button>
+          <div className="relative">
+            {compareTicker ? (
+              <button
+                onClick={() => setCompareTicker(null)}
+                title="Убрать сравнение"
+                className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-[#f97316] transition-colors hover:bg-bg-hover"
+              >
+                <GitCompare size={13} /> {compareTicker} <X size={11} />
+              </button>
+            ) : (
+              <button
+                onClick={() => setCompareOpen((v) => !v)}
+                title="Сравнить с другим инструментом"
+                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                  compareOpen ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
+                }`}
+              >
+                <GitCompare size={13} /> Сравнить
+              </button>
+            )}
+            {compareOpen && !compareTicker && (
+              <div className="absolute right-0 top-full z-30 mt-1 w-56 overflow-hidden rounded-md border border-border-color bg-bg-elevated shadow-panel">
+                <input
+                  autoFocus
+                  value={compareQuery}
+                  onChange={(e) => setCompareQuery(e.target.value)}
+                  placeholder="Тикер или название…"
+                  className="w-full border-b border-border-color bg-transparent px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
+                />
+                <div className="max-h-56 overflow-y-auto">
+                  {compareMatches.map((i) => (
+                    <button
+                      key={i.ticker}
+                      onClick={() => {
+                        setCompareTicker(i.ticker)
+                        setCompareOpen(false)
+                        setCompareQuery('')
+                      }}
+                      className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs hover:bg-bg-hover"
+                    >
+                      <span className="font-semibold text-text-primary">{i.ticker}</span>
+                      <span className="truncate text-text-muted">{i.name}</span>
+                    </button>
+                  ))}
+                  {compareQuery && compareMatches.length === 0 && (
+                    <div className="px-2.5 py-2 text-xs text-text-muted">Ничего не найдено</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={() =>
               chartRef.current?.timeScale().setVisibleLogicalRange({ from: -0.5, to: candles.length - 0.5 })
