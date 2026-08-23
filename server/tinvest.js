@@ -1,0 +1,82 @@
+/**
+ * Клиент T-Invest API (REST-шлюз) — источник рыночных данных БЕЗ 15-минутной
+ * задержки MOEX ISS (та отдаёт анонимному доступу delayed-котировки, это
+ * политика биржи, не наш баг). Работает только при заданном TINVEST_TOKEN —
+ * без него весь модуль просто не используется, приложение остаётся на ISS.
+ *
+ * Токен создаётся в Т-Инвестициях: Настройки → API → «Только просмотр»
+ * достаточно, торговых поручений мы не отправляем.
+ */
+import { cached } from './cache.js'
+
+const BASE = 'https://invest-public-api.tinkoff.ru/rest/tinkoff.public.invest.api.contract.v1'
+const TOKEN = process.env.TINVEST_TOKEN
+
+export function tinvestEnabled() {
+  return Boolean(TOKEN)
+}
+
+async function post(service, method, body) {
+  const res = await fetch(`${BASE}.${service}/${method}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body ?? {}),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`T-Invest ${service}.${method} ${res.status}: ${text.slice(0, 200)}`)
+  }
+  return res.json()
+}
+
+/** Quotation/MoneyValue из T-Invest API — units (строка) + nano (доля) */
+function quotationToNumber(q) {
+  if (!q) return null
+  return Number(q.units) + (q.nano ?? 0) / 1e9
+}
+
+async function loadTickerToFigiMap() {
+  const json = await post('InstrumentsService', 'Shares', { instrumentStatus: 'INSTRUMENT_STATUS_BASE' })
+  const map = new Map()
+  for (const s of json.instruments ?? []) {
+    // TQBR — тот же основной режим торгов акциями МосБиржи, что мы используем в ISS
+    if (s.classCode === 'TQBR' && !map.has(s.ticker)) map.set(s.ticker, s.figi)
+  }
+  return map
+}
+
+/** Карта тикер→FIGI меняется крайне редко — кэшируем на час */
+function getFigiMap() {
+  return cached('tinvest:figi-map', 3600000, loadTickerToFigiMap)
+}
+
+/**
+ * Актуальные (без задержки) последние цены по списку тикеров.
+ * Возвращает Map<ticker, { price, time }>; тикеры без FIGI/данных просто отсутствуют в ответе.
+ */
+export async function getLastPrices(tickers) {
+  if (!tinvestEnabled() || tickers.length === 0) return new Map()
+  const figiMap = await getFigiMap()
+  const figiToTicker = new Map()
+  const figis = []
+  for (const t of tickers) {
+    const figi = figiMap.get(t)
+    if (figi) {
+      figiToTicker.set(figi, t)
+      figis.push(figi)
+    }
+  }
+  if (figis.length === 0) return new Map()
+
+  const json = await post('MarketDataService', 'GetLastPrices', { figi: figis })
+  const result = new Map()
+  for (const p of json.lastPrices ?? []) {
+    const ticker = figiToTicker.get(p.figi)
+    const price = quotationToNumber(p.price)
+    if (ticker && price != null) result.set(ticker, { price, time: p.time })
+  }
+  return result
+}

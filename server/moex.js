@@ -1,4 +1,5 @@
 import { cached } from './cache.js'
+import { tinvestEnabled, getLastPrices as getTinvestLastPrices } from './tinvest.js'
 
 const ISS_BASE = 'https://iss.moex.com/iss'
 const BOARD = 'TQBR' // основной режим торгов акциями на МосБирже
@@ -72,6 +73,27 @@ async function loadSecurities() {
     })
     .filter(Boolean)
     .sort((a, b) => (b.turnover ?? 0) - (a.turnover ?? 0))
+
+  // MOEX ISS без авторизации отдаёт котировки акций с задержкой ~15 минут —
+  // это политика биржи для анонимного доступа, не наш баг. При наличии токена
+  // T-Invest API подменяем last price на реальные (без задержки) котировки,
+  // пересчитывая изменение от той же базовой цены закрытия предыдущего дня.
+  if (tinvestEnabled()) {
+    try {
+      const live = await getTinvestLastPrices(instruments.map((i) => i.ticker))
+      for (const inst of instruments) {
+        const quote = live.get(inst.ticker)
+        if (!quote) continue
+        const prevPrice = inst.lastPrice - inst.change // база закрытия, уже посчитанная выше
+        inst.lastPrice = quote.price
+        inst.change = quote.price - prevPrice
+        inst.changePercent = prevPrice !== 0 ? (inst.change / prevPrice) * 100 : 0
+      }
+    } catch (err) {
+      console.error('tinvest live prices error:', err.message)
+      // тихо остаёмся на данных ISS — лучше delayed-цена, чем упавший список инструментов
+    }
+  }
 
   return instruments
 }

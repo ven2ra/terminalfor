@@ -2,6 +2,7 @@ import './proxy.js'
 import express from 'express'
 import { getSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'
+import { tinvestEnabled } from './tinvest.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -66,4 +67,9 @@ app.get('/api/news', async (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`terminalfor-api listening on :${PORT}`)
+  console.log(
+    tinvestEnabled()
+      ? '[tinvest] TINVEST_TOKEN задан — last price берётся без задержки через T-Invest API'
+      : '[tinvest] TINVEST_TOKEN не задан — котировки идут напрямую с MOEX ISS (задержка ~15 мин у анонимного доступа)'
+  )
 })
