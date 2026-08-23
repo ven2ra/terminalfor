@@ -1,64 +1,90 @@
 import { create } from 'zustand'
 import { Instrument, OrderBookData, Trade } from '@/types'
-import { DEFAULT_TICKER, INSTRUMENTS } from '@/mock/instruments'
-import { generateInitialTrades, generateOrderBook, generateTrade } from '@/mock/orderbook'
-import { nextTick } from '@/mock/candles'
+import { fetchSecurities, fetchTrades, SecurityDto } from '@/api/client'
+import { synthesizeOrderBook } from '@/mock/orderbook'
+
+export const DEFAULT_TICKER = 'SBER'
+
+function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Instrument {
+  return {
+    ticker: dto.ticker,
+    name: dto.name,
+    exchange: dto.exchange,
+    currency: dto.currency,
+    lotSize: dto.lotSize,
+    lastPrice: dto.lastPrice,
+    change: dto.change,
+    changePercent: dto.changePercent,
+    volume: dto.volume,
+    turnover: dto.turnover,
+    bid: dto.bid,
+    offer: dto.offer,
+    isFavorite: prevFavorite,
+  }
+}
+
+const DEFAULT_FAVORITES = new Set(['SBER', 'LKOH', 'GAZP', 'YDEX'])
 
 interface MarketState {
   instruments: Instrument[]
   selectedTicker: string
   orderBook: OrderBookData
   trades: Trade[]
+  status: 'loading' | 'ready' | 'error'
+  loadSecurities: () => Promise<void>
+  refreshOrderBook: () => void
+  loadTrades: () => Promise<void>
   selectTicker: (ticker: string) => void
-  tickPrices: () => void
-  pushTrade: () => void
   toggleFavorite: (ticker: string) => void
 }
 
-function currentInstrument(instruments: Instrument[], ticker: string): Instrument {
-  return instruments.find((i) => i.ticker === ticker) ?? instruments[0]
+function currentInstrument(instruments: Instrument[], ticker: string): Instrument | undefined {
+  return instruments.find((i) => i.ticker === ticker)
 }
 
-/** Рыночные данные: список инструментов, текущий выбранный тикер, стакан и лента сделок */
+/** Рыночные данные с МосБиржи: полный список бумаг TQBR, стакан, лента сделок по выбранному тикеру */
 export const useMarketStore = create<MarketState>((set, get) => ({
-  instruments: INSTRUMENTS,
+  instruments: [],
   selectedTicker: DEFAULT_TICKER,
-  orderBook: generateOrderBook(currentInstrument(INSTRUMENTS, DEFAULT_TICKER).lastPrice),
-  trades: generateInitialTrades(currentInstrument(INSTRUMENTS, DEFAULT_TICKER).lastPrice),
+  orderBook: { bids: [], asks: [] },
+  trades: [],
+  status: 'loading',
+
+  loadSecurities: async () => {
+    try {
+      const dtos = await fetchSecurities()
+      const prevByTicker = new Map(get().instruments.map((i) => [i.ticker, i.isFavorite]))
+      const instruments = dtos.map((dto) =>
+        toInstrument(dto, prevByTicker.get(dto.ticker) ?? DEFAULT_FAVORITES.has(dto.ticker))
+      )
+      set({ instruments, status: 'ready' })
+      get().refreshOrderBook()
+    } catch {
+      set({ status: 'error' })
+    }
+  },
+
+  refreshOrderBook: () => {
+    const { instruments, selectedTicker } = get()
+    const inst = currentInstrument(instruments, selectedTicker)
+    if (!inst?.bid || !inst?.offer) return
+    set({ orderBook: synthesizeOrderBook(inst.bid, inst.offer) })
+  },
+
+  loadTrades: async () => {
+    const ticker = get().selectedTicker
+    try {
+      const trades = await fetchTrades(ticker)
+      if (get().selectedTicker === ticker) set({ trades })
+    } catch {
+      // сеть моргнула — просто оставляем предыдущую ленту до следующего опроса
+    }
+  },
 
   selectTicker: (ticker) => {
-    const inst = currentInstrument(get().instruments, ticker)
-    set({
-      selectedTicker: ticker,
-      orderBook: generateOrderBook(inst.lastPrice),
-      trades: generateInitialTrades(inst.lastPrice),
-    })
-  },
-
-  tickPrices: () => {
-    set((state) => {
-      const instruments = state.instruments.map((inst) => {
-        const newPrice = +nextTick(inst.lastPrice).toFixed(2)
-        const change = newPrice - (inst.lastPrice - inst.change)
-        return {
-          ...inst,
-          lastPrice: newPrice,
-          change,
-          changePercent: (change / (newPrice - change)) * 100,
-        }
-      })
-      const selected = currentInstrument(instruments, state.selectedTicker)
-      return { instruments, orderBook: generateOrderBook(selected.lastPrice) }
-    })
-  },
-
-  pushTrade: () => {
-    set((state) => {
-      const selected = currentInstrument(state.instruments, state.selectedTicker)
-      const trade = generateTrade(selected.lastPrice)
-      const trades = [trade, ...state.trades].slice(0, 60)
-      return { trades }
-    })
+    set({ selectedTicker: ticker, trades: [] })
+    get().refreshOrderBook()
+    get().loadTrades()
   },
 
   toggleFavorite: (ticker) => {

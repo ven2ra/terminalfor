@@ -1,17 +1,22 @@
-import { OrderBookData, OrderBookLevel, Trade } from '@/types'
+import { OrderBookData, OrderBookLevel } from '@/types'
 
-/** Строит стакан заявок вокруг текущей цены с убывающей ликвидностью по мере удаления */
-export function generateOrderBook(midPrice: number, depth = 12, tickSize = 0.05): OrderBookData {
+/**
+ * MOEX ISS в бесплatном доступе отдаёт только лучшие bid/offer (без глубины L2).
+ * Стакан вокруг них достраивается синтетически — реалистичная лесенка объёмов,
+ * но сама верхняя цена (спред) всегда настоящая, с биржи.
+ */
+export function synthesizeOrderBook(bid: number, offer: number, depth = 12): OrderBookData {
+  const tick = Math.max(offer - bid, bid * 0.0005, 0.01)
   const bids: OrderBookLevel[] = []
   const asks: OrderBookLevel[] = []
   let bidTotal = 0
   let askTotal = 0
 
   for (let i = 0; i < depth; i++) {
-    const bidPrice = +(midPrice - tickSize * (i + 1) * (1 + Math.random() * 0.3)).toFixed(2)
-    const askPrice = +(midPrice + tickSize * (i + 1) * (1 + Math.random() * 0.3)).toFixed(2)
-    const bidSize = Math.round(50 + Math.random() * 950 * (1 - i / depth))
-    const askSize = Math.round(50 + Math.random() * 950 * (1 - i / depth))
+    const bidPrice = +(bid - tick * i * (1 + Math.random() * 0.4)).toFixed(2)
+    const askPrice = +(offer + tick * i * (1 + Math.random() * 0.4)).toFixed(2)
+    const bidSize = Math.round(30 + Math.random() * 900 * (1 - i / depth))
+    const askSize = Math.round(30 + Math.random() * 900 * (1 - i / depth))
     bidTotal += bidSize
     askTotal += askSize
     bids.push({ price: bidPrice, size: bidSize, total: bidTotal })
@@ -19,19 +24,4 @@ export function generateOrderBook(midPrice: number, depth = 12, tickSize = 0.05)
   }
 
   return { bids, asks }
-}
-
-let tradeCounter = 0
-
-/** Генерирует одну сделку в ленте (для периодического добавления) */
-export function generateTrade(midPrice: number): Trade {
-  tradeCounter += 1
-  const side: Trade['side'] = Math.random() > 0.5 ? 'buy' : 'sell'
-  const price = +(midPrice + (Math.random() - 0.5) * midPrice * 0.001).toFixed(2)
-  const size = Math.round(1 + Math.random() * 200)
-  return { id: `t-${Date.now()}-${tradeCounter}`, price, size, side, time: Date.now() }
-}
-
-export function generateInitialTrades(midPrice: number, count = 30): Trade[] {
-  return Array.from({ length: count }, () => generateTrade(midPrice))
 }

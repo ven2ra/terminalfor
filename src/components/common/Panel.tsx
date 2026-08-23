@@ -1,4 +1,5 @@
 import { PropsWithChildren, ReactNode } from 'react'
+import { GripVertical, X } from 'lucide-react'
 
 interface PanelProps {
   title: string
@@ -6,18 +7,47 @@ interface PanelProps {
   actions?: ReactNode
   noPadding?: boolean
   className?: string
+  /** Делает заголовок панели ручкой перетаскивания виджета на рабочей области */
+  draggable?: boolean
+  /** Показывает кнопку закрытия виджета в заголовке */
+  onRemove?: () => void
 }
 
 /** Стандартная панель рабочей области терминала: заголовок + содержимое */
-export function Panel({ title, icon, actions, noPadding, className = '', children }: PropsWithChildren<PanelProps>) {
+export function Panel({
+  title,
+  icon,
+  actions,
+  noPadding,
+  className = '',
+  draggable,
+  onRemove,
+  children,
+}: PropsWithChildren<PanelProps>) {
   return (
     <div className={`flex h-full flex-col bg-bg-panel ${className}`}>
-      <div className="flex shrink-0 items-center justify-between border-b border-border-subtle px-3 py-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+      <div
+        className={`widget-drag-handle flex shrink-0 items-center justify-between gap-2 border-b border-border-subtle px-3 py-2 ${
+          draggable ? 'cursor-move select-none' : ''
+        }`}
+      >
+        <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+          {draggable && <GripVertical size={13} className="shrink-0 text-text-muted" />}
           {icon}
-          <span>{title}</span>
+          <span className="truncate">{title}</span>
         </div>
-        {actions}
+        <div className="flex shrink-0 items-center gap-2">
+          {actions}
+          {onRemove && (
+            <button
+              onClick={onRemove}
+              aria-label="Удалить виджет"
+              className="rounded p-0.5 text-text-muted transition-colors hover:bg-sell-bg hover:text-sell"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
       <div className={`min-h-0 flex-1 overflow-auto ${noPadding ? '' : 'p-3'}`}>{children}</div>
     </div>

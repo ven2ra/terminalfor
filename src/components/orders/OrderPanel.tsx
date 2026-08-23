@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useOrderStore } from '@/store/useOrderStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
+import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { OrderType } from '@/types'
 import { Panel } from '@/components/common/Panel'
 import { formatMoney, formatPrice } from '@/lib/format'
@@ -14,32 +15,52 @@ const ORDER_TYPES: Array<{ value: OrderType; label: string }> = [
 
 const QUICK_VOLUMES = [10, 50, 100, 500]
 
-/** Панель выставления ордеров: покупка/продажа, тип, объём, цена, быстрые кнопки */
-export function OrderPanel() {
+interface OrderPanelProps {
+  onRemove?: () => void
+}
+
+/** Панель выставления ордеров: покупка/продажа, тип, объём, цена, быстрые кнопки. Клик по стакану подставляет цену */
+export function OrderPanel({ onRemove }: OrderPanelProps) {
   const { instruments, selectedTicker } = useMarketStore()
   const { placeOrder } = useOrderStore()
   const { account } = usePortfolioStore()
-  const instrument = instruments.find((i) => i.ticker === selectedTicker) ?? instruments[0]
+  const { draft } = useOrderDraftStore()
+  const instrument = instruments.find((i) => i.ticker === selectedTicker)
 
   const [side, setSide] = useState<'buy' | 'sell'>('buy')
   const [type, setType] = useState<OrderType>('limit')
-  const [price, setPrice] = useState(instrument.lastPrice.toFixed(2))
+  const [price, setPrice] = useState('')
   const [size, setSize] = useState('10')
   const [flash, setFlash] = useState<string | null>(null)
 
-  const numericPrice = type === 'market' ? instrument.lastPrice : Number(price) || 0
+  // При смене инструмента (или первой загрузке его котировки) подставляем цену по умолчанию
+  useEffect(() => {
+    if (instrument) setPrice(instrument.lastPrice.toFixed(2))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTicker, instrument === undefined])
+
+  // Клик по строке стакана заявок подставляет цену и сторону сюда
+  useEffect(() => {
+    if (!draft) return
+    setType('limit')
+    setSide(draft.side)
+    setPrice(draft.price.toFixed(2))
+  }, [draft])
+
+  const lastPrice = instrument?.lastPrice ?? 0
+  const numericPrice = type === 'market' ? lastPrice : Number(price) || 0
   const numericSize = Number(size) || 0
   const total = numericPrice * numericSize
 
   const handleSubmit = () => {
-    if (numericSize <= 0) return
+    if (!instrument || numericSize <= 0) return
     placeOrder({ ticker: instrument.ticker, side, type, price: numericPrice, size: numericSize })
     setFlash(`Заявка ${side === 'buy' ? 'на покупку' : 'на продажу'} отправлена`)
     setTimeout(() => setFlash(null), 2000)
   }
 
   return (
-    <Panel title="Выставление ордера">
+    <Panel title="Выставление ордера" draggable={!!onRemove} onRemove={onRemove}>
       <div className="flex flex-col gap-3">
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -75,10 +96,10 @@ export function OrderPanel() {
         </div>
 
         <label className="block text-xs text-text-muted">
-          Цена, {instrument.currency}
+          Цена, {instrument?.currency ?? 'RUB'}
           <input
             disabled={type === 'market'}
-            value={type === 'market' ? instrument.lastPrice.toFixed(2) : price}
+            value={type === 'market' ? lastPrice.toFixed(2) : price}
             onChange={(e) => setPrice(e.target.value)}
             inputMode="decimal"
             className="mt-1 w-full rounded-md border border-border-color bg-bg-base px-2.5 py-1.5 font-tabular text-sm text-text-primary focus:border-accent focus:outline-none disabled:opacity-60"
@@ -110,7 +131,9 @@ export function OrderPanel() {
         <div className="space-y-1 rounded-md bg-bg-elevated px-3 py-2 text-xs">
           <div className="flex justify-between text-text-muted">
             <span>Сумма</span>
-            <span className="font-tabular text-text-secondary">{formatPrice(total)} {instrument.currency}</span>
+            <span className="font-tabular text-text-secondary">
+              {formatPrice(total)} {instrument?.currency ?? 'RUB'}
+            </span>
           </div>
           <div className="flex justify-between text-text-muted">
             <span>Доступно</span>
@@ -120,11 +143,12 @@ export function OrderPanel() {
 
         <button
           onClick={handleSubmit}
-          className={`rounded-md py-2.5 text-sm font-bold text-white transition-transform active:scale-[0.98] ${
+          disabled={!instrument}
+          className={`rounded-md py-2.5 text-sm font-bold text-white transition-transform active:scale-[0.98] disabled:opacity-50 ${
             side === 'buy' ? 'bg-buy hover:brightness-110' : 'bg-sell hover:brightness-110'
           }`}
         >
-          {side === 'buy' ? 'Купить' : 'Продать'} {instrument.ticker}
+          {side === 'buy' ? 'Купить' : 'Продать'} {instrument?.ticker ?? ''}
         </button>
 
         {flash && <div className="rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-xs font-medium text-accent">{flash}</div>}

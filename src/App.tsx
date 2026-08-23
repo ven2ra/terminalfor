@@ -1,10 +1,10 @@
 import { Header } from '@/components/layout/Header'
 import { MainGrid } from '@/components/layout/MainGrid'
-import { useMockFeed } from '@/hooks/useMockFeed'
+import { useMarketFeed } from '@/hooks/useMarketFeed'
 
 export default function App() {
-  // Запускает имитацию потока рыночных данных на всё время жизни приложения
-  useMockFeed()
+  // Опрашивает бэкенд за живыми котировками, стаканом, сделками и переоценивает портфель
+  useMarketFeed()
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg-base">

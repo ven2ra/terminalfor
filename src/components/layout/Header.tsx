@@ -3,15 +3,23 @@ import { Bell, ChevronDown, LineChart, Moon, Search, Sun } from 'lucide-react'
 import { useThemeStore } from '@/store/useThemeStore'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
+import { useViewStore } from '@/store/useViewStore'
+import { ViewMode } from '@/types'
 import { formatMoney, formatPercent } from '@/lib/format'
 
-const NAV_ITEMS = ['Терминал', 'Графики', 'Аналитика', 'Отчёты']
+const NAV_ITEMS: Array<{ value: ViewMode; label: string }> = [
+  { value: 'terminal', label: 'Терминал' },
+  { value: 'charts', label: 'Графики' },
+  { value: 'analytics', label: 'Аналитика' },
+  { value: 'reports', label: 'Отчёты' },
+]
 
 /** Верхняя панель терминала: логотип, навигация, поиск, баланс, уведомления, тема */
 export function Header() {
   const { theme, toggleTheme } = useThemeStore()
   const { instruments, selectTicker } = useMarketStore()
   const { account } = usePortfolioStore()
+  const { view, setView } = useViewStore()
   const [query, setQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
 
@@ -25,22 +33,23 @@ export function Header() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border-color bg-bg-panel px-4">
-      <div className="flex items-center gap-2 font-extrabold tracking-tight text-text-primary">
+      <div className="flex items-center gap-2 font-display font-extrabold text-text-primary">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white">
           <LineChart size={18} />
         </div>
-        <span className="text-base">Terminalfor</span>
+        <span className="text-[17px]">Terminalfor</span>
       </div>
 
       <nav className="flex items-center gap-1">
-        {NAV_ITEMS.map((item, idx) => (
+        {NAV_ITEMS.map((item) => (
           <button
-            key={item}
+            key={item.value}
+            onClick={() => setView(item.value)}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              idx === 0 ? 'bg-bg-hover text-text-primary' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+              view === item.value ? 'bg-bg-hover text-text-primary' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
             }`}
           >
-            {item}
+            {item.label}
           </button>
         ))}
       </nav>
@@ -63,6 +72,7 @@ export function Header() {
                 onMouseDown={() => {
                   selectTicker(i.ticker)
                   setQuery('')
+                  setView('terminal')
                 }}
                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-bg-hover"
               >

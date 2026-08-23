@@ -9,8 +9,12 @@ type Tab = 'positions' | 'orders' | 'structure'
 
 const ASSET_COLORS = ['#3b82f6', '#26a65b', '#f5a623', '#a367f5', '#e0473b']
 
+interface PortfolioPanelProps {
+  onRemove?: () => void
+}
+
 /** Портфель: открытые позиции, активные ордера, структура активов */
-export function PortfolioPanel() {
+export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
   const { positions, account } = usePortfolioStore()
   const { orders, cancelOrder } = useOrderStore()
   const [tab, setTab] = useState<Tab>('positions')
@@ -28,6 +32,8 @@ export function PortfolioPanel() {
     <Panel
       title="Портфель"
       noPadding
+      draggable={!!onRemove}
+      onRemove={onRemove}
       actions={
         <div className="flex items-center gap-3 text-xs">
           <span className="text-text-muted">Баланс</span>

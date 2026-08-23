@@ -2,15 +2,22 @@
 
 export type ThemeMode = 'dark' | 'light'
 
+/** Раздел терминала, выбранный в верхней навигации */
+export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports'
+
 export interface Instrument {
   ticker: string
   name: string
   exchange: string
   currency: string
+  lotSize: number
   lastPrice: number
   change: number
   changePercent: number
   volume: number
+  turnover: number
+  bid: number | null
+  offer: number | null
   isFavorite?: boolean
 }
 
@@ -43,7 +50,8 @@ export interface Trade {
   price: number
   size: number
   side: OrderSide
-  time: number
+  /** Время сделки по MSK в формате HH:MM:SS, как приходит с MOEX ISS */
+  time: string
 }
 
 export interface PendingOrder {
@@ -72,6 +80,7 @@ export interface NewsItem {
   id: string
   title: string
   source: string
+  link: string
   time: number
   tag: 'market' | 'company' | 'macro' | 'crypto'
   important?: boolean

@@ -12,12 +12,12 @@ import {
 } from 'lightweight-charts'
 import { BarChart3, TrendingUp } from 'lucide-react'
 import { Candle } from '@/types'
+import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useThemeStore } from '@/store/useThemeStore'
 import { calcSMA } from '@/lib/indicators'
 import { formatPercent, formatPrice } from '@/lib/format'
-
-const TIMEFRAMES = ['1м', '5м', '15м', '1ч', '1д'] as const
+import { TIMEFRAMES } from '@/lib/timeframes'
 
 function readCssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -25,10 +25,13 @@ function readCssVar(name: string): string {
 
 interface PriceChartProps {
   candles: Candle[]
+  loading: boolean
+  timeframe: { label: string; interval: CandleInterval }
+  onTimeframeChange: (tf: { label: string; interval: CandleInterval }) => void
 }
 
-/** Главный свечной график с MA-индикаторами и гистограммой объёмов */
-export function PriceChart({ candles }: PriceChartProps) {
+/** Главный свечной график с MA-индикаторами и гистограммой объёмов — реальные данные МосБиржи */
+export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
@@ -38,11 +41,10 @@ export function PriceChart({ candles }: PriceChartProps) {
 
   const { instruments, selectedTicker } = useMarketStore()
   const { theme } = useThemeStore()
-  const [timeframe, setTimeframe] = useState<(typeof TIMEFRAMES)[number]>('1м')
   const [showMA, setShowMA] = useState(true)
   const [showVolume, setShowVolume] = useState(true)
 
-  const instrument = instruments.find((i) => i.ticker === selectedTicker) ?? instruments[0]
+  const instrument = instruments.find((i) => i.ticker === selectedTicker)
 
   // Создание графика один раз при монтировании
   useEffect(() => {
@@ -116,7 +118,7 @@ export function PriceChart({ candles }: PriceChartProps) {
 
   // Обновление данных при поступлении новых свечей
   useEffect(() => {
-    if (!candleSeriesRef.current || !volumeSeriesRef.current) return
+    if (!candleSeriesRef.current || !volumeSeriesRef.current || candles.length === 0) return
 
     const candleData: CandlestickData[] = candles.map((c) => ({
       time: c.time as never,
@@ -138,7 +140,7 @@ export function PriceChart({ candles }: PriceChartProps) {
     ma20SeriesRef.current?.setData(ma20Data)
     ma50SeriesRef.current?.setData(ma50Data)
 
-    chartRef.current?.timeScale().applyOptions({})
+    chartRef.current?.timeScale().fitContent()
   }, [candles])
 
   useEffect(() => {
@@ -150,53 +152,58 @@ export function PriceChart({ candles }: PriceChartProps) {
     volumeSeriesRef.current?.applyOptions({ visible: showVolume })
   }, [showVolume])
 
-  const positive = instrument.change >= 0
-  const lastCandle = candles[candles.length - 1]
-  const dayHigh = useMemo(() => Math.max(...candles.map((c) => c.high)), [candles])
-  const dayLow = useMemo(() => Math.min(...candles.map((c) => c.low)), [candles])
+  const positive = (instrument?.change ?? 0) >= 0
+  const dayHigh = useMemo(() => (candles.length ? Math.max(...candles.map((c) => c.high)) : null), [candles])
+  const dayLow = useMemo(() => (candles.length ? Math.min(...candles.map((c) => c.low)) : null), [candles])
 
   return (
     <div className="flex h-full flex-col bg-bg-panel">
       <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-border-subtle px-4 py-2.5">
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-text-primary">{instrument.ticker}</span>
-            <span className="text-xs text-text-muted">{instrument.name} · {instrument.exchange}</span>
+            <span className="text-lg font-bold text-text-primary">{instrument?.ticker ?? selectedTicker}</span>
+            <span className="text-xs text-text-muted">
+              {instrument?.name ?? '…'} · {instrument?.exchange ?? 'MOEX'}
+            </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-tabular text-2xl font-bold text-text-primary">{formatPrice(instrument.lastPrice)}</span>
-            <span className={`font-tabular text-sm font-semibold ${positive ? 'text-buy' : 'text-sell'}`}>
-              {positive ? '+' : ''}
-              {formatPrice(instrument.change)} ({formatPercent(instrument.changePercent)})
+            <span className="font-tabular text-2xl font-bold text-text-primary">
+              {instrument ? formatPrice(instrument.lastPrice) : '—'}
             </span>
+            {instrument && (
+              <span className={`font-tabular text-sm font-semibold ${positive ? 'text-buy' : 'text-sell'}`}>
+                {positive ? '+' : ''}
+                {formatPrice(instrument.change)} ({formatPercent(instrument.changePercent)})
+              </span>
+            )}
           </div>
         </div>
 
         <div className="hidden gap-4 text-xs text-text-muted md:flex">
           <div>
             <div className="text-text-muted">Макс</div>
-            <div className="font-tabular text-text-secondary">{lastCandle ? formatPrice(dayHigh) : '—'}</div>
+            <div className="font-tabular text-text-secondary">{dayHigh != null ? formatPrice(dayHigh) : '—'}</div>
           </div>
           <div>
             <div className="text-text-muted">Мин</div>
-            <div className="font-tabular text-text-secondary">{lastCandle ? formatPrice(dayLow) : '—'}</div>
+            <div className="font-tabular text-text-secondary">{dayLow != null ? formatPrice(dayLow) : '—'}</div>
           </div>
           <div>
             <div className="text-text-muted">Объём</div>
-            <div className="font-tabular text-text-secondary">{instrument.volume.toLocaleString('ru-RU')}</div>
+            <div className="font-tabular text-text-secondary">{(instrument?.volume ?? 0).toLocaleString('ru-RU')}</div>
           </div>
         </div>
 
         <div className="ml-auto flex items-center gap-1">
           {TIMEFRAMES.map((tf) => (
             <button
-              key={tf}
-              onClick={() => setTimeframe(tf)}
+              key={tf.label}
+              onClick={() => onTimeframeChange(tf)}
               className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-                timeframe === tf ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
+                timeframe.label === tf.label ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
               }`}
             >
-              {tf}
+              {tf.label}
             </button>
           ))}
           <div className="mx-1 h-4 w-px bg-border-color" />
@@ -219,7 +226,14 @@ export function PriceChart({ candles }: PriceChartProps) {
         </div>
       </div>
 
-      <div ref={containerRef} className="min-h-0 flex-1" />
+      <div className="relative min-h-0 flex-1">
+        {loading && candles.length === 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg-panel/70 text-sm text-text-muted">
+            Загрузка котировок с МосБиржи…
+          </div>
+        )}
+        <div ref={containerRef} className="h-full w-full" />
+      </div>
     </div>
   )
 }

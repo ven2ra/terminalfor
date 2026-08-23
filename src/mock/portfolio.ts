@@ -1,4 +1,4 @@
-import { AccountSummary, Position } from '@/types'
+import { AccountSummary } from '@/types'
 
 export const INITIAL_ACCOUNT: AccountSummary = {
   balance: 1_248_930.5,
@@ -9,9 +9,15 @@ export const INITIAL_ACCOUNT: AccountSummary = {
   todayPnlPercent: 1.08,
 }
 
-export const INITIAL_POSITIONS: Position[] = [
-  { ticker: 'SBER', side: 'buy', size: 1200, avgPrice: 281.2, currentPrice: 289.45, pnl: 9900, pnlPercent: 2.93 },
-  { ticker: 'LKOH', side: 'buy', size: 20, avgPrice: 7050.0, currentPrice: 7218.5, pnl: 3370, pnlPercent: 2.39 },
-  { ticker: 'GAZP', side: 'sell', size: 800, avgPrice: 141.5, currentPrice: 138.02, pnl: 2784, pnlPercent: 2.46 },
-  { ticker: 'BTCUSDT', side: 'buy', size: 0.15, avgPrice: 66200.0, currentPrice: 68420.15, pnl: 333.02, pnlPercent: 3.35 },
+/**
+ * Стартовые позиции портфеля — реальные тикеры МосБиржи. offsetPercent задаёт,
+ * насколько цена входа отличается от текущей рыночной — сама avgPrice
+ * вычисляется от первой живой котировки (см. usePortfolioStore), а не хардкодится,
+ * чтобы портфель оставался реалистичным вне зависимости от того, где сейчас рынок.
+ */
+export const POSITION_SEEDS: Array<{ ticker: string; side: 'buy' | 'sell'; size: number; offsetPercent: number }> = [
+  { ticker: 'SBER', side: 'buy', size: 1200, offsetPercent: -2.9 },
+  { ticker: 'LKOH', side: 'buy', size: 20, offsetPercent: -2.4 },
+  { ticker: 'GAZP', side: 'sell', size: 800, offsetPercent: 2.5 },
+  { ticker: 'ROSN', side: 'buy', size: 150, offsetPercent: -4.6 },
 ]
