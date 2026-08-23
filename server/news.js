@@ -2,18 +2,21 @@ import { XMLParser } from 'fast-xml-parser'
 import { cached } from './cache.js'
 import { stripHtml } from './text.js'
 import { getTelegramGroups } from './telegram.js'
+import { classifyTag } from './classify.js'
 
 const parser = new XMLParser({ ignoreAttributes: false })
 
+// fallbackTag — тег для заголовков, которые classifyTag не признал политикой
 const FEEDS = [
-  { url: 'https://rssexport.rbc.ru/rbcnews/news/30/full.rss', source: 'РБК', tag: 'market' },
-  { url: 'https://www.finam.ru/analysis/conews/rsspoint', source: 'Финам', tag: 'company' },
-  // Общественно-политическая повестка — курс рынка зависит от неё не меньше, чем от отчётностей
-  { url: 'https://ria.ru/export/rss2/index.xml', source: 'РИА Новости', tag: 'politics' },
-  { url: 'https://lenta.ru/rss/news', source: 'Lenta.ru', tag: 'politics' },
+  { url: 'https://rssexport.rbc.ru/rbcnews/news/30/full.rss', source: 'РБК', fallbackTag: 'market' },
+  { url: 'https://www.finam.ru/analysis/conews/rsspoint', source: 'Финам', fallbackTag: 'company' },
+  // Общественно-политическая повестка — курс рынка зависит от неё не меньше, чем от отчётностей.
+  // Ленты общие (не только политика), поэтому тег ставится по содержанию заголовка, см. classify.js
+  { url: 'https://ria.ru/export/rss2/index.xml', source: 'РИА Новости', fallbackTag: 'society' },
+  { url: 'https://lenta.ru/rss/news', source: 'Lenta.ru', fallbackTag: 'society' },
 ]
 
-async function loadFeed({ url, source, tag }) {
+async function loadFeed({ url, source, fallbackTag }) {
   const res = await fetch(url, { headers: { 'User-Agent': 'terminalfor/1.0' } })
   if (!res.ok) throw new Error(`RSS ${res.status} for ${url}`)
   const xml = await res.text()
@@ -30,7 +33,7 @@ async function loadFeed({ url, source, tag }) {
       title,
       link,
       source,
-      tag,
+      tag: classifyTag(title, fallbackTag),
       time: Number.isFinite(pubDate) ? pubDate : Date.now(),
     }
   })

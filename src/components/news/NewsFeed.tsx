@@ -11,12 +11,14 @@ const TAG_LABELS: Record<NewsItem['tag'], string> = {
   market: 'Рынок',
   company: 'Компании',
   politics: 'Политика',
+  society: 'Общество',
 }
 
 const TAG_COLORS: Record<NewsItem['tag'], string> = {
   market: 'text-accent bg-accent/10',
   company: 'text-buy bg-buy-bg',
   politics: 'text-sell bg-sell-bg',
+  society: 'text-text-secondary bg-bg-elevated',
 }
 
 const FILTERS: Array<{ value: NewsItem['tag'] | 'all'; label: string }> = [
@@ -24,6 +26,7 @@ const FILTERS: Array<{ value: NewsItem['tag'] | 'all'; label: string }> = [
   { value: 'market', label: 'Рынок' },
   { value: 'company', label: 'Компании' },
   { value: 'politics', label: 'Политика' },
+  { value: 'society', label: 'Общество' },
 ]
 
 const POLL_MS = 60000
@@ -61,7 +64,7 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
   return (
     <Panel title="Новости и события" noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="flex h-full flex-col">
-        <div className="flex shrink-0 gap-1 border-b border-border-subtle px-2 py-1.5">
+        <div className="flex shrink-0 flex-wrap gap-1 border-b border-border-subtle px-2 py-1.5">
           {FILTERS.map((f) => (
             <button
               key={f.value}
