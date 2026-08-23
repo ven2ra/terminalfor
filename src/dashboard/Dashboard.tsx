@@ -39,7 +39,7 @@ export function Dashboard() {
           onLayoutChange={setLayout}
         >
           {widgets.map((type) => (
-            <div key={type} className="overflow-hidden rounded-lg border border-border-color shadow-panel">
+            <div key={type} className="overflow-hidden border border-border-color shadow-panel">
               {WIDGET_REGISTRY[type].render({ onRemove: () => removeWidget(type) })}
             </div>
           ))}

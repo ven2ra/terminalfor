@@ -25,7 +25,7 @@ export function Panel({
   children,
 }: PropsWithChildren<PanelProps>) {
   return (
-    <div className={`flex h-full flex-col bg-bg-panel ${className}`}>
+    <div className={`panel-frame flex h-full flex-col bg-bg-panel ${className}`}>
       <div
         className={`widget-drag-handle flex shrink-0 items-center justify-between gap-2 border-b border-border-subtle px-3 py-2 ${
           draggable ? 'cursor-move select-none' : ''

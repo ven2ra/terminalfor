@@ -1,17 +1,5 @@
 import { useState } from 'react'
-import {
-  BarChart2,
-  Bell,
-  CandlestickChart,
-  ChevronDown,
-  FileText,
-  LayoutGrid,
-  LineChart,
-  Moon,
-  Search,
-  Sun,
-  Trash2,
-} from 'lucide-react'
+import { BarChart2, Bell, CandlestickChart, ChevronDown, FileText, LayoutGrid, Moon, Search, Sun, Trash2 } from 'lucide-react'
 import { useThemeStore } from '@/store/useThemeStore'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
@@ -56,9 +44,15 @@ export function Header() {
   return (
     <header className="relative flex h-14 shrink-0 items-center gap-2 border-b border-border-color bg-bg-panel px-2 sm:gap-4 sm:px-4">
       <div className="flex shrink-0 items-center gap-2 font-display font-extrabold text-text-primary">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white">
-          <LineChart size={18} />
-        </div>
+        {/* Фирменный знак — рамка-прицел вместо иконки из общей библиотеки:
+            та же "уголковая" логика, что и на панелях, но в масштабе логотипа */}
+        <svg width="30" height="30" viewBox="0 0 30 30" className="shrink-0" aria-hidden>
+          <path d="M2 9V3.5A1.5 1.5 0 0 1 3.5 2H9" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M28 9V3.5A1.5 1.5 0 0 0 26.5 2H21" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M2 21v5.5A1.5 1.5 0 0 0 3.5 28H9" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M28 21v5.5a1.5 1.5 0 0 1-1.5 1.5H21" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <circle cx="15" cy="15" r="3" fill="var(--accent)" />
+        </svg>
         <span className="hidden text-[17px] sm:inline">Terminalfor</span>
       </div>
 

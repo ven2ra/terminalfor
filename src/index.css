@@ -22,8 +22,11 @@
   --text-secondary: #8e96a8;
   --text-muted: #565d6d;
 
-  --accent: #3b82f6;
-  --accent-hover: #5b93f7;
+  /* Фирменный акцент — тёплый янтарь вместо типового синего SaaS-акцента:
+     считываемо как "терминал/пульт", а не очередная синяя админка */
+  --accent: #f5a524;
+  --accent-hover: #ffb84d;
+  --accent-rgb: 245, 165, 36;
 
   --buy: #10b981;
   --buy-bg: rgba(16, 185, 129, 0.12);
@@ -33,7 +36,7 @@
   --warning-bg: rgba(240, 180, 41, 0.12);
   --accent-cyan: #22d3ee;
 
-  --flash-color: rgba(59, 130, 246, 0.25);
+  --flash-color: rgba(245, 165, 36, 0.22);
 
   color-scheme: dark;
 }
@@ -51,8 +54,9 @@
   --text-secondary: #5b6472;
   --text-muted: #8991a0;
 
-  --accent: #2563eb;
-  --accent-hover: #1d4fd1;
+  --accent: #b6790a;
+  --accent-hover: #9c6708;
+  --accent-rgb: 182, 121, 10;
 
   --buy: #0ea472;
   --buy-bg: rgba(16, 185, 129, 0.1);
@@ -62,7 +66,7 @@
   --warning-bg: rgba(183, 121, 31, 0.1);
   --accent-cyan: #0891b2;
 
-  --flash-color: rgba(37, 99, 235, 0.15);
+  --flash-color: rgba(182, 121, 10, 0.15);
 
   color-scheme: light;
 }
@@ -78,7 +82,11 @@ body,
 }
 
 body {
+  /* Едва заметная точечная сетка на фоне — читается как "приборная панель",
+     а не плоская закраска, которую невозможно отличить от любого другого SaaS */
   background-color: var(--bg-base);
+  background-image: radial-gradient(circle, var(--border-subtle) 1px, transparent 1px);
+  background-size: 28px 28px;
   color: var(--text-primary);
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-feature-settings: 'cv11', 'ss01', 'tnum';
@@ -123,6 +131,32 @@ body {
   background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 37%, var(--bg-elevated) 63%);
   background-size: 400px 100%;
   animation: shimmer 1.4s infinite linear;
+}
+
+/* Фирменный "уголковый" мотив панелей — тонкие HUD-засечки по верхним углам,
+   а не типовая карточка с ровной рамкой и тенью, как у любого другого дашборда */
+.panel-frame {
+  position: relative;
+}
+.panel-frame::before,
+.panel-frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--accent);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-frame::before {
+  left: 0;
+  border-left: 2px solid var(--accent);
+}
+.panel-frame::after {
+  right: 0;
+  border-right: 2px solid var(--accent);
 }
 
 /* Библиотека resizable-панелей рисует свой сплиттер — стилизуем под тему */
