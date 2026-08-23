@@ -487,7 +487,7 @@ export function PriceChart({
           </div>
         </div>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex max-w-full flex-nowrap items-center gap-1 overflow-x-auto [&>*]:shrink-0">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf.label}

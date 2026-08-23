@@ -4,6 +4,8 @@ import 'react-grid-layout/css/styles.css'
 import { useDashboardStore } from '@/store/useDashboardStore'
 import { WIDGET_REGISTRY } from '@/dashboard/widgets'
 import { AddWidgetMenu } from '@/dashboard/AddWidgetMenu'
+import { MobileDashboard } from '@/dashboard/MobileDashboard'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const ROW_HEIGHT = 26
 const MARGIN: readonly [number, number] = [8, 8]
@@ -11,11 +13,15 @@ const MARGIN: readonly [number, number] = [8, 8]
 /**
  * Свободно компонуемая рабочая область: виджеты можно перетаскивать за
  * заголовок, менять их размер за нижний правый угол и удалять — раскладка
- * сохраняется в localStorage между сессиями.
+ * сохраняется в localStorage между сессиями. На узких экранах вместо
+ * сжатой сетки — полноэкранные вкладки (MobileDashboard).
  */
 export function Dashboard() {
   const { widgets, layout, setLayout, removeWidget } = useDashboardStore()
   const { width, containerRef } = useContainerWidth({ initialWidth: 1400 })
+  const isMobile = useIsMobile()
+
+  if (isMobile) return <MobileDashboard />
 
   return (
     <div className="flex h-full flex-col">
