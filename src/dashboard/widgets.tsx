@@ -60,13 +60,14 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
   orderPanel: {
     label: 'Ордер',
     icon: <LineChart size={14} />,
-    layout: { x: 9, y: 14, w: 3, h: 9, minW: 2, minH: 6 },
+    // Высота с запасом: кнопки, тип, цена, объём, быстрые кнопки, сумма/остаток и submit целиком помещаются без обрезки
+    layout: { x: 9, y: 14, w: 3, h: 17, minW: 2, minH: 13 },
     render: ({ onRemove }) => <OrderPanel onRemove={onRemove} />,
   },
   news: {
     label: 'Новости',
     icon: <Newspaper size={14} />,
-    layout: { x: 9, y: 23, w: 3, h: 8, minW: 2, minH: 5 },
+    layout: { x: 9, y: 31, w: 3, h: 8, minW: 2, minH: 5 },
     render: ({ onRemove }) => <NewsFeed onRemove={onRemove} />,
   },
 }

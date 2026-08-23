@@ -5,6 +5,11 @@ services:
     restart: unless-stopped
     expose:
       - "4000"
+    environment:
+      # Если t.me/MOEX/RSS не отдаются напрямую с сервера — раскомментируйте и
+      # укажите свой HTTP(S)-прокси, все исходящие запросы бэкенда пойдут через него.
+      # HTTPS_PROXY: "http://user:pass@proxy-host:3128"
+      PORT: "4000"
 
   web:
     build: .

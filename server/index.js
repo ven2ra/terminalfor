@@ -1,3 +1,4 @@
+import './proxy.js'
 import express from 'express'
 import { getSecurities, getCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'

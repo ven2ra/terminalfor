@@ -1,19 +1,17 @@
 import { XMLParser } from 'fast-xml-parser'
 import { cached } from './cache.js'
+import { stripHtml } from './text.js'
+import { getTelegramGroups } from './telegram.js'
 
 const parser = new XMLParser({ ignoreAttributes: false })
 
 const FEEDS = [
   { url: 'https://rssexport.rbc.ru/rbcnews/news/30/full.rss', source: 'РБК', tag: 'market' },
   { url: 'https://www.finam.ru/analysis/conews/rsspoint', source: 'Финам', tag: 'company' },
+  // Общественно-политическая повестка — курс рынка зависит от неё не меньше, чем от отчётностей
+  { url: 'https://ria.ru/export/rss2/index.xml', source: 'РИА Новости', tag: 'politics' },
+  { url: 'https://lenta.ru/rss/news', source: 'Lenta.ru', tag: 'politics' },
 ]
-
-function stripHtml(text) {
-  return String(text ?? '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
 
 async function loadFeed({ url, source, tag }) {
   const res = await fetch(url, { headers: { 'User-Agent': 'terminalfor/1.0' } })
@@ -38,11 +36,39 @@ async function loadFeed({ url, source, tag }) {
   })
 }
 
+const PER_SOURCE_GUARANTEED = 8
+const TOTAL_LIMIT = 70
+
+/**
+ * Быстрые источники (политические ленты постят каждую минуту) иначе вымывают
+ * из общей выдачи медленные (Финам, Telegram-каналы). Поэтому у каждого
+ * источника сначала резервируется гарантированная доля, а уже остаток мест
+ * добирается по общей свежести — так видна вся подписка, а не только топ по времени.
+ */
+function mergeFairly(groups) {
+  const guaranteed = []
+  const leftover = []
+  for (const group of groups) {
+    guaranteed.push(...group.slice(0, PER_SOURCE_GUARANTEED))
+    leftover.push(...group.slice(PER_SOURCE_GUARANTEED))
+  }
+  leftover.sort((a, b) => b.time - a.time)
+  const remainingSlots = Math.max(0, TOTAL_LIMIT - guaranteed.length)
+  const merged = [...guaranteed, ...leftover.slice(0, remainingSlots)]
+  merged.sort((a, b) => b.time - a.time)
+  return merged
+}
+
 async function loadAllNews() {
-  const results = await Promise.allSettled(FEEDS.map(loadFeed))
-  const items = results.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value)
-  items.sort((a, b) => b.time - a.time)
-  return items.slice(0, 40)
+  const [feedResults, telegramGroups] = await Promise.all([
+    Promise.allSettled(FEEDS.map(loadFeed)),
+    getTelegramGroups(),
+  ])
+  const groups = [
+    ...feedResults.filter((r) => r.status === 'fulfilled').map((r) => r.value),
+    ...telegramGroups,
+  ]
+  return mergeFairly(groups)
 }
 
 export function getNews() {

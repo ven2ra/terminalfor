@@ -5,7 +5,7 @@ import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { OrderType } from '@/types'
 import { Panel } from '@/components/common/Panel'
-import { formatMoney, formatPrice } from '@/lib/format'
+import { formatMoney } from '@/lib/format'
 
 const ORDER_TYPES: Array<{ value: OrderType; label: string }> = [
   { value: 'market', label: 'Рыночная' },
@@ -131,9 +131,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
         <div className="space-y-1 rounded-md bg-bg-elevated px-3 py-2 text-xs">
           <div className="flex justify-between text-text-muted">
             <span>Сумма</span>
-            <span className="font-tabular text-text-secondary">
-              {formatPrice(total)} {instrument?.currency ?? 'RUB'}
-            </span>
+            <span className="font-tabular text-text-secondary">{formatMoney(total)}</span>
           </div>
           <div className="flex justify-between text-text-muted">
             <span>Доступно</span>

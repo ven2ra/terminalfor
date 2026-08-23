@@ -82,7 +82,7 @@ export interface NewsItem {
   source: string
   link: string
   time: number
-  tag: 'market' | 'company' | 'macro' | 'crypto'
+  tag: 'market' | 'company' | 'politics'
   important?: boolean
 }
 

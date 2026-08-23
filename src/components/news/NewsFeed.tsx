@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { ExternalLink } from 'lucide-react'
@@ -10,16 +10,21 @@ import { SkeletonRows } from '@/components/common/Skeleton'
 const TAG_LABELS: Record<NewsItem['tag'], string> = {
   market: 'Рынок',
   company: 'Компании',
-  macro: 'Макро',
-  crypto: 'Крипто',
+  politics: 'Политика',
 }
 
 const TAG_COLORS: Record<NewsItem['tag'], string> = {
   market: 'text-accent bg-accent/10',
   company: 'text-buy bg-buy-bg',
-  macro: 'text-text-secondary bg-bg-elevated',
-  crypto: 'text-sell bg-sell-bg',
+  politics: 'text-sell bg-sell-bg',
 }
+
+const FILTERS: Array<{ value: NewsItem['tag'] | 'all'; label: string }> = [
+  { value: 'all', label: 'Все' },
+  { value: 'market', label: 'Рынок' },
+  { value: 'company', label: 'Компании' },
+  { value: 'politics', label: 'Политика' },
+]
 
 const POLL_MS = 60000
 
@@ -27,10 +32,11 @@ interface NewsFeedProps {
   onRemove?: () => void
 }
 
-/** Лента новостей — реальные заголовки РБК и Финам через бэкенд-прокси */
+/** Лента новостей — РБК, Финам, РИА/Lenta (политика) и Telegram-канал MarketTwits */
 export function NewsFeed({ onRemove }: NewsFeedProps) {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<NewsItem['tag'] | 'all'>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -50,40 +56,60 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
     }
   }, [])
 
+  const filtered = useMemo(() => (filter === 'all' ? news : news.filter((n) => n.tag === filter)), [news, filter])
+
   return (
     <Panel title="Новости и события" noPadding draggable={!!onRemove} onRemove={onRemove}>
-      {loading && news.length === 0 ? (
-        <div className="p-3">
-          <SkeletonRows rows={8} />
-        </div>
-      ) : (
-        <div className="flex flex-col divide-y divide-border-subtle">
-          {news.map((n) => (
-            <a
-              key={n.id}
-              href={n.link}
-              target="_blank"
-              rel="noreferrer"
-              className="group block px-3 py-2.5 hover:bg-bg-hover"
+      <div className="flex h-full flex-col">
+        <div className="flex shrink-0 gap-1 border-b border-border-subtle px-2 py-1.5">
+          {FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+                filter === f.value ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:text-text-secondary'
+              }`}
             >
-              <div className="mb-1 flex items-center gap-2">
-                <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${TAG_COLORS[n.tag]}`}>
-                  {TAG_LABELS[n.tag]}
-                </span>
-                <span className="ml-auto text-[10px] text-text-muted">
-                  {formatDistanceToNow(n.time, { addSuffix: true, locale: ru })}
-                </span>
-              </div>
-              <p className="flex items-start gap-1 text-xs leading-snug text-text-primary">
-                <span>{n.title}</span>
-                <ExternalLink size={10} className="mt-0.5 shrink-0 text-text-muted opacity-0 group-hover:opacity-100" />
-              </p>
-              <span className="text-[10px] text-text-muted">{n.source}</span>
-            </a>
+              {f.label}
+            </button>
           ))}
-          {news.length === 0 && <div className="p-4 text-center text-xs text-text-muted">Новостей пока нет</div>}
         </div>
-      )}
+
+        <div className="min-h-0 flex-1 overflow-auto">
+          {loading && news.length === 0 ? (
+            <div className="p-3">
+              <SkeletonRows rows={8} />
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-border-subtle">
+              {filtered.map((n) => (
+                <a
+                  key={n.id}
+                  href={n.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group block px-3 py-2.5 hover:bg-bg-hover"
+                >
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${TAG_COLORS[n.tag]}`}>
+                      {TAG_LABELS[n.tag]}
+                    </span>
+                    <span className="ml-auto text-[10px] text-text-muted">
+                      {formatDistanceToNow(n.time, { addSuffix: true, locale: ru })}
+                    </span>
+                  </div>
+                  <p className="flex items-start gap-1 text-xs leading-snug text-text-primary">
+                    <span>{n.title}</span>
+                    <ExternalLink size={10} className="mt-0.5 shrink-0 text-text-muted opacity-0 group-hover:opacity-100" />
+                  </p>
+                  <span className="text-[10px] text-text-muted">{n.source}</span>
+                </a>
+              ))}
+              {filtered.length === 0 && <div className="p-4 text-center text-xs text-text-muted">Новостей пока нет</div>}
+            </div>
+          )}
+        </div>
+      </div>
     </Panel>
   )
 }
