@@ -2,6 +2,7 @@ import './proxy.js'
 import express from 'express'
 import { getSecurities, getExtraSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'
+import { getCalendar } from './calendar.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
 
@@ -94,6 +95,15 @@ app.get('/api/news', async (_req, res) => {
   } catch (err) {
     console.error('news error:', err.message)
     res.status(502).json({ error: 'news_unavailable' })
+  }
+})
+
+app.get('/api/calendar', async (_req, res) => {
+  try {
+    res.json(await getCalendar())
+  } catch (err) {
+    console.error('calendar error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
   }
 })
 

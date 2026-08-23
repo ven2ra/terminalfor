@@ -1,4 +1,4 @@
-import { AssetType, Candle, NewsItem, Trade } from '@/types'
+import { AssetType, CalendarEvent, Candle, NewsItem, Trade } from '@/types'
 
 /** Сырые данные инструмента, приходящие с бэкенда (MOEX ISS) */
 export interface SecurityDto {
@@ -79,4 +79,9 @@ export function fetchTapeCatalog(): Promise<TapeCatalogEntry[]> {
 export function fetchTapeQuotes(symbols: string[]): Promise<TapeQuote[]> {
   if (symbols.length === 0) return Promise.resolve([])
   return getJson(`/api/tape?symbols=${symbols.map(encodeURIComponent).join(',')}`)
+}
+
+/** Ближайшие оферты/купоны/погашения по ликвидным облигациям МосБиржи */
+export function fetchCalendar(): Promise<CalendarEvent[]> {
+  return getJson('/api/calendar')
 }

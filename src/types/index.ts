@@ -3,7 +3,7 @@
 export type ThemeMode = 'dark' | 'light'
 
 /** Раздел терминала, выбранный в верхней навигации */
-export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports'
+export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports' | 'calendar'
 
 export type AssetType = 'share' | 'fund' | 'bond' | 'future'
 
@@ -93,6 +93,17 @@ export interface NewsItem {
   time: number
   tag: 'market' | 'company' | 'politics' | 'society'
   important?: boolean
+}
+
+/** Ближайшее событие по облигации: оферта (пут/колл-дата), купон или погашение. Дивиденды не входят — см. server/calendar.js */
+export interface CalendarEvent {
+  ticker: string
+  name: string
+  isin: string | null
+  currency: string
+  type: 'offer' | 'coupon' | 'maturity'
+  date: string
+  value: number | null
 }
 
 export interface AccountSummary {
