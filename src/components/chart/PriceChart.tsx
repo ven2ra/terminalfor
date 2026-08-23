@@ -21,6 +21,7 @@ import { SentimentBadge } from '@/components/chart/SentimentBadge'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA, calcBollinger, calcVWAP } from '@/lib/indicators'
 import { calcSupportResistance } from '@/lib/levels'
+import { useAlertsStore } from '@/store/useAlertsStore'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -77,14 +78,25 @@ export function PriceChart({
 
   const { instruments, selectedTicker } = useMarketStore()
   const { theme } = useThemeStore()
+  const { addAlert } = useAlertsStore()
   const [showMA, setShowMA] = useState(true)
   const [showVolume, setShowVolume] = useState(true)
   const [showBollinger, setShowBollinger] = useState(false)
   const [showVWAP, setShowVWAP] = useState(false)
   const [showLevels, setShowLevels] = useState(false)
+  const [alertFlash, setAlertFlash] = useState<string | null>(null)
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
+
+  // Актуальный тикер/цена/создание алерта для обработчика двойного клика по
+  // графику, который подписывается на chart один раз при монтировании
+  const selectedTickerRef = useRef(selectedTicker)
+  const lastPriceRef = useRef(instrument?.lastPrice ?? 0)
+  const addAlertRef = useRef(addAlert)
+  selectedTickerRef.current = selectedTicker
+  lastPriceRef.current = instrument?.lastPrice ?? 0
+  addAlertRef.current = addAlert
 
   // Создание графика один раз при монтировании
   useEffect(() => {
@@ -181,8 +193,21 @@ export function PriceChart({
     }
     chart.timeScale().subscribeVisibleLogicalRangeChange(handleRangeChange)
 
+    // Двойной клик по графику — быстрое создание ценового алерта на цене клика
+    const handleDblClick = (param: { point?: { x: number; y: number } }) => {
+      if (!param.point || !candleSeriesRef.current) return
+      const clickedPrice = candleSeriesRef.current.coordinateToPrice(param.point.y)
+      if (clickedPrice == null) return
+      const condition = clickedPrice >= lastPriceRef.current ? 'above' : 'below'
+      addAlertRef.current(selectedTickerRef.current, condition, clickedPrice)
+      setAlertFlash(`Алерт создан: ${selectedTickerRef.current} ${condition === 'above' ? '≥' : '≤'} ${formatPrice(clickedPrice)}`)
+      setTimeout(() => setAlertFlash(null), 2500)
+    }
+    chart.subscribeDblClick(handleDblClick)
+
     return () => {
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleRangeChange)
+      chart.unsubscribeDblClick(handleDblClick)
       chart.remove()
       chartRef.current = null
     }
@@ -467,7 +492,12 @@ export function PriceChart({
             Загрузка истории…
           </div>
         )}
-        <div ref={containerRef} className="h-full w-full" />
+        {alertFlash && (
+          <div className="animate-pop-in absolute right-2 top-2 z-10 rounded-md bg-accent/15 px-2.5 py-1.5 text-[11px] font-medium text-accent">
+            {alertFlash}
+          </div>
+        )}
+        <div ref={containerRef} className="h-full w-full" title="Двойной клик по графику — создать ценовой алерт" />
       </div>
     </div>
   )
