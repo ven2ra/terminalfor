@@ -10,7 +10,7 @@ import {
   LineSeries,
   createChart,
 } from 'lightweight-charts'
-import { BarChart3, TrendingUp } from 'lucide-react'
+import { BarChart3, Maximize2, TrendingUp } from 'lucide-react'
 import { Candle } from '@/types'
 import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
@@ -41,6 +41,9 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null)
   const ma20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
+  // Ключ (тикер+таймфрейм), на который масштаб уже подгонялся — чтобы не
+  // сбрасывать зум/скролл пользователя при каждом периодическом обновлении данных
+  const fittedKeyRef = useRef<string>('')
 
   const { instruments, selectedTicker } = useMarketStore()
   const { theme } = useThemeStore()
@@ -150,8 +153,14 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     ma20SeriesRef.current?.setData(ma20Data)
     ma50SeriesRef.current?.setData(ma50Data)
 
-    chartRef.current?.timeScale().fitContent()
-  }, [candles])
+    // Автоподгонка масштаба — только при смене инструмента/таймфрейма, а не на
+    // каждый периодический опрос (иначе зум/прокрутку пользователя сбрасывало бы каждые пару секунд)
+    const fitKey = `${selectedTicker}:${timeframe.interval}`
+    if (fittedKeyRef.current !== fitKey) {
+      fittedKeyRef.current = fitKey
+      chartRef.current?.timeScale().fitContent()
+    }
+  }, [candles, selectedTicker, timeframe.interval])
 
   useEffect(() => {
     ma20SeriesRef.current?.applyOptions({ visible: showMA })
@@ -237,6 +246,13 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
             }`}
           >
             <BarChart3 size={13} /> Объём
+          </button>
+          <button
+            onClick={() => chartRef.current?.timeScale().fitContent()}
+            title="Сбросить масштаб"
+            className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover"
+          >
+            <Maximize2 size={13} />
           </button>
         </div>
       </div>
