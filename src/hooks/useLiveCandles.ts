@@ -40,7 +40,15 @@ export function useLiveCandles(ticker: string, interval: CandleInterval) {
       try {
         const data = await fetchCandles(ticker, interval)
         if (!cancelledRef.current) {
-          setCandles(data)
+          // fetchCandles всегда возвращает недавнее окно (последние ~500 баров
+          // для интрадей). Периодический опрос не должен затирать им историю,
+          // довыгруженную прокруткой назад через loadOlder, — сохраняем более
+          // старые бары и обновляем только актуальный "хвост".
+          setCandles((prev) => {
+            if (prev.length === 0 || data.length === 0) return data
+            const older = prev.filter((c) => c.time < data[0].time)
+            return older.length > 0 ? [...older, ...data] : data
+          })
           setLoading(false)
         }
       } catch {
