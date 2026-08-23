@@ -6,7 +6,7 @@ import { SkeletonRows } from '@/components/common/Skeleton'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { formatPercent, formatPrice } from '@/lib/format'
-import { Instrument } from '@/types'
+import { AssetType, Instrument } from '@/types'
 
 interface WatchlistProps {
   onRemove?: () => void
@@ -19,10 +19,19 @@ interface RowProps {
   onToggleFavorite: () => void
 }
 
+const TABS: Array<{ value: AssetType | 'all'; label: string }> = [
+  { value: 'all', label: 'Все' },
+  { value: 'share', label: 'Акции' },
+  { value: 'fund', label: 'Фонды' },
+  { value: 'bond', label: 'Облигации' },
+  { value: 'future', label: 'Фьючерсы' },
+]
+
 /** Отдельный компонент строки — usePriceFlash обязан жить в собственном инстансе на каждый тикер */
 function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
   const positive = inst.change >= 0
   const priceFlash = usePriceFlash(inst.lastPrice)
+  const priceSuffix = inst.priceUnit === 'percent' ? '%' : ''
 
   return (
     <button
@@ -54,6 +63,7 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
             }`}
           >
             {formatPrice(inst.lastPrice)}
+            {priceSuffix}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -67,22 +77,28 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
   )
 }
 
-/** Список инструментов слева: весь основной режим торгов МосБиржи (TQBR), поиск, избранное */
+/** Список инструментов слева: акции, фонды, облигации и фьючерсы МосБиржи, с фильтром по типу и поиском */
 export function Watchlist({ onRemove }: WatchlistProps) {
   const { instruments, selectedTicker, selectTicker, toggleFavorite, status } = useMarketStore()
   const [query, setQuery] = useState('')
+  const [tab, setTab] = useState<AssetType | 'all'>('all')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const list = q
-      ? instruments.filter((i) => i.ticker.toLowerCase().includes(q) || i.name.toLowerCase().includes(q))
-      : instruments
+    let list = tab === 'all' ? instruments : instruments.filter((i) => i.assetType === tab)
+    if (q) list = list.filter((i) => i.ticker.toLowerCase().includes(q) || i.name.toLowerCase().includes(q))
     return [...list].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
-  }, [instruments, query])
+  }, [instruments, query, tab])
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: instruments.length }
+    for (const i of instruments) c[i.assetType] = (c[i.assetType] ?? 0) + 1
+    return c
+  }, [instruments])
 
   return (
     <Panel
-      title={`Инструменты МосБиржи${instruments.length ? ` · ${instruments.length}` : ''}`}
+      title="Инструменты МосБиржи"
       noPadding
       draggable={!!onRemove}
       onRemove={onRemove}
@@ -98,6 +114,21 @@ export function Watchlist({ onRemove }: WatchlistProps) {
         </div>
       }
     >
+      <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border-subtle px-2 py-1.5">
+        {TABS.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => setTab(t.value)}
+            className={`shrink-0 whitespace-nowrap rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+              tab === t.value ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
+            }`}
+          >
+            {t.label}
+            {counts[t.value] ? <span className="ml-1 opacity-70">{counts[t.value]}</span> : null}
+          </button>
+        ))}
+      </div>
+
       {status === 'loading' && instruments.length === 0 ? (
         <div className="p-3">
           <SkeletonRows rows={10} />

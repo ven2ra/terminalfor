@@ -6,8 +6,14 @@ import {
   getLastTrades as getTinvestLastTrades,
 } from './tinvest.js'
 import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
+import { registerInstrument, getInstrumentMeta } from './instrumentRegistry.js'
+import { getBonds } from './bonds.js'
+import { getFutures } from './futures.js'
 
 const BOARD = 'TQBR' // основной режим торгов акциями на МосБирже
+// Коды SECTYPE ISS, соответствующие фондам (ETF/ПИФ) — торгуются на той же
+// доске TQBR вперемешку с обычными акциями, отличаются только этим полем
+const FUND_SECTYPES = new Set(['9', 'J', 'B', 'A'])
 
 /** Единый безопасный тикер: только латиница/цифры, защищает from path-инъекций в апстрим-URL */
 export function isValidTicker(ticker) {
@@ -18,7 +24,7 @@ export function isValidTicker(ticker) {
 async function loadSecurities() {
   const url =
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities.json` +
-    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVLEGALCLOSEPRICE,PREVPRICE` +
+    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVLEGALCLOSEPRICE,PREVPRICE,SECTYPE` +
     `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME,HIGH,LOW`
 
   const json = await fetchJson(url)
@@ -43,6 +49,8 @@ async function loadSecurities() {
         isin: s.ISIN ?? null,
         exchange: 'MOEX',
         currency: 'RUB',
+        assetType: FUND_SECTYPES.has(s.SECTYPE) ? 'fund' : 'share',
+        priceUnit: 'currency',
         lotSize: s.LOTSIZE ?? 1,
         lastPrice,
         change,
@@ -82,11 +90,35 @@ async function loadSecurities() {
     }
   }
 
+  for (const inst of instruments) {
+    registerInstrument(inst.ticker, { engine: 'stock', market: 'shares', board: BOARD, assetType: inst.assetType })
+  }
+
   return instruments
 }
 
+/** Акции + фонды (доска TQBR) — быстрый список, как было раньше */
 export function getSecurities() {
   return cached('securities', 1200, loadSecurities)
+}
+
+/**
+ * Облигации + фьючерсы — отдельно от getSecurities(): облигации (TQCB —
+ * 3000+ бумаг) занимают у ISS секунды на один запрос, и это не должно
+ * задерживать первую отрисовку основного списка акций.
+ */
+export async function getExtraSecurities() {
+  const [bonds, futures] = await Promise.all([
+    getBonds().catch((err) => {
+      console.error('bonds error:', err.message)
+      return []
+    }),
+    getFutures().catch((err) => {
+      console.error('futures error:', err.message)
+      return []
+    }),
+  ])
+  return [...bonds, ...futures]
 }
 
 const INTERVALS = new Set([1, 10, 60, 24, 7, 31])
@@ -130,8 +162,9 @@ async function loadCandles(ticker, interval) {
   from.setUTCDate(from.getUTCDate() - fromDaysBack)
   const fmt = (d) => d.toISOString().slice(0, 10)
 
+  const { engine, market, board } = getInstrumentMeta(ticker)
   const baseUrl =
-    `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities/${ticker}/candles.json` +
+    `${ISS_BASE}/engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}/candles.json` +
     `?interval=${interval}&from=${fmt(from)}&till=${fmt(till)}&iss.meta=off`
 
   const rows = []
@@ -193,12 +226,13 @@ async function loadOlderCandles(ticker, interval, beforeSec) {
   const windowDays = MINUTE_INTERVALS.has(interval) ? (OLDER_WINDOW_DAYS[interval] ?? 5) : 365 * 5
   let till = new Date(beforeSec * 1000)
   const fmt = (d) => d.toISOString().slice(0, 10)
+  const { engine, market, board } = getInstrumentMeta(ticker)
 
   for (let attempt = 0; attempt < OLDER_MAX_WIDEN_ATTEMPTS; attempt++) {
     const from = new Date(till)
     from.setUTCDate(from.getUTCDate() - windowDays * (attempt + 1))
     const baseUrl =
-      `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities/${ticker}/candles.json` +
+      `${ISS_BASE}/engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}/candles.json` +
       `?interval=${interval}&from=${fmt(from)}&till=${fmt(till)}&iss.meta=off`
 
     const rows = []
@@ -245,7 +279,8 @@ export function getOlderCandles(ticker, interval, beforeSec) {
 
 /** Лента последних сделок по бумаге */
 async function loadTrades(ticker) {
-  const url = `${ISS_BASE}/engines/stock/markets/shares/securities/${ticker}/trades.json?iss.meta=off&trades.columns=TRADENO,TRADETIME,PRICE,QUANTITY,BUYSELL`
+  const { engine, market } = getInstrumentMeta(ticker)
+  const url = `${ISS_BASE}/engines/${engine}/markets/${market}/securities/${ticker}/trades.json?iss.meta=off&trades.columns=TRADENO,TRADETIME,PRICE,QUANTITY,BUYSELL`
   const json = await fetchJson(url)
   const rows = rowsToObjects(json.trades)
   return rows

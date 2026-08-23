@@ -3,6 +3,7 @@ import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 
 const SECURITIES_POLL_MS = 1500
+const EXTRA_SECURITIES_POLL_MS = 20000 // облигации/фьючерсы обновляются реже — список тяжёлый для ISS
 const BOOK_AND_TRADES_POLL_MS = 1500
 
 /**
@@ -11,7 +12,7 @@ const BOOK_AND_TRADES_POLL_MS = 1500
  * а также переоценивает портфель по актуальным ценам.
  */
 export function useMarketFeed() {
-  const { loadSecurities, refreshOrderBook, loadTrades, instruments } = useMarketStore()
+  const { loadSecurities, loadExtraSecurities, refreshOrderBook, loadTrades, instruments } = useMarketStore()
   const { revalue } = usePortfolioStore()
 
   useEffect(() => {
@@ -19,6 +20,13 @@ export function useMarketFeed() {
     const interval = setInterval(loadSecurities, SECURITIES_POLL_MS)
     return () => clearInterval(interval)
   }, [loadSecurities])
+
+  useEffect(() => {
+    // Не блокирует первую отрисовку основного списка акций — подтягивается следом
+    loadExtraSecurities()
+    const interval = setInterval(loadExtraSecurities, EXTRA_SECURITIES_POLL_MS)
+    return () => clearInterval(interval)
+  }, [loadExtraSecurities])
 
   useEffect(() => {
     const interval = setInterval(() => {

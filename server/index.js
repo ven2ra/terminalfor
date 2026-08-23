@@ -1,6 +1,6 @@
 import './proxy.js'
 import express from 'express'
-import { getSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
+import { getSecurities, getExtraSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
@@ -15,6 +15,17 @@ app.get('/api/securities', async (_req, res) => {
     res.json(await getSecurities())
   } catch (err) {
     console.error('securities error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+// Облигации + фьючерсы отдельно от акций — не задерживают первую отрисовку
+// основного списка (TQCB — 3000+ бумаг, запрос к ISS занимает секунды)
+app.get('/api/securities/extra', async (_req, res) => {
+  try {
+    res.json(await getExtraSecurities())
+  } catch (err) {
+    console.error('extra securities error:', err.message)
     res.status(502).json({ error: 'moex_unavailable' })
   }
 })

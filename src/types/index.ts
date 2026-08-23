@@ -5,12 +5,17 @@ export type ThemeMode = 'dark' | 'light'
 /** Раздел терминала, выбранный в верхней навигации */
 export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports'
 
+export type AssetType = 'share' | 'fund' | 'bond' | 'future'
+
 export interface Instrument {
   ticker: string
   name: string
   isin: string | null
   exchange: string
   currency: string
+  assetType: AssetType
+  /** Облигации котируются в % от номинала, а не в валюте */
+  priceUnit: 'currency' | 'percent'
   lotSize: number
   lastPrice: number
   change: number

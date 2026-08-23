@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { Instrument, OrderBookData, Trade } from '@/types'
-import { fetchSecurities, fetchTrades, SecurityDto } from '@/api/client'
+import { fetchExtraSecurities, fetchSecurities, fetchTrades, SecurityDto } from '@/api/client'
 import { synthesizeOrderBook } from '@/mock/orderbook'
 import { isWeekendSessionOpen } from '@/lib/tradingHours'
 
@@ -13,6 +13,8 @@ function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Inst
     isin: dto.isin,
     exchange: dto.exchange,
     currency: dto.currency,
+    assetType: dto.assetType,
+    priceUnit: dto.priceUnit,
     lotSize: dto.lotSize,
     lastPrice: dto.lastPrice,
     change: dto.change,
@@ -36,6 +38,7 @@ interface MarketState {
   trades: Trade[]
   status: 'loading' | 'ready' | 'error'
   loadSecurities: () => Promise<void>
+  loadExtraSecurities: () => Promise<void>
   refreshOrderBook: () => void
   loadTrades: () => Promise<void>
   selectTicker: (ticker: string) => void
@@ -58,13 +61,26 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     try {
       const dtos = await fetchSecurities()
       const prevByTicker = new Map(get().instruments.map((i) => [i.ticker, i.isFavorite]))
-      const instruments = dtos.map((dto) =>
-        toInstrument(dto, prevByTicker.get(dto.ticker) ?? DEFAULT_FAVORITES.has(dto.ticker))
-      )
-      set({ instruments, status: 'ready' })
+      const fresh = dtos.map((dto) => toInstrument(dto, prevByTicker.get(dto.ticker) ?? DEFAULT_FAVORITES.has(dto.ticker)))
+      // Акции/фонды заменяем целиком, а ранее подгруженные облигации/фьючерсы
+      // (из loadExtraSecurities) сохраняем — у них свой, более редкий опрос
+      const extra = get().instruments.filter((i) => i.assetType === 'bond' || i.assetType === 'future')
+      set({ instruments: [...fresh, ...extra], status: 'ready' })
       get().refreshOrderBook()
     } catch {
       set({ status: 'error' })
+    }
+  },
+
+  loadExtraSecurities: async () => {
+    try {
+      const dtos = await fetchExtraSecurities()
+      const prevByTicker = new Map(get().instruments.map((i) => [i.ticker, i.isFavorite]))
+      const extra = dtos.map((dto) => toInstrument(dto, prevByTicker.get(dto.ticker)))
+      const rest = get().instruments.filter((i) => i.assetType !== 'bond' && i.assetType !== 'future')
+      set({ instruments: [...rest, ...extra] })
+    } catch {
+      // сеть моргнула — оставляем то, что уже загружено (или пусто, если ещё не грузилось)
     }
   },
 

@@ -1,4 +1,4 @@
-import { Candle, NewsItem, Trade } from '@/types'
+import { AssetType, Candle, NewsItem, Trade } from '@/types'
 
 /** Сырые данные инструмента, приходящие с бэкенда (MOEX ISS) */
 export interface SecurityDto {
@@ -7,6 +7,8 @@ export interface SecurityDto {
   isin: string | null
   exchange: string
   currency: string
+  assetType: AssetType
+  priceUnit: 'currency' | 'percent'
   lotSize: number
   lastPrice: number
   change: number
@@ -28,6 +30,11 @@ async function getJson<T>(url: string): Promise<T> {
 
 export function fetchSecurities(): Promise<SecurityDto[]> {
   return getJson('/api/securities')
+}
+
+/** Облигации + фьючерсы — грузятся отдельно от акций, дольше (не блокируют первую отрисовку) */
+export function fetchExtraSecurities(): Promise<SecurityDto[]> {
+  return getJson('/api/securities/extra')
 }
 
 /** Коды таймфреймов, поддерживаемые MOEX ISS: 1/10/60 мин, 24 — день, 7 — неделя, 31 — месяц */

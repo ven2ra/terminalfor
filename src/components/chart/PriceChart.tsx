@@ -262,11 +262,13 @@ export function PriceChart({
               }`}
             >
               {instrument ? formatPrice(instrument.lastPrice) : '—'}
+              {instrument?.priceUnit === 'percent' ? '%' : ''}
             </span>
             {instrument && (
               <span className={`font-tabular text-sm font-semibold ${positive ? 'text-buy' : 'text-sell'}`}>
                 {positive ? '+' : ''}
-                {formatPrice(instrument.change)} ({formatPercent(instrument.changePercent)})
+                {formatPrice(instrument.change)}
+                {instrument.priceUnit === 'percent' ? '%' : ''} ({formatPercent(instrument.changePercent)})
               </span>
             )}
           </div>
