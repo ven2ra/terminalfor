@@ -75,6 +75,28 @@
   border-color: var(--border-color);
 }
 
+/* Фирменный focus-ring — там, где компонент не переопределяет фокус явно
+   (напр. focus:border-accent на инпутах), клавиатурная навигация всё равно
+   получает видимую рамку в акцентном цвете, а не браузерный синий по умолчанию */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Уважаем prefers-reduced-motion: анимации (вспышки цены, бегущая строка
+   тикеров, появление строк сделок, скелетоны) сворачиваются до мгновенных —
+   контент остаётся, лишнее движение убирается */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 html,
 body,
 #root {
