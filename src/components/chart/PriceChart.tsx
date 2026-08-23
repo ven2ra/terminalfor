@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   CandlestickData,
   CandlestickSeries,
@@ -11,7 +12,7 @@ import {
   LineSeries,
   createChart,
 } from 'lightweight-charts'
-import { BarChart3, Maximize2, TrendingUp, Waves, Activity, Minus as MinusIcon } from 'lucide-react'
+import { BarChart3, Maximize2, TrendingUp, Waves, Activity, Minus as MinusIcon, Expand, Shrink } from 'lucide-react'
 import { Candle } from '@/types'
 import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
@@ -22,6 +23,7 @@ import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA, calcBollinger, calcVWAP } from '@/lib/indicators'
 import { calcSupportResistance } from '@/lib/levels'
 import { useAlertsStore } from '@/store/useAlertsStore'
+import { ChartSkeleton } from '@/components/chart/ChartSkeleton'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -85,6 +87,7 @@ export function PriceChart({
   const [showVWAP, setShowVWAP] = useState(false)
   const [showLevels, setShowLevels] = useState(false)
   const [alertFlash, setAlertFlash] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
@@ -351,6 +354,16 @@ export function PriceChart({
     }
   }, [candles, showLevels])
 
+  // Выход из полноэкранного режима по Escape
+  useEffect(() => {
+    if (!isFullscreen) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [isFullscreen])
+
   const positive = (instrument?.change ?? 0) >= 0
   // Официальные HIGH/LOW сессии с биржи — не считаем сами по загруженным
   // свечам: там из-за бесконечной подгрузки истории может быть много дней,
@@ -358,8 +371,8 @@ export function PriceChart({
   const dayHigh = instrument?.dayHigh ?? null
   const dayLow = instrument?.dayLow ?? null
 
-  return (
-    <div className="flex h-full flex-col bg-bg-panel">
+  const chartContent = (
+    <div className={`flex h-full flex-col bg-bg-panel ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
       <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-border-subtle px-4 py-2.5">
         <div>
           <div className="flex items-center gap-2">
@@ -478,15 +491,18 @@ export function PriceChart({
           >
             <Maximize2 size={13} />
           </button>
+          <button
+            onClick={() => setIsFullscreen((v) => !v)}
+            title={isFullscreen ? 'Свернуть (Esc)' : 'На весь экран'}
+            className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover"
+          >
+            {isFullscreen ? <Shrink size={13} /> : <Expand size={13} />}
+          </button>
         </div>
       </div>
 
       <div className="relative min-h-0 flex-1">
-        {loading && candles.length === 0 && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg-panel/70 text-sm text-text-muted">
-            Загрузка котировок с МосБиржи…
-          </div>
-        )}
+        {loading && candles.length === 0 && <ChartSkeleton />}
         {loadingMore && (
           <div className="absolute left-2 top-2 z-10 rounded bg-bg-elevated/90 px-2 py-1 text-[11px] text-text-muted">
             Загрузка истории…
@@ -501,4 +517,6 @@ export function PriceChart({
       </div>
     </div>
   )
+
+  return isFullscreen ? createPortal(chartContent, document.body) : chartContent
 }
