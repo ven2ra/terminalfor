@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Candle } from '@/types'
 import { CandleInterval, fetchCandles } from '@/api/client'
 
-const POLL_MS = 5000
+const POLL_MS = 8000
 
 /** Загружает реальные свечи с МосБиржи для инструмента/таймфрейма и периодически обновляет хвост ряда */
 export function useLiveCandles(ticker: string, interval: CandleInterval) {

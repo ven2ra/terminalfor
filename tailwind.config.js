@@ -46,6 +46,14 @@ export default {
           '0%': { backgroundColor: 'var(--flash-color)' },
           '100%': { backgroundColor: 'transparent' },
         },
+        'flash-up': {
+          '0%': { backgroundColor: 'var(--buy-bg)', color: 'var(--buy)' },
+          '100%': { backgroundColor: 'transparent' },
+        },
+        'flash-down': {
+          '0%': { backgroundColor: 'var(--sell-bg)', color: 'var(--sell)' },
+          '100%': { backgroundColor: 'transparent' },
+        },
         shimmer: {
           '0%': { backgroundPosition: '-400px 0' },
           '100%': { backgroundPosition: '400px 0' },
@@ -53,6 +61,8 @@ export default {
       },
       animation: {
         flash: 'flash 0.6s ease-out',
+        'flash-up': 'flash-up 0.7s ease-out',
+        'flash-down': 'flash-down 0.7s ease-out',
         shimmer: 'shimmer 1.4s infinite linear',
       },
     },

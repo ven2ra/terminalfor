@@ -16,6 +16,7 @@ import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useThemeStore } from '@/store/useThemeStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
+import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA } from '@/lib/indicators'
 import { formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -46,6 +47,7 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
   const [showVolume, setShowVolume] = useState(true)
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
+  const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
 
   // Создание графика один раз при монтировании
   useEffect(() => {
@@ -169,7 +171,11 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-tabular text-2xl font-bold text-text-primary">
+            <span
+              className={`rounded font-tabular text-2xl font-bold text-text-primary ${
+                priceFlash === 'up' ? 'animate-flash-up' : priceFlash === 'down' ? 'animate-flash-down' : ''
+              }`}
+            >
               {instrument ? formatPrice(instrument.lastPrice) : '—'}
             </span>
             {instrument && (

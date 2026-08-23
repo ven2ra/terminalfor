@@ -2,8 +2,8 @@ import { useEffect } from 'react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 
-const SECURITIES_POLL_MS = 4000
-const BOOK_AND_TRADES_POLL_MS = 2500
+const SECURITIES_POLL_MS = 1500
+const BOOK_AND_TRADES_POLL_MS = 1500
 
 /**
  * Опрашивает бэкенд (который в свою очередь кэширует MOEX ISS) за живыми

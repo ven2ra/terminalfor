@@ -2,6 +2,7 @@ import { useMarketStore } from '@/store/useMarketStore'
 import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { Panel } from '@/components/common/Panel'
 import { OrderBookDepthChart } from './OrderBookDepthChart'
+import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { formatPrice } from '@/lib/format'
 
 interface OrderBookProps {
@@ -13,6 +14,7 @@ export function OrderBook({ onRemove }: OrderBookProps) {
   const { orderBook, instruments, selectedTicker } = useMarketStore()
   const { setDraftFromBook } = useOrderDraftStore()
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
+  const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
 
   const maxTotal = Math.max(
     orderBook.bids[orderBook.bids.length - 1]?.total ?? 1,
@@ -54,7 +56,11 @@ export function OrderBook({ onRemove }: OrderBookProps) {
         </div>
 
         <div className="shrink-0 border-y border-border-subtle bg-bg-elevated px-3 py-2 text-center">
-          <span className="font-tabular text-base font-bold text-text-primary">
+          <span
+            className={`rounded font-tabular text-base font-bold text-text-primary ${
+              priceFlash === 'up' ? 'animate-flash-up' : priceFlash === 'down' ? 'animate-flash-down' : ''
+            }`}
+          >
             {instrument ? formatPrice(instrument.lastPrice) : '—'}
           </span>
         </div>

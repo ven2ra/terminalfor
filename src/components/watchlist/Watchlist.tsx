@@ -4,10 +4,67 @@ import { useMarketStore } from '@/store/useMarketStore'
 import { Panel } from '@/components/common/Panel'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
+import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { formatPercent, formatPrice } from '@/lib/format'
+import { Instrument } from '@/types'
 
 interface WatchlistProps {
   onRemove?: () => void
+}
+
+interface RowProps {
+  inst: Instrument
+  active: boolean
+  onSelect: () => void
+  onToggleFavorite: () => void
+}
+
+/** Отдельный компонент строки — usePriceFlash обязан жить в собственном инстансе на каждый тикер */
+function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
+  const positive = inst.change >= 0
+  const priceFlash = usePriceFlash(inst.lastPrice)
+
+  return (
+    <button
+      onClick={onSelect}
+      className={`group flex items-center gap-2 border-b border-border-subtle px-3 py-2 text-left transition-colors ${
+        active ? 'bg-bg-hover' : 'hover:bg-bg-hover'
+      }`}
+    >
+      <span
+        role="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggleFavorite()
+        }}
+        className="shrink-0"
+      >
+        <Star
+          size={14}
+          className={inst.isFavorite ? 'fill-accent text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100'}
+        />
+      </span>
+      <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-text-primary">{inst.ticker}</span>
+          <span
+            className={`rounded font-tabular text-sm text-text-primary ${
+              priceFlash === 'up' ? 'animate-flash-up' : priceFlash === 'down' ? 'animate-flash-down' : ''
+            }`}
+          >
+            {formatPrice(inst.lastPrice)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="truncate text-xs text-text-muted">{inst.name}</span>
+          <span className={`font-tabular text-xs ${positive ? 'text-buy' : 'text-sell'}`}>
+            {formatPercent(inst.changePercent)}
+          </span>
+        </div>
+      </div>
+    </button>
+  )
 }
 
 /** Список инструментов слева: весь основной режим торгов МосБиржи (TQBR), поиск, избранное */
@@ -47,46 +104,15 @@ export function Watchlist({ onRemove }: WatchlistProps) {
         </div>
       ) : (
         <div className="flex flex-col">
-          {filtered.map((inst) => {
-            const positive = inst.change >= 0
-            const active = inst.ticker === selectedTicker
-            return (
-              <button
-                key={inst.ticker}
-                onClick={() => selectTicker(inst.ticker)}
-                className={`group flex items-center gap-2 border-b border-border-subtle px-3 py-2 text-left transition-colors ${
-                  active ? 'bg-bg-hover' : 'hover:bg-bg-hover'
-                }`}
-              >
-                <span
-                  role="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleFavorite(inst.ticker)
-                  }}
-                  className="shrink-0"
-                >
-                  <Star
-                    size={14}
-                    className={inst.isFavorite ? 'fill-accent text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100'}
-                  />
-                </span>
-                <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-text-primary">{inst.ticker}</span>
-                    <span className="font-tabular text-sm text-text-primary">{formatPrice(inst.lastPrice)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="truncate text-xs text-text-muted">{inst.name}</span>
-                    <span className={`font-tabular text-xs ${positive ? 'text-buy' : 'text-sell'}`}>
-                      {formatPercent(inst.changePercent)}
-                    </span>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
+          {filtered.map((inst) => (
+            <WatchlistRow
+              key={inst.ticker}
+              inst={inst}
+              active={inst.ticker === selectedTicker}
+              onSelect={() => selectTicker(inst.ticker)}
+              onToggleFavorite={() => toggleFavorite(inst.ticker)}
+            />
+          ))}
           {filtered.length === 0 && (
             <div className="p-4 text-center text-xs text-text-muted">Ничего не найдено</div>
           )}
