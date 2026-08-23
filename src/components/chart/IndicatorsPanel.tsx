@@ -3,6 +3,7 @@ import { AreaSeries, ColorType, IChartApi, ISeriesApi, LineData, createChart } f
 import { Candle } from '@/types'
 import { calcRSI } from '@/lib/indicators'
 import { useThemeStore } from '@/store/useThemeStore'
+import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 
 function readCssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -25,7 +26,8 @@ export function IndicatorsPanel({ candles }: IndicatorsPanelProps) {
       layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: readCssVar('--text-secondary'), fontSize: 11 },
       grid: { vertLines: { color: readCssVar('--border-subtle') }, horzLines: { color: readCssVar('--border-subtle') } },
       rightPriceScale: { borderColor: readCssVar('--border-color') },
-      timeScale: { borderColor: readCssVar('--border-color'), timeVisible: true, secondsVisible: false },
+      timeScale: { borderColor: readCssVar('--border-color'), timeVisible: true, secondsVisible: false, tickMarkFormatter },
+      localization: { timeFormatter: crosshairTimeFormatter },
       autoSize: true,
     })
 

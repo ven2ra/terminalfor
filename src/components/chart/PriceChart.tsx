@@ -18,6 +18,7 @@ import { useThemeStore } from '@/store/useThemeStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA } from '@/lib/indicators'
+import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 import { formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
 
@@ -66,7 +67,13 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
       },
       crosshair: { mode: 0 },
       rightPriceScale: { borderColor: readCssVar('--border-color') },
-      timeScale: { borderColor: readCssVar('--border-color'), timeVisible: true, secondsVisible: false },
+      timeScale: {
+        borderColor: readCssVar('--border-color'),
+        timeVisible: true,
+        secondsVisible: false,
+        tickMarkFormatter,
+      },
+      localization: { timeFormatter: crosshairTimeFormatter },
       autoSize: true,
     })
 

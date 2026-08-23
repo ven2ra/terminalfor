@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Candle } from '@/types'
 import { CandleInterval, fetchCandles } from '@/api/client'
 
-const POLL_MS = 8000
+const INTRADAY_POLL_MS = 8000
+const DAILY_PLUS_POLL_MS = 60000
 
 /** Загружает реальные свечи с МосБиржи для инструмента/таймфрейма и периодически обновляет хвост ряда */
 export function useLiveCandles(ticker: string, interval: CandleInterval) {
@@ -26,7 +27,8 @@ export function useLiveCandles(ticker: string, interval: CandleInterval) {
     }
 
     load()
-    const poll = setInterval(load, POLL_MS)
+    const pollMs = interval <= 60 ? INTRADAY_POLL_MS : DAILY_PLUS_POLL_MS
+    const poll = setInterval(load, pollMs)
     return () => {
       cancelled = true
       clearInterval(poll)

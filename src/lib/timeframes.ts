@@ -7,4 +7,5 @@ export const TIMEFRAMES: Array<{ label: string; interval: CandleInterval }> = [
   { label: '1ч', interval: 60 },
   { label: '1д', interval: 24 },
   { label: '1н', interval: 7 },
+  { label: '1мес', interval: 31 },
 ]

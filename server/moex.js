@@ -78,49 +78,56 @@ export function getSecurities() {
 }
 
 const INTERVALS = new Set([1, 10, 60, 24, 7, 31])
+// Коды интервалов MOEX ISS не числовые по величине минут: 1/10/60 — реально
+// минуты, а 24/7/31 — это "код" дня/недели/месяца, а не "24 минуты" и т.п.
+const MINUTE_INTERVALS = new Set([1, 10, 60])
 const PAGE_SIZE = 500
-const MAX_PAGES = 10
-const KEEP_LAST = 500
 
 /**
- * Свечи по бумаге за последнюю торговую сессию (для интрадей) либо за год
- * (для дневных/недельных). MOEX ISS отдаёт не больше 500 строк за запрос,
- * считая от начала запрошенного диапазона — при широком окне (нужно, чтобы
- * перекрыть выходные/праздники) это утыкается в самое старое, а не в
- * актуальное время. Поэтому досылаем страницы через `start=`, пока не
- * дойдём до конца доступных данных, и оставляем только свежий хвост.
+ * Интрадей — глубина/лимит страниц под "последние торговые сессии" (нужно
+ * только перекрыть выходные), дневные/недельные/месячные — под всю историю
+ * бумаги с торгов (MOEX ISS не отдаёт данные раньше конца 2000-х).
+ */
+function candleWindow(interval) {
+  const intraday = MINUTE_INTERVALS.has(interval)
+  return {
+    intraday,
+    fromYearsBack: intraday ? 0 : 30,
+    fromDaysBack: intraday ? 5 : 0, // с запасом на длинные выходные/праздники
+    maxPages: intraday ? 10 : 16, // 16×500 ≈ 8000 дневных баров — с запасом на 30+ лет истории
+    keepLast: intraday ? 500 : 8000,
+  }
+}
+
+/**
+ * Свечи по бумаге. MOEX ISS отдаёт не больше 500 строк за запрос, считая от
+ * начала запрошенного диапазона — при широком окне (год-десятилетия для
+ * дневных, либо просто чтобы перекрыть выходные для интрадей) это утыкается
+ * в самое старое, а не в актуальное. Поэтому досылаем страницы через
+ * `start=` параллельно, пока не выберем всё доступное.
  */
 async function loadCandles(ticker, interval) {
+  const { fromYearsBack, fromDaysBack, maxPages, keepLast } = candleWindow(interval)
   const till = new Date()
   const from = new Date(till)
-  const intraday = interval <= 60
-  if (intraday) {
-    from.setUTCDate(from.getUTCDate() - 5) // с запасом на длинные выходные/праздники
-  } else {
-    from.setUTCFullYear(from.getUTCFullYear() - 1)
-  }
+  from.setUTCFullYear(from.getUTCFullYear() - fromYearsBack)
+  from.setUTCDate(from.getUTCDate() - fromDaysBack)
   const fmt = (d) => d.toISOString().slice(0, 10)
 
   const baseUrl =
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities/${ticker}/candles.json` +
     `?interval=${interval}&from=${fmt(from)}&till=${fmt(till)}&iss.meta=off`
 
-  let rows
-  if (intraday) {
-    // Страницы независимы друг от друга — забираем все параллельно, а не по одной.
-    // Если отдельная страница не задалась даже с ретраем — просто пропускаем её
-    // (в свежем хвосте останется небольшой пробел), а не роняем весь ответ.
-    const pages = await Promise.allSettled(
-      Array.from({ length: MAX_PAGES }, (_, page) => fetchJson(`${baseUrl}&start=${page * PAGE_SIZE}`))
-    )
-    rows = pages.filter((p) => p.status === 'fulfilled').flatMap((p) => rowsToObjects(p.value.candles))
-  } else {
-    // Дневные/недельные/месячные свечи за год всегда укладываются в одну страницу
-    rows = rowsToObjects((await fetchJson(baseUrl)).candles)
-  }
+  // Страницы независимы друг от друга — забираем все параллельно, а не по одной.
+  // Если отдельная страница не задалась даже с ретраем — просто пропускаем её
+  // (в ряду останется небольшой пробел), а не роняем весь ответ.
+  const pages = await Promise.allSettled(
+    Array.from({ length: maxPages }, (_, page) => fetchJson(`${baseUrl}&start=${page * PAGE_SIZE}`))
+  )
+  const rows = pages.filter((p) => p.status === 'fulfilled').flatMap((p) => rowsToObjects(p.value.candles))
 
   // Время МосБиржи в ISS приходит в MSK (UTC+3) без указания зоны
-  return rows.slice(-KEEP_LAST).map((r) => ({
+  return rows.slice(-keepLast).map((r) => ({
     time: Math.floor(new Date(`${r.begin.replace(' ', 'T')}+03:00`).getTime() / 1000),
     open: r.open,
     high: r.high,
@@ -133,7 +140,11 @@ async function loadCandles(ticker, interval) {
 export function getCandles(ticker, interval) {
   if (!isValidTicker(ticker)) throw new Error('invalid ticker')
   if (!INTERVALS.has(interval)) throw new Error('invalid interval')
-  return cached(`candles:${ticker}:${interval}`, 8000, () => loadCandles(ticker, interval))
+  // Дневные+ бары не нужно перепроверять каждые несколько секунд — там
+  // меняется максимум текущий незакрытый бар, а сам запрос тяжёлый (до 16
+  // страниц на всю историю)
+  const ttl = interval <= 60 ? 8000 : 60000
+  return cached(`candles:${ticker}:${interval}`, ttl, () => loadCandles(ticker, interval))
 }
 
 /** Лента последних сделок по бумаге */
