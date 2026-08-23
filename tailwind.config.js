@@ -3,6 +3,21 @@ export default {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
+    // Заменяем весь масштаб скруглений (не extend — именно замена): вместо
+    // мягких SaaS-карточек — почти прямые углы приборной панели. rounded-full
+    // остаётся для аватаров/точек-индикаторов, всё остальное становится
+    // технически строгим одним центральным изменением, без правки компонентов
+    borderRadius: {
+      none: '0px',
+      sm: '1px',
+      DEFAULT: '2px',
+      md: '2px',
+      lg: '3px',
+      xl: '4px',
+      '2xl': '5px',
+      '3xl': '6px',
+      full: '9999px',
+    },
     extend: {
       fontFamily: {
         sans: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],

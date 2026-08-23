@@ -10,13 +10,15 @@
    ========================================================================== */
 :root,
 [data-theme='dark'] {
-  --bg-base: #0f111a;
-  --bg-panel: #161922;
-  --bg-elevated: #1a1d28;
-  --bg-hover: #1e2330;
+  /* Более глубокий, почти OLED-чёрный с холодным подтоном — премиальнее и
+     контрастнее типового "тёмно-серого" SaaS-фона, ближе к языку приборной панели */
+  --bg-base: #06070c;
+  --bg-panel: #0b0e16;
+  --bg-elevated: #10141f;
+  --bg-hover: #161b28;
 
-  --border-color: #2a2d3a;
-  --border-subtle: #1e2330;
+  --border-color: #242938;
+  --border-subtle: #161b26;
 
   --text-primary: #ffffff;
   --text-secondary: #8e96a8;
@@ -155,30 +157,32 @@ body {
   animation: shimmer 1.4s infinite linear;
 }
 
-/* Фирменный "уголковый" мотив панелей — тонкие HUD-засечки по верхним углам,
-   а не типовая карточка с ровной рамкой и тенью, как у любого другого дашборда */
+/* Фирменный "уголковый" мотив панелей — все четыре угла обрамлены тонкими
+   HUD-засечками (background-image, не border/pseudo — так помещаются все 4
+   сразу без конфликта с bg-*-цветом самой панели), а не типовая карточка
+   с ровной рамкой и тенью, как у любого другого дашборда */
 .panel-frame {
   position: relative;
-}
-.panel-frame::before,
-.panel-frame::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  border-top: 2px solid var(--accent);
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 1;
-}
-.panel-frame::before {
-  left: 0;
-  border-left: 2px solid var(--accent);
-}
-.panel-frame::after {
-  right: 0;
-  border-right: 2px solid var(--accent);
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
+    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85));
+  background-size:
+    10px 2px, 2px 10px,
+    10px 2px, 2px 10px,
+    10px 2px, 2px 10px,
+    10px 2px, 2px 10px;
+  background-position:
+    top left, top left,
+    top right, top right,
+    bottom left, bottom left,
+    bottom right, bottom right;
 }
 
 /* Библиотека resizable-панелей рисует свой сплиттер — стилизуем под тему */
