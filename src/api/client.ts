@@ -35,6 +35,11 @@ export function fetchCandles(ticker: string, interval: CandleInterval): Promise<
   return getJson(`/api/candles/${encodeURIComponent(ticker)}?interval=${interval}`)
 }
 
+/** Довыгружает бары старше указанного времени (unix-секунды) — для подгрузки истории при прокрутке графика влево */
+export function fetchOlderCandles(ticker: string, interval: CandleInterval, beforeSec: number): Promise<Candle[]> {
+  return getJson(`/api/candles/${encodeURIComponent(ticker)}/older?interval=${interval}&before=${beforeSec}`)
+}
+
 export function fetchTrades(ticker: string): Promise<Trade[]> {
   return getJson(`/api/trades/${encodeURIComponent(ticker)}`)
 }

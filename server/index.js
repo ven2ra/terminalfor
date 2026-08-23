@@ -1,6 +1,6 @@
 import './proxy.js'
 import express from 'express'
-import { getSecurities, getCandles, getTrades, isValidTicker } from './moex.js'
+import { getSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'
 
 const app = express()
@@ -25,6 +25,21 @@ app.get('/api/candles/:ticker', async (req, res) => {
     res.json(await getCandles(ticker, interval))
   } catch (err) {
     console.error('candles error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+// Довыгрузка более старых баров при прокрутке графика влево (бесконечная история)
+app.get('/api/candles/:ticker/older', async (req, res) => {
+  const ticker = req.params.ticker.toUpperCase()
+  const interval = Number(req.query.interval ?? 1)
+  const before = Number(req.query.before)
+  if (!isValidTicker(ticker)) return res.status(400).json({ error: 'invalid_ticker' })
+  if (!Number.isFinite(before)) return res.status(400).json({ error: 'invalid_before' })
+  try {
+    res.json(await getOlderCandles(ticker, interval, before))
+  } catch (err) {
+    console.error('older candles error:', err.message)
     res.status(502).json({ error: 'moex_unavailable' })
   }
 })

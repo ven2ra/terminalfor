@@ -31,10 +31,21 @@ interface PriceChartProps {
   loading: boolean
   timeframe: { label: string; interval: CandleInterval }
   onTimeframeChange: (tf: { label: string; interval: CandleInterval }) => void
+  onLoadOlder?: () => void
+  loadingMore?: boolean
+  hasMore?: boolean
 }
 
 /** Главный свечной график с MA-индикаторами и гистограммой объёмов — реальные данные МосБиржи */
-export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: PriceChartProps) {
+export function PriceChart({
+  candles,
+  loading,
+  timeframe,
+  onTimeframeChange,
+  onLoadOlder,
+  loadingMore,
+  hasMore,
+}: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
@@ -44,6 +55,17 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
   // Ключ (тикер+таймфрейм), на который масштаб уже подгонялся — чтобы не
   // сбрасывать зум/скролл пользователя при каждом периодическом обновлении данных
   const fittedKeyRef = useRef<string>('')
+  // Предыдущий массив свечей — чтобы отличить довыгрузку старой истории
+  // (бары добавились СПЕРЕДИ) от обычного периодического опроса
+  const prevCandlesRef = useRef<Candle[]>([])
+  // Актуальные колбэки/флаги подгрузки истории для обработчика скролла,
+  // который подписывается на chart один раз при монтировании
+  const onLoadOlderRef = useRef(onLoadOlder)
+  const loadingMoreRef = useRef(loadingMore)
+  const hasMoreRef = useRef(hasMore)
+  onLoadOlderRef.current = onLoadOlder
+  loadingMoreRef.current = loadingMore
+  hasMoreRef.current = hasMore
 
   const { instruments, selectedTicker } = useMarketStore()
   const { theme } = useThemeStore()
@@ -104,7 +126,17 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     ma20SeriesRef.current = ma20
     ma50SeriesRef.current = ma50
 
+    // Довыгрузка старой истории при прокрутке к левому краю загруженных данных
+    const LOAD_MORE_THRESHOLD = 30 // баров до начала видимого диапазона
+    const handleRangeChange = (range: { from: number; to: number } | null) => {
+      if (!range || range.from > LOAD_MORE_THRESHOLD) return
+      if (loadingMoreRef.current || hasMoreRef.current === false) return
+      onLoadOlderRef.current?.()
+    }
+    chart.timeScale().subscribeVisibleLogicalRangeChange(handleRangeChange)
+
     return () => {
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleRangeChange)
       chart.remove()
       chartRef.current = null
     }
@@ -139,6 +171,19 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     // иначе новые бары просто формируются за пределами видимой области незаметно
     const timeScale = chartRef.current?.timeScale()
     const wasAtRealTime = (timeScale?.scrollPosition() ?? 0) >= -2
+    const visibleRangeBefore = timeScale?.getVisibleLogicalRange() ?? null
+
+    const prevCandles = prevCandlesRef.current
+    prevCandlesRef.current = candles
+    // Довыгрузка старой истории добавляет бары СПЕРЕДИ массива — хвост (последний
+    // бар) при этом не меняется, в отличие от обычного периодического опроса
+    const prependedCount =
+      prevCandles.length > 0 &&
+      candles.length > prevCandles.length &&
+      candles[candles.length - 1]?.time === prevCandles[prevCandles.length - 1]?.time &&
+      candles[0].time < prevCandles[0].time
+        ? candles.length - prevCandles.length
+        : 0
 
     const candleData: CandlestickData[] = candles.map((c) => ({
       time: c.time as never,
@@ -171,6 +216,12 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
       // свечей) не всегда растягивает вид на всю историю — явно задаём
       // логический диапазон от первого до последнего бара.
       timeScale?.setVisibleLogicalRange({ from: -0.5, to: candles.length - 0.5 })
+    } else if (prependedCount > 0 && visibleRangeBefore) {
+      // Индексы всех баров сдвинулись на число довыгруженных — держим на экране те же свечи
+      timeScale?.setVisibleLogicalRange({
+        from: visibleRangeBefore.from + prependedCount,
+        to: visibleRangeBefore.to + prependedCount,
+      })
     } else if (wasAtRealTime) {
       timeScale?.scrollToRealTime()
     }
@@ -277,6 +328,11 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
         {loading && candles.length === 0 && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg-panel/70 text-sm text-text-muted">
             Загрузка котировок с МосБиржи…
+          </div>
+        )}
+        {loadingMore && (
+          <div className="absolute left-2 top-2 z-10 rounded bg-bg-elevated/90 px-2 py-1 text-[11px] text-text-muted">
+            Загрузка истории…
           </div>
         )}
         <div ref={containerRef} className="h-full w-full" />

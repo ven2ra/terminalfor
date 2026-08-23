@@ -16,7 +16,7 @@ export function ChartArea({ onRemove }: ChartAreaProps) {
   const { selectedTicker, instruments } = useMarketStore()
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const [timeframe, setTimeframe] = useState(TIMEFRAMES[0])
-  const { candles, loading } = useLiveCandles(selectedTicker, timeframe.interval)
+  const { candles, loading, loadOlder, loadingMore, hasMore } = useLiveCandles(selectedTicker, timeframe.interval)
 
   // Реальные свечи с биржи подтягиваются раз в несколько секунд, а котировка в
   // шапке/стакане тикает чаще — чтобы график не "отставал" от неё визуально,
@@ -48,7 +48,15 @@ export function ChartArea({ onRemove }: ChartAreaProps) {
       )}
       <div className="min-h-0 flex-1">
         <ResizableSplit direction="vertical" initial={76} min={55} max={88}>
-          <PriceChart candles={liveCandles} loading={loading} timeframe={timeframe} onTimeframeChange={setTimeframe} />
+          <PriceChart
+            candles={liveCandles}
+            loading={loading}
+            timeframe={timeframe}
+            onTimeframeChange={setTimeframe}
+            onLoadOlder={loadOlder}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+          />
           <IndicatorsPanel candles={liveCandles} />
         </ResizableSplit>
       </div>

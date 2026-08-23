@@ -161,6 +161,76 @@ export function getCandles(ticker, interval) {
   return cached(`candles:${ticker}:${interval}`, ttl, () => loadCandles(ticker, interval))
 }
 
+// Ширина окна одной "довыгрузки" при прокрутке графика назад — подобрана так,
+// чтобы обычно укладываться в один-два запроса (лимит ISS — 500 строк за раз),
+// но при этом не быть слишком узкой (иначе пришлось бы слать запрос почти на
+// каждый шаг прокрутки).
+const OLDER_WINDOW_DAYS = { 1: 3, 10: 20, 60: 90 }
+const OLDER_BATCH_SIZE = 4
+const OLDER_MAX_BATCHES = 3
+const OLDER_MAX_WIDEN_ATTEMPTS = 6 // расширяем окно назад, если упёрлись в выходные/праздники без баров
+
+/**
+ * Довыгрузка более старых баров перед указанным моментом времени (для
+ * подгрузки истории при прокрутке графика влево). В отличие от loadCandles()
+ * не тянет всё до "сейчас" — только одно окно перед курсором, расширяя его
+ * назад, если оно оказалось пустым (нерабочие дни).
+ */
+async function loadOlderCandles(ticker, interval, beforeSec) {
+  if (!INTERVALS.has(interval)) throw new Error('invalid interval')
+  const windowDays = MINUTE_INTERVALS.has(interval) ? (OLDER_WINDOW_DAYS[interval] ?? 5) : 365 * 5
+  let till = new Date(beforeSec * 1000)
+  const fmt = (d) => d.toISOString().slice(0, 10)
+
+  for (let attempt = 0; attempt < OLDER_MAX_WIDEN_ATTEMPTS; attempt++) {
+    const from = new Date(till)
+    from.setUTCDate(from.getUTCDate() - windowDays * (attempt + 1))
+    const baseUrl =
+      `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities/${ticker}/candles.json` +
+      `?interval=${interval}&from=${fmt(from)}&till=${fmt(till)}&iss.meta=off`
+
+    const rows = []
+    let page = 0
+    for (let batchNum = 0; batchNum < OLDER_MAX_BATCHES; batchNum++) {
+      const batchPages = await Promise.allSettled(
+        Array.from({ length: OLDER_BATCH_SIZE }, (_, i) => fetchJson(`${baseUrl}&start=${(page + i) * PAGE_SIZE}`))
+      )
+      page += OLDER_BATCH_SIZE
+      let reachedEnd = false
+      for (const p of batchPages) {
+        if (p.status !== 'fulfilled') continue
+        const pageRows = rowsToObjects(p.value.candles)
+        rows.push(...pageRows)
+        if (pageRows.length < PAGE_SIZE) reachedEnd = true
+      }
+      if (reachedEnd) break
+    }
+
+    const candles = rows.map((r) => ({
+      time: Math.floor(new Date(`${r.begin.replace(' ', 'T')}+03:00`).getTime() / 1000),
+      open: r.open,
+      high: r.high,
+      low: r.low,
+      close: r.close,
+      volume: r.volume,
+    }))
+    // Берём только строго более старые бары, чем курсор (на случай пересечения границ)
+    const older = candles.filter((c) => c.time < beforeSec)
+    if (older.length > 0) return older
+    till = from // окно пустое (выходные/праздники) — расширяем ещё дальше назад
+  }
+  return [] // упёрлись в самое начало истории торгов по бумаге
+}
+
+export function getOlderCandles(ticker, interval, beforeSec) {
+  if (!isValidTicker(ticker)) throw new Error('invalid ticker')
+  if (!INTERVALS.has(interval)) throw new Error('invalid interval')
+  if (!Number.isFinite(beforeSec)) throw new Error('invalid before')
+  return cached(`candles-older:${ticker}:${interval}:${beforeSec}`, 300000, () =>
+    loadOlderCandles(ticker, interval, beforeSec)
+  )
+}
+
 /** Лента последних сделок по бумаге */
 async function loadTrades(ticker) {
   const url = `${ISS_BASE}/engines/stock/markets/shares/securities/${ticker}/trades.json?iss.meta=off&trades.columns=TRADENO,TRADETIME,PRICE,QUANTITY,BUYSELL`
