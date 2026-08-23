@@ -15,6 +15,8 @@ export interface SecurityDto {
   turnover: number
   bid: number | null
   offer: number | null
+  dayHigh: number | null
+  dayLow: number | null
   updatedAt: string | null
 }
 
@@ -46,4 +48,27 @@ export function fetchTrades(ticker: string): Promise<Trade[]> {
 
 export function fetchNews(): Promise<NewsItem[]> {
   return getJson('/api/news')
+}
+
+export interface TapeQuote {
+  symbol: string
+  name: string
+  lastPrice: number
+  change: number
+  changePercent: number
+}
+
+export interface TapeCatalogEntry {
+  symbol: string
+  name: string
+}
+
+/** Небиржевые символы (валюты/индексы/нефть), доступные для добавления в бегущую строку — акции добавляются по тикеру напрямую */
+export function fetchTapeCatalog(): Promise<TapeCatalogEntry[]> {
+  return getJson('/api/tape/catalog')
+}
+
+export function fetchTapeQuotes(symbols: string[]): Promise<TapeQuote[]> {
+  if (symbols.length === 0) return Promise.resolve([])
+  return getJson(`/api/tape?symbols=${symbols.map(encodeURIComponent).join(',')}`)
 }

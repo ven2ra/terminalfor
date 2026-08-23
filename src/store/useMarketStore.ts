@@ -21,6 +21,8 @@ function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Inst
     turnover: dto.turnover,
     bid: dto.bid,
     offer: dto.offer,
+    dayHigh: dto.dayHigh,
+    dayLow: dto.dayLow,
     isFavorite: prevFavorite,
   }
 }

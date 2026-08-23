@@ -1,7 +1,7 @@
 import { cached } from './cache.js'
 import { tinvestEnabled, getLastPrices as getTinvestLastPrices, getLastTrades as getTinvestLastTrades } from './tinvest.js'
+import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
 
-const ISS_BASE = 'https://iss.moex.com/iss'
 const BOARD = 'TQBR' // основной режим торгов акциями на МосБирже
 
 /** Единый безопасный тикер: только латиница/цифры, защищает from path-инъекций в апстрим-URL */
@@ -9,34 +9,12 @@ export function isValidTicker(ticker) {
   return /^[A-Z0-9]{1,12}$/.test(ticker)
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-/** Бывают точечные сетевые сбои при большом числе параллельных запросов — один повтор их гасит */
-async function fetchJson(url, attempt = 0) {
-  try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'terminalfor/1.0' } })
-    if (!res.ok) throw new Error(`MOEX ISS ${res.status} for ${url}`)
-    return await res.json()
-  } catch (err) {
-    if (attempt >= 1) throw err
-    await sleep(300)
-    return fetchJson(url, attempt + 1)
-  }
-}
-
-function rowsToObjects(block) {
-  if (!block) return []
-  return block.data.map((row) => Object.fromEntries(block.columns.map((col, i) => [col, row[i]])))
-}
-
 /** Список всех бумаг основного режима торгов TQBR с текущими котировками */
 async function loadSecurities() {
   const url =
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities.json` +
     `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVLEGALCLOSEPRICE,PREVPRICE` +
-    `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME`
+    `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME,HIGH,LOW`
 
   const json = await fetchJson(url)
   const securities = rowsToObjects(json.securities)
@@ -68,6 +46,8 @@ async function loadSecurities() {
         turnover: md?.VALTODAY ?? 0,
         bid: md?.BID ?? null,
         offer: md?.OFFER ?? null,
+        dayHigh: md?.HIGH ?? null,
+        dayLow: md?.LOW ?? null,
         updatedAt: md?.UPDATETIME ?? null,
       }
     })

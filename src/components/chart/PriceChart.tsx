@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   CandlestickData,
   CandlestickSeries,
@@ -238,8 +238,11 @@ export function PriceChart({
   }, [showVolume])
 
   const positive = (instrument?.change ?? 0) >= 0
-  const dayHigh = useMemo(() => (candles.length ? Math.max(...candles.map((c) => c.high)) : null), [candles])
-  const dayLow = useMemo(() => (candles.length ? Math.min(...candles.map((c) => c.low)) : null), [candles])
+  // Официальные HIGH/LOW сессии с биржи — не считаем сами по загруженным
+  // свечам: там из-за бесконечной подгрузки истории может быть много дней,
+  // а не только сегодняшняя сессия
+  const dayHigh = instrument?.dayHigh ?? null
+  const dayLow = instrument?.dayLow ?? null
 
   return (
     <div className="flex h-full flex-col bg-bg-panel">

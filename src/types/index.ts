@@ -19,6 +19,8 @@ export interface Instrument {
   turnover: number
   bid: number | null
   offer: number | null
+  dayHigh: number | null
+  dayLow: number | null
   isFavorite?: boolean
 }
 
