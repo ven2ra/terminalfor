@@ -34,7 +34,7 @@ function rowsToObjects(block) {
 async function loadSecurities() {
   const url =
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities.json` +
-    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN` +
+    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVLEGALCLOSEPRICE,PREVPRICE` +
     `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME`
 
   const json = await fetchJson(url)
@@ -46,9 +46,12 @@ async function loadSecurities() {
       const md = marketdata.get(s.SECID)
       const lastPrice = md?.LAST ?? md?.PREVPRICE ?? null
       if (lastPrice == null) return null
-      const change = md?.CHANGE ?? 0
-      const prevPrice = lastPrice - change
-      // LASTCHANGEPRCNT от ISS не всегда актуален вне торговой сессии — считаем сами от CHANGE
+      // Брокерские терминалы считают дневной % от официальной цены закрытия
+      // ПРЕДЫДУЩЕГО торгового дня (PREVLEGALCLOSEPRICE), а не от последней
+      // сделки предыдущей сессии (CHANGE/PREVPRICE от ISS) — та может быть по
+      // тонкому объёму вечерней сессии и давать заметно другой процент.
+      const prevPrice = s.PREVLEGALCLOSEPRICE ?? s.PREVPRICE ?? lastPrice - (md?.CHANGE ?? 0)
+      const change = lastPrice - prevPrice
       const changePercent = prevPrice !== 0 ? (change / prevPrice) * 100 : 0
       return {
         ticker: s.SECID,

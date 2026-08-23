@@ -74,26 +74,26 @@ body,
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-feature-settings: 'cv11', 'ss01', 'tnum';
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  letter-spacing: -0.006em;
+  letter-spacing: -0.008em;
   overflow: hidden;
 }
 
 /* Числа и тикеры — моноширинный шрифт для ровного выравнивания разрядов */
 .font-tabular {
-  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  font-family: 'IBM Plex Mono', 'Roboto Mono', monospace;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 /* Фирменное начертание для логотипа и заголовков разделов */
 .font-display {
-  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  font-family: 'Space Grotesk', 'Hanken Grotesk', system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
 

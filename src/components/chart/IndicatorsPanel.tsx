@@ -23,7 +23,12 @@ export function IndicatorsPanel({ candles }: IndicatorsPanelProps) {
   useEffect(() => {
     if (!containerRef.current) return
     const chart = createChart(containerRef.current, {
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: readCssVar('--text-secondary'), fontSize: 11 },
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: readCssVar('--text-secondary'),
+        fontSize: 11,
+        attributionLogo: false,
+      },
       grid: { vertLines: { color: readCssVar('--border-subtle') }, horzLines: { color: readCssVar('--border-subtle') } },
       rightPriceScale: { borderColor: readCssVar('--border-color') },
       timeScale: { borderColor: readCssVar('--border-color'), timeVisible: true, secondsVisible: false, tickMarkFormatter },

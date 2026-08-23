@@ -83,8 +83,9 @@ export function PriceChart({
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: readCssVar('--text-secondary'),
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'Hanken Grotesk, sans-serif',
         fontSize: 11,
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: readCssVar('--border-subtle') },
