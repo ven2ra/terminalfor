@@ -37,25 +37,35 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
   const sparkValues = usePriceHistoryStore((s) => (inst.isFavorite ? s.history[inst.ticker] : undefined))
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
-      className={`group flex items-center gap-2 border-b border-border-subtle px-3 py-2 text-left transition-colors ${
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect()
+        }
+      }}
+      className={`group flex cursor-pointer items-center gap-2 border-b border-border-subtle px-3 py-2 text-left transition-colors ${
         active ? 'bg-bg-hover' : 'hover:bg-bg-hover'
       }`}
     >
-      <span
-        role="button"
+      <button
         onClick={(e) => {
           e.stopPropagation()
           onToggleFavorite()
         }}
-        className="shrink-0"
+        aria-label={inst.isFavorite ? `Убрать ${inst.ticker} из избранного` : `Добавить ${inst.ticker} в избранное`}
+        aria-pressed={inst.isFavorite}
+        className="shrink-0 active:scale-90"
       >
         <Star
           size={14}
-          className={inst.isFavorite ? 'fill-accent text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100'}
+          weight={inst.isFavorite ? 'fill' : 'regular'}
+          className={inst.isFavorite ? 'text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100'}
         />
-      </span>
+      </button>
       <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
@@ -81,7 +91,7 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
           </div>
         </div>
       </div>
-    </button>
+    </div>
   )
 }
 
@@ -127,7 +137,7 @@ export function Watchlist({ onRemove }: WatchlistProps) {
           <button
             key={t.value}
             onClick={() => setTab(t.value)}
-            className={`shrink-0 whitespace-nowrap rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+            className={`shrink-0 whitespace-nowrap rounded px-2 py-1 text-[11px] font-medium transition-all active:scale-95 ${
               tab === t.value ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
             }`}
           >

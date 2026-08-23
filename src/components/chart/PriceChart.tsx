@@ -503,7 +503,7 @@ export function PriceChart({
             <button
               key={tf.label}
               onClick={() => onTimeframeChange(tf)}
-              className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+              className={`rounded px-2 py-1 text-xs font-medium transition-all active:scale-95 ${
                 timeframe.label === tf.label ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
               }`}
             >

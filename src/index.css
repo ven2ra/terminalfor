@@ -25,10 +25,12 @@
   --text-muted: #565d6d;
 
   /* Фирменный акцент — тёплый янтарь вместо типового синего SaaS-акцента:
-     считываемо как "терминал/пульт", а не очередная синяя админка */
-  --accent: #f5a524;
-  --accent-hover: #ffb84d;
-  --accent-rgb: 245, 165, 36;
+     считываемо как "терминал/пульт", а не очередная синяя админка.
+     Насыщенность сознательно снижена (~90% → ~74%) — по аудиту redesign-skill
+     ("keep saturation below 80%"): выверенный акцент, а не кричащий неон */
+  --accent: #df9b2e;
+  --accent-hover: #e4aa4d;
+  --accent-rgb: 223, 155, 46;
 
   --buy: #10b981;
   --buy-bg: rgba(16, 185, 129, 0.12);
@@ -38,7 +40,7 @@
   --warning-bg: rgba(240, 180, 41, 0.12);
   --accent-cyan: #22d3ee;
 
-  --flash-color: rgba(245, 165, 36, 0.22);
+  --flash-color: rgba(223, 155, 46, 0.22);
 
   color-scheme: dark;
 }
@@ -56,9 +58,9 @@
   --text-secondary: #5b6472;
   --text-muted: #8991a0;
 
-  --accent: #b6790a;
-  --accent-hover: #9c6708;
-  --accent-rgb: 182, 121, 10;
+  --accent: #a87619;
+  --accent-hover: #926615;
+  --accent-rgb: 168, 118, 25;
 
   --buy: #0ea472;
   --buy-bg: rgba(16, 185, 129, 0.1);

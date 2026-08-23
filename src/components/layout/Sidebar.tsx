@@ -49,7 +49,7 @@ export function Sidebar() {
             onClick={() => setView(item.value)}
             title={item.label}
             aria-label={item.label}
-            className={`flex h-10 w-10 items-center justify-center transition-colors ${
+            className={`flex h-10 w-10 items-center justify-center transition-all active:scale-90 ${
               view === item.value
                 ? 'bg-accent/15 text-accent'
                 : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
@@ -64,7 +64,7 @@ export function Sidebar() {
         <button
           onClick={toggleTheme}
           aria-label="Переключить тему"
-          className="flex h-9 w-9 items-center justify-center text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+          className="flex h-9 w-9 items-center justify-center text-text-secondary transition-all active:scale-90 hover:bg-bg-hover hover:text-text-primary"
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
@@ -76,7 +76,7 @@ export function Sidebar() {
               if (!notifOpen) markAllSeen()
             }}
             aria-label="Уведомления по алертам"
-            className="relative flex h-9 w-9 items-center justify-center text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+            className="relative flex h-9 w-9 items-center justify-center text-text-secondary transition-all active:scale-90 hover:bg-bg-hover hover:text-text-primary"
           >
             <Bell size={16} />
             {unseenCount > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-sell" />}
@@ -118,7 +118,7 @@ export function Sidebar() {
         <button
           title="Аккаунт"
           aria-label="Аккаунт"
-          className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-white hover:brightness-110"
+          className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-white transition-transform active:scale-90 hover:brightness-110"
         >
           КК
         </button>

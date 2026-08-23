@@ -46,8 +46,12 @@ export function Dashboard() {
             autoSize
             onLayoutChange={setLayout}
           >
-            {widgets.map((type) => (
-              <div key={type} className="overflow-hidden border border-border-color shadow-panel">
+            {widgets.map((type, i) => (
+              <div
+                key={type}
+                className="animate-widget-in overflow-hidden border border-border-color shadow-panel"
+                style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+              >
                 {WIDGET_REGISTRY[type].render({ onRemove: () => removeWidget(type) })}
               </div>
             ))}

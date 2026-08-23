@@ -94,6 +94,12 @@ export default {
           '0%': { opacity: '0', transform: 'scale(0.96)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        // Каскадное появление виджетов при монтировании дашборда — вес и лёгкая
+        // "пружинность" вместо мгновенного появления всех блоков разом
+        'widget-in': {
+          '0%': { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
       },
       animation: {
         flash: 'flash 0.6s ease-out',
@@ -103,6 +109,7 @@ export default {
         'tape-scroll': 'tape-scroll 30s linear infinite',
         'row-in': 'row-in 0.25s ease-out',
         'pop-in': 'pop-in 0.15s ease-out',
+        'widget-in': 'widget-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both',
       },
     },
   },

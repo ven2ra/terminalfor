@@ -74,7 +74,7 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
+              className={`rounded px-2 py-1 text-[11px] font-medium transition-all active:scale-95 ${
                 filter === f.value ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:text-text-secondary'
               }`}
             >
