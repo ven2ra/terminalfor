@@ -21,8 +21,12 @@ function colorForTicker(ticker: string): string {
  * при ошибке загрузки или отсутствии ISIN показываем аватар с инициалами тикера.
  */
 export function InstrumentLogo({ ticker, isin, size = 28, className = '' }: InstrumentLogoProps) {
-  const [failed, setFailed] = useState(false)
-  const showImage = isin && !failed
+  // Храним ISIN, для которого загрузка провалилась — а не просто boolean,
+  // иначе при смене инструмента в ДОЛГОЖИВУЩЕМ экземпляре компонента (график,
+  // где он не пересоздаётся при переключении тикера) состояние ошибки
+  // "залипало" навсегда, даже когда у нового ISIN логотип на самом деле есть.
+  const [failedIsin, setFailedIsin] = useState<string | null>(null)
+  const showImage = isin && isin !== failedIsin
 
   if (!showImage) {
     return (
@@ -37,12 +41,13 @@ export function InstrumentLogo({ ticker, isin, size = 28, className = '' }: Inst
 
   return (
     <img
+      key={isin}
       src={`https://invest-brands.cdn-tinkoff.ru/${isin}x160.png`}
       alt=""
       width={size}
       height={size}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setFailedIsin(isin)}
       className={`shrink-0 rounded-full bg-white object-cover ${className}`}
       style={{ width: size, height: size }}
     />
