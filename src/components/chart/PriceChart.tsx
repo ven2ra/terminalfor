@@ -125,7 +125,7 @@ export function PriceChart({
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: readCssVar('--text-secondary'),
-        fontFamily: 'Hanken Grotesk, sans-serif',
+        fontFamily: 'Sofia Sans Condensed, sans-serif',
         fontSize: 11,
         attributionLogo: false,
       },
