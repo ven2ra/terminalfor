@@ -1,5 +1,5 @@
 import { cached } from './cache.js'
-import { tinvestEnabled, getLastPrices as getTinvestLastPrices } from './tinvest.js'
+import { tinvestEnabled, getLastPrices as getTinvestLastPrices, getLastTrades as getTinvestLastTrades } from './tinvest.js'
 
 const ISS_BASE = 'https://iss.moex.com/iss'
 const BOARD = 'TQBR' // основной режим торгов акциями на МосБирже
@@ -273,7 +273,20 @@ async function loadTrades(ticker) {
     }))
 }
 
+async function loadTradesPreferringLive(ticker) {
+  if (tinvestEnabled()) {
+    try {
+      const live = await getTinvestLastTrades(ticker)
+      if (live.length > 0) return live
+    } catch (err) {
+      console.error('tinvest live trades error:', err.message)
+      // тихо остаёмся на ISS ниже
+    }
+  }
+  return loadTrades(ticker)
+}
+
 export function getTrades(ticker) {
   if (!isValidTicker(ticker)) throw new Error('invalid ticker')
-  return cached(`trades:${ticker}`, 1200, () => loadTrades(ticker))
+  return cached(`trades:${ticker}`, 1200, () => loadTradesPreferringLive(ticker))
 }

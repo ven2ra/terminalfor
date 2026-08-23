@@ -80,3 +80,38 @@ export async function getLastPrices(tickers) {
   }
   return result
 }
+
+/**
+ * Реальная (без задержки) лента последних сделок по одной бумаге.
+ * Возвращает [] если T-Invest не сконфигурирован, бумага не найдена в
+ * карте FIGI или сделок за окно не было — вызывающий код в этом случае
+ * должен сам упасть обратно на ISS.
+ */
+export async function getLastTrades(ticker) {
+  if (!tinvestEnabled()) return []
+  const figiMap = await getFigiMap()
+  const figi = figiMap.get(ticker)
+  if (!figi) return []
+
+  const to = new Date()
+  const from = new Date(to.getTime() - 24 * 60 * 60 * 1000) // с запасом на паузы в торгах
+  const json = await post('MarketDataService', 'GetLastTrades', {
+    instrumentId: figi,
+    from: from.toISOString(),
+    to: to.toISOString(),
+  })
+  const trades = json.trades ?? []
+  return trades
+    .slice(-60)
+    .reverse()
+    .map((t, i) => ({
+      id: t.time ? `${t.time}-${i}` : String(i),
+      price: quotationToNumber(t.price),
+      size: Number(t.quantity ?? 0),
+      side: t.direction === 'TRADE_DIRECTION_BUY' ? 'buy' : 'sell',
+      // Формат "ЧЧ:ММ:СС" МСК — как отдаёт ISS TRADETIME, чтобы фронтенд
+      // не менялся в зависимости от источника данных
+      time: t.time ? new Date(t.time).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Moscow', hour12: false }) : '',
+    }))
+    .filter((t) => t.price != null)
+}
