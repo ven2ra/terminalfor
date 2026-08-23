@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Bell, ChevronDown, LineChart, Moon, Search, Sun } from 'lucide-react'
+import { Bell, ChevronDown, LineChart, Moon, Search, Sun, Trash2 } from 'lucide-react'
 import { useThemeStore } from '@/store/useThemeStore'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useViewStore } from '@/store/useViewStore'
+import { useAlertsStore } from '@/store/useAlertsStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { ViewMode } from '@/types'
-import { formatMoney, formatPercent } from '@/lib/format'
+import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
 
 const NAV_ITEMS: Array<{ value: ViewMode; label: string }> = [
   { value: 'terminal', label: 'Терминал' },
@@ -21,8 +22,15 @@ export function Header() {
   const { instruments, selectTicker } = useMarketStore()
   const { account } = usePortfolioStore()
   const { view, setView } = useViewStore()
+  const { alerts, removeAlert, markAllSeen } = useAlertsStore()
   const [query, setQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+
+  const triggeredAlerts = alerts
+    .filter((a) => a.triggeredAt != null)
+    .sort((a, b) => (b.triggeredAt ?? 0) - (a.triggeredAt ?? 0))
+  const unseenCount = triggeredAlerts.filter((a) => !a.seen).length
 
   const filtered = query
     ? instruments.filter(
@@ -103,10 +111,51 @@ export function Header() {
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        <button className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border-color text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary">
-          <Bell size={16} />
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-sell" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => {
+              setNotifOpen((v) => !v)
+              if (!notifOpen) markAllSeen()
+            }}
+            aria-label="Уведомления по алертам"
+            className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border-color text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+          >
+            <Bell size={16} />
+            {unseenCount > 0 && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-sell" />}
+          </button>
+
+          {notifOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+              <div className="absolute right-0 top-full z-40 mt-1 w-72 overflow-hidden rounded-md border border-border-color bg-bg-elevated shadow-panel">
+                <div className="border-b border-border-subtle px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  Сработавшие алерты
+                </div>
+                <div className="max-h-72 overflow-auto">
+                  {triggeredAlerts.length === 0 && (
+                    <div className="px-3 py-4 text-center text-xs text-text-muted">Пока ничего не сработало</div>
+                  )}
+                  {triggeredAlerts.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between gap-2 border-b border-border-subtle px-3 py-2 text-xs last:border-b-0">
+                      <div>
+                        <span className="font-semibold text-text-primary">{a.ticker}</span>{' '}
+                        <span className="text-text-muted">{a.condition === 'above' ? 'выше' : 'ниже'}</span>{' '}
+                        <span className="font-tabular text-text-secondary">{formatPrice(a.targetPrice)}</span>
+                      </div>
+                      <button
+                        onClick={() => removeAlert(a.id)}
+                        aria-label="Удалить алерт"
+                        className="shrink-0 text-text-muted transition-colors hover:text-sell"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         <button className="flex items-center gap-1.5 rounded-md border border-border-color py-1 pl-1 pr-2 hover:bg-bg-hover">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">

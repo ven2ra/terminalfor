@@ -58,12 +58,17 @@ export default {
           '0%': { backgroundPosition: '-400px 0' },
           '100%': { backgroundPosition: '400px 0' },
         },
+        'tape-scroll': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         flash: 'flash 0.6s ease-out',
         'flash-up': 'flash-up 0.7s ease-out',
         'flash-down': 'flash-down 0.7s ease-out',
         shimmer: 'shimmer 1.4s infinite linear',
+        'tape-scroll': 'tape-scroll 30s linear infinite',
       },
     },
   },

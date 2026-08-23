@@ -3,6 +3,7 @@ import express from 'express'
 import { getSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'
 import { tinvestEnabled } from './tinvest.js'
+import { getTapeCatalog, getTapeQuotes } from './tape.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -52,6 +53,26 @@ app.get('/api/trades/:ticker', async (req, res) => {
     res.json(await getTrades(ticker))
   } catch (err) {
     console.error('trades error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+// Каталог небиржевых символов (валюты/индексы/нефть), доступных для добавления в бегущую строку
+app.get('/api/tape/catalog', (_req, res) => {
+  res.json(getTapeCatalog())
+})
+
+app.get('/api/tape', async (req, res) => {
+  const symbolsParam = String(req.query.symbols ?? '')
+  const symbols = symbolsParam
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => isValidTicker(s))
+  if (symbols.length === 0) return res.json([])
+  try {
+    res.json(await getTapeQuotes(symbols))
+  } catch (err) {
+    console.error('tape error:', err.message)
     res.status(502).json({ error: 'moex_unavailable' })
   }
 })

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Activity, BookOpen, CandlestickChart, ClipboardList, LineChart, Newspaper, Star, Wallet } from 'lucide-react'
+import { Activity, Bell, BookOpen, CandlestickChart, ClipboardList, LineChart, Newspaper, Star, Wallet } from 'lucide-react'
 import { Watchlist } from '@/components/watchlist/Watchlist'
 import { ChartArea } from '@/components/chart/ChartArea'
 import { OrderBook } from '@/components/orderbook/OrderBook'
@@ -8,6 +8,7 @@ import { OrderPanel } from '@/components/orders/OrderPanel'
 import { ActiveOrdersPanel } from '@/components/orders/ActiveOrdersPanel'
 import { PortfolioPanel } from '@/components/portfolio/PortfolioPanel'
 import { NewsFeed } from '@/components/news/NewsFeed'
+import { PriceAlerts } from '@/components/alerts/PriceAlerts'
 
 export type WidgetType =
   | 'watchlist'
@@ -18,6 +19,7 @@ export type WidgetType =
   | 'activeOrders'
   | 'portfolio'
   | 'news'
+  | 'alerts'
 
 interface WidgetLayoutDefaults {
   x: number
@@ -85,6 +87,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
     icon: <Newspaper size={14} />,
     layout: { x: 9, y: 41, w: 3, h: 8, minW: 2, minH: 5 },
     render: ({ onRemove }) => <NewsFeed onRemove={onRemove} />,
+  },
+  alerts: {
+    label: 'Ценовые алерты',
+    icon: <Bell size={14} />,
+    layout: { x: 2, y: 22, w: 4, h: 10, minW: 3, minH: 6 },
+    render: ({ onRemove }) => <PriceAlerts onRemove={onRemove} />,
   },
 }
 
