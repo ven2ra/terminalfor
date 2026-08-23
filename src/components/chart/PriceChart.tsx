@@ -15,6 +15,7 @@ import { Candle } from '@/types'
 import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useThemeStore } from '@/store/useThemeStore'
+import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { calcSMA } from '@/lib/indicators'
 import { formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -160,7 +161,8 @@ export function PriceChart({ candles, loading, timeframe, onTimeframeChange }: P
     <div className="flex h-full flex-col bg-bg-panel">
       <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-border-subtle px-4 py-2.5">
         <div>
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-center gap-2">
+            <InstrumentLogo ticker={selectedTicker} isin={instrument?.isin ?? null} size={22} />
             <span className="text-lg font-bold text-text-primary">{instrument?.ticker ?? selectedTicker}</span>
             <span className="text-xs text-text-muted">
               {instrument?.name ?? '…'} · {instrument?.exchange ?? 'MOEX'}

@@ -3,6 +3,7 @@ import { Search, Star } from 'lucide-react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { Panel } from '@/components/common/Panel'
 import { SkeletonRows } from '@/components/common/Skeleton'
+import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { formatPercent, formatPrice } from '@/lib/format'
 
 interface WatchlistProps {
@@ -70,6 +71,7 @@ export function Watchlist({ onRemove }: WatchlistProps) {
                     className={inst.isFavorite ? 'fill-accent text-accent' : 'text-text-muted opacity-0 group-hover:opacity-100'}
                   />
                 </span>
+                <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-text-primary">{inst.ticker}</span>

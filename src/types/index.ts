@@ -8,6 +8,7 @@ export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports'
 export interface Instrument {
   ticker: string
   name: string
+  isin: string | null
   exchange: string
   currency: string
   lotSize: number

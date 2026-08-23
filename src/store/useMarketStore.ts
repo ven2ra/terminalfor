@@ -9,6 +9,7 @@ function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Inst
   return {
     ticker: dto.ticker,
     name: dto.name,
+    isin: dto.isin,
     exchange: dto.exchange,
     currency: dto.currency,
     lotSize: dto.lotSize,

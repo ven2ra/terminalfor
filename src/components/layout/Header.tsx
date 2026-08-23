@@ -4,6 +4,7 @@ import { useThemeStore } from '@/store/useThemeStore'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useViewStore } from '@/store/useViewStore'
+import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { ViewMode } from '@/types'
 import { formatMoney, formatPercent } from '@/lib/format'
 
@@ -74,10 +75,11 @@ export function Header() {
                   setQuery('')
                   setView('terminal')
                 }}
-                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-bg-hover"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-bg-hover"
               >
+                <InstrumentLogo ticker={i.ticker} isin={i.isin} size={20} />
                 <span className="font-semibold">{i.ticker}</span>
-                <span className="text-text-muted">{i.name}</span>
+                <span className="ml-auto truncate text-text-muted">{i.name}</span>
               </button>
             ))}
           </div>

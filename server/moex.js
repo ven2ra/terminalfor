@@ -23,7 +23,7 @@ function rowsToObjects(block) {
 async function loadSecurities() {
   const url =
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities.json` +
-    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE` +
+    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN` +
     `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME`
 
   const json = await fetchJson(url)
@@ -42,6 +42,7 @@ async function loadSecurities() {
       return {
         ticker: s.SECID,
         name: s.SHORTNAME,
+        isin: s.ISIN ?? null,
         exchange: 'MOEX',
         currency: 'RUB',
         lotSize: s.LOTSIZE ?? 1,
@@ -98,7 +99,7 @@ async function loadCandles(ticker, interval) {
 export function getCandles(ticker, interval) {
   if (!isValidTicker(ticker)) throw new Error('invalid ticker')
   if (!INTERVALS.has(interval)) throw new Error('invalid interval')
-  return cached(`candles:${ticker}:${interval}`, 15000, () => loadCandles(ticker, interval))
+  return cached(`candles:${ticker}:${interval}`, 5000, () => loadCandles(ticker, interval))
 }
 
 /** Лента последних сделок по бумаге */

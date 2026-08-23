@@ -4,6 +4,7 @@ import { Candle, NewsItem, Trade } from '@/types'
 export interface SecurityDto {
   ticker: string
   name: string
+  isin: string | null
   exchange: string
   currency: string
   lotSize: number
