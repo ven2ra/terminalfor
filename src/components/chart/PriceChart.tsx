@@ -5,12 +5,13 @@ import {
   ColorType,
   HistogramSeries,
   IChartApi,
+  IPriceLine,
   ISeriesApi,
   LineData,
   LineSeries,
   createChart,
 } from 'lightweight-charts'
-import { BarChart3, Maximize2, TrendingUp, Waves, Activity } from 'lucide-react'
+import { BarChart3, Maximize2, TrendingUp, Waves, Activity, Minus as MinusIcon } from 'lucide-react'
 import { Candle } from '@/types'
 import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
@@ -19,6 +20,7 @@ import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { SentimentBadge } from '@/components/chart/SentimentBadge'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA, calcBollinger, calcVWAP } from '@/lib/indicators'
+import { calcSupportResistance } from '@/lib/levels'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -57,6 +59,7 @@ export function PriceChart({
   const bollMiddleRef = useRef<ISeriesApi<'Line'> | null>(null)
   const bollLowerRef = useRef<ISeriesApi<'Line'> | null>(null)
   const vwapSeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const srLinesRef = useRef<IPriceLine[]>([])
   // Ключ (тикер+таймфрейм), на который масштаб уже подгонялся — чтобы не
   // сбрасывать зум/скролл пользователя при каждом периодическом обновлении данных
   const fittedKeyRef = useRef<string>('')
@@ -78,6 +81,7 @@ export function PriceChart({
   const [showVolume, setShowVolume] = useState(true)
   const [showBollinger, setShowBollinger] = useState(false)
   const [showVWAP, setShowVWAP] = useState(false)
+  const [showLevels, setShowLevels] = useState(false)
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
@@ -296,6 +300,32 @@ export function PriceChart({
     vwapSeriesRef.current?.applyOptions({ visible: showVWAP })
   }, [showVWAP])
 
+  // Уровни поддержки/сопротивления — рисуем как ценовые линии на свечном ряде,
+  // пересчитываем при каждом обновлении свечей, пока включен показ
+  useEffect(() => {
+    const series = candleSeriesRef.current
+    if (!series) return
+
+    for (const line of srLinesRef.current) series.removePriceLine(line)
+    srLinesRef.current = []
+
+    if (!showLevels || candles.length === 0) return
+
+    const levels = calcSupportResistance(candles, 4)
+    for (const lvl of levels) {
+      const color = lvl.type === 'resistance' ? readCssVar('--sell') : readCssVar('--buy')
+      const line = series.createPriceLine({
+        price: lvl.price,
+        color: `${color}99`,
+        lineWidth: 1,
+        lineStyle: 3,
+        axisLabelVisible: true,
+        title: lvl.type === 'resistance' ? 'R' : 'S',
+      })
+      srLinesRef.current.push(line)
+    }
+  }, [candles, showLevels])
+
   const positive = (instrument?.change ?? 0) >= 0
   // Официальные HIGH/LOW сессии с биржи — не считаем сами по загруженным
   // свечам: там из-за бесконечной подгрузки истории может быть много дней,
@@ -404,6 +434,15 @@ export function PriceChart({
             }`}
           >
             <Activity size={13} /> VWAP
+          </button>
+          <button
+            onClick={() => setShowLevels((v) => !v)}
+            title="Автоматические уровни поддержки/сопротивления"
+            className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+              showLevels ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
+            }`}
+          >
+            <MinusIcon size={13} /> S/R
           </button>
           <button
             onClick={() =>
