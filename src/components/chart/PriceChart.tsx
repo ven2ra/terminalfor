@@ -117,7 +117,18 @@ export function PriceChart({
   lastPriceRef.current = instrument?.lastPrice ?? 0
   addAlertRef.current = addAlert
 
-  // Создание графика один раз при монтировании
+  // Пересоздаём график при монтировании и при каждом переключении
+  // полноэкранного режима: чтобы fixed-позиционирование не обрезалось
+  // трансформированным родителем (react-grid-layout позиционирует виджеты
+  // через transform, который создаёт новый containing block для fixed),
+  // fullscreen рендерится через createPortal в document.body — а смена
+  // "портал / не портал" на верхнем уровне того, что возвращает компонент,
+  // заставляет React полностью размонтировать и заново смонтировать всё
+  // поддерево chartContent (включая div с containerRef), хотя сам компонент
+  // PriceChart не размонтируется. Без isFullscreen в зависимостях этот
+  // эффект не перезапускался бы, и chartRef продолжал бы держать график,
+  // привязанный к уже удалённому из DOM узлу — а новый (видимый) div
+  // оставался бы пустым
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -245,7 +256,7 @@ export function PriceChart({
       chart.remove()
       chartRef.current = null
     }
-  }, [])
+  }, [isFullscreen])
 
   // Перекраска графика при смене темы
   useEffect(() => {
@@ -265,7 +276,7 @@ export function PriceChart({
       wickUpColor: readCssVar('--buy'),
       wickDownColor: readCssVar('--sell'),
     })
-  }, [theme])
+  }, [theme, isFullscreen])
 
   // Обновление данных при поступлении новых свечей
   useEffect(() => {
@@ -338,26 +349,26 @@ export function PriceChart({
     } else if (wasAtRealTime) {
       timeScale?.scrollToRealTime()
     }
-  }, [candles, selectedTicker, timeframe.interval])
+  }, [candles, selectedTicker, timeframe.interval, isFullscreen])
 
   useEffect(() => {
     ma20SeriesRef.current?.applyOptions({ visible: showMA })
     ma50SeriesRef.current?.applyOptions({ visible: showMA })
-  }, [showMA])
+  }, [showMA, isFullscreen])
 
   useEffect(() => {
     volumeSeriesRef.current?.applyOptions({ visible: showVolume })
-  }, [showVolume])
+  }, [showVolume, isFullscreen])
 
   useEffect(() => {
     bollUpperRef.current?.applyOptions({ visible: showBollinger })
     bollMiddleRef.current?.applyOptions({ visible: showBollinger })
     bollLowerRef.current?.applyOptions({ visible: showBollinger })
-  }, [showBollinger])
+  }, [showBollinger, isFullscreen])
 
   useEffect(() => {
     vwapSeriesRef.current?.applyOptions({ visible: showVWAP })
-  }, [showVWAP])
+  }, [showVWAP, isFullscreen])
 
   // Загрузка свечей инструмента для сравнения — тем же таймфреймом, что и основной график
   useEffect(() => {
@@ -390,7 +401,7 @@ export function PriceChart({
       value: base > 0 ? ((c.close - base) / base) * 100 : 0,
     }))
     compareSeriesRef.current?.setData(data)
-  }, [compareTicker, compareCandles])
+  }, [compareTicker, compareCandles, isFullscreen])
 
   // Уровни поддержки/сопротивления — рисуем как ценовые линии на свечном ряде,
   // пересчитываем при каждом обновлении свечей, пока включен показ
@@ -416,7 +427,7 @@ export function PriceChart({
       })
       srLinesRef.current.push(line)
     }
-  }, [candles, showLevels])
+  }, [candles, showLevels, isFullscreen])
 
   // Выход из полноэкранного режима по Escape
   useEffect(() => {
