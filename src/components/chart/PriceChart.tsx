@@ -19,7 +19,7 @@ import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA } from '@/lib/indicators'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
-import { formatPercent, formatPrice } from '@/lib/format'
+import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
 
 function readCssVar(name: string): string {
@@ -275,15 +275,18 @@ export function PriceChart({
         <div className="hidden gap-4 text-xs text-text-muted md:flex">
           <div>
             <div className="text-text-muted">Макс</div>
-            <div className="font-tabular text-text-secondary">{dayHigh != null ? formatPrice(dayHigh) : '—'}</div>
+            {/* 3 знака после запятой — у части бумаг шаг цены мельче 1 копейки, округление до 2 искажало значение */}
+            <div className="font-tabular text-text-secondary">{dayHigh != null ? formatPrice(dayHigh, 3) : '—'}</div>
           </div>
           <div>
             <div className="text-text-muted">Мин</div>
-            <div className="font-tabular text-text-secondary">{dayLow != null ? formatPrice(dayLow) : '—'}</div>
+            <div className="font-tabular text-text-secondary">{dayLow != null ? formatPrice(dayLow, 3) : '—'}</div>
           </div>
           <div>
-            <div className="text-text-muted">Объём</div>
-            <div className="font-tabular text-text-secondary">{(instrument?.volume ?? 0).toLocaleString('ru-RU')}</div>
+            <div className="text-text-muted">Объём торгов</div>
+            <div className="font-tabular text-text-secondary">
+              {instrument ? `${formatCompact(instrument.turnover)} ₽` : '—'}
+            </div>
           </div>
         </div>
 
