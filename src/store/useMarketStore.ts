@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { Instrument, OrderBookData, Trade } from '@/types'
 import { fetchSecurities, fetchTrades, SecurityDto } from '@/api/client'
 import { synthesizeOrderBook } from '@/mock/orderbook'
-import { isOrderBookOpen } from '@/lib/tradingHours'
+import { isWeekendSessionOpen } from '@/lib/tradingHours'
 
 export const DEFAULT_TICKER = 'SBER'
 
@@ -67,10 +67,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   refreshOrderBook: () => {
-    // По выходным вне окна 09:50–19:00 МСК у нашего брокера нет OTC-торгов
-    // (в отличие от Т-Инвестиций) — стакан замораживаем на последнем известном
-    // состоянии и просто не опрашиваем дальше (UI показывает "Торги закрыты")
-    if (!isOrderBookOpen()) return
+    // По выходным вне сессии выходного дня (09:50–18:59 МСК) у нашего брокера
+    // нет OTC-торгов (в отличие от Т-Инвестиций) — стакан замораживаем на
+    // последнем известном состоянии и просто не опрашиваем дальше (UI
+    // показывает "Торги закрыты")
+    if (!isWeekendSessionOpen()) return
     const { instruments, selectedTicker } = get()
     const inst = currentInstrument(instruments, selectedTicker)
     if (!inst?.bid || !inst?.offer) return
@@ -78,6 +79,9 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   loadTrades: async () => {
+    // Та же логика, что и для стакана — лента сделок вне сессии выходного
+    // дня тоже замораживается вместо показа несуществующих у брокера сделок
+    if (!isWeekendSessionOpen()) return
     const ticker = get().selectedTicker
     try {
       const trades = await fetchTrades(ticker)
