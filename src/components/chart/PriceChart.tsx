@@ -10,7 +10,7 @@ import {
   LineSeries,
   createChart,
 } from 'lightweight-charts'
-import { BarChart3, Maximize2, TrendingUp } from 'lucide-react'
+import { BarChart3, Maximize2, TrendingUp, Waves, Activity } from 'lucide-react'
 import { Candle } from '@/types'
 import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
@@ -18,7 +18,7 @@ import { useThemeStore } from '@/store/useThemeStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { SentimentBadge } from '@/components/chart/SentimentBadge'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
-import { calcSMA } from '@/lib/indicators'
+import { calcSMA, calcBollinger, calcVWAP } from '@/lib/indicators'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -53,6 +53,10 @@ export function PriceChart({
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null)
   const ma20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const bollUpperRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const bollMiddleRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const bollLowerRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const vwapSeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
   // Ключ (тикер+таймфрейм), на который масштаб уже подгонялся — чтобы не
   // сбрасывать зум/скролл пользователя при каждом периодическом обновлении данных
   const fittedKeyRef = useRef<string>('')
@@ -72,6 +76,8 @@ export function PriceChart({
   const { theme } = useThemeStore()
   const [showMA, setShowMA] = useState(true)
   const [showVolume, setShowVolume] = useState(true)
+  const [showBollinger, setShowBollinger] = useState(false)
+  const [showVWAP, setShowVWAP] = useState(false)
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
@@ -122,11 +128,45 @@ export function PriceChart({
     const ma20 = chart.addSeries(LineSeries, { color: '#fbbf24', lineWidth: 1, priceLineVisible: false })
     const ma50 = chart.addSeries(LineSeries, { color: '#a367f5', lineWidth: 1, priceLineVisible: false })
 
+    const bollUpper = chart.addSeries(LineSeries, {
+      color: 'rgba(96,165,250,0.55)',
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      visible: false,
+    })
+    const bollMiddle = chart.addSeries(LineSeries, {
+      color: 'rgba(96,165,250,0.85)',
+      lineWidth: 1,
+      lineStyle: 2,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      visible: false,
+    })
+    const bollLower = chart.addSeries(LineSeries, {
+      color: 'rgba(96,165,250,0.55)',
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      visible: false,
+    })
+    const vwap = chart.addSeries(LineSeries, {
+      color: readCssVar('--accent-cyan') || '#22d3ee',
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      visible: false,
+    })
+
     chartRef.current = chart
     candleSeriesRef.current = candleSeries
     volumeSeriesRef.current = volumeSeries
     ma20SeriesRef.current = ma20
     ma50SeriesRef.current = ma50
+    bollUpperRef.current = bollUpper
+    bollMiddleRef.current = bollMiddle
+    bollLowerRef.current = bollLower
+    vwapSeriesRef.current = vwap
 
     // Довыгрузка старой истории при прокрутке к левому краю загруженных данных
     const LOAD_MORE_THRESHOLD = 30 // баров до начала видимого диапазона
@@ -207,6 +247,14 @@ export function PriceChart({
     ma20SeriesRef.current?.setData(ma20Data)
     ma50SeriesRef.current?.setData(ma50Data)
 
+    const bollinger = calcBollinger(candles, 20, 2)
+    bollUpperRef.current?.setData(bollinger.upper.map((p) => ({ time: p.time as never, value: p.value })))
+    bollMiddleRef.current?.setData(bollinger.middle.map((p) => ({ time: p.time as never, value: p.value })))
+    bollLowerRef.current?.setData(bollinger.lower.map((p) => ({ time: p.time as never, value: p.value })))
+
+    const vwapData: LineData[] = calcVWAP(candles).map((p) => ({ time: p.time as never, value: p.value }))
+    vwapSeriesRef.current?.setData(vwapData)
+
     // Автоподгонка масштаба — только при смене инструмента/таймфрейма, а не на
     // каждый периодический опрос (иначе зум/прокрутку пользователя сбрасывало бы каждые пару секунд).
     // Если же пользователь и так смотрел на актуальное время — доскролливаем к новым барам,
@@ -237,6 +285,16 @@ export function PriceChart({
   useEffect(() => {
     volumeSeriesRef.current?.applyOptions({ visible: showVolume })
   }, [showVolume])
+
+  useEffect(() => {
+    bollUpperRef.current?.applyOptions({ visible: showBollinger })
+    bollMiddleRef.current?.applyOptions({ visible: showBollinger })
+    bollLowerRef.current?.applyOptions({ visible: showBollinger })
+  }, [showBollinger])
+
+  useEffect(() => {
+    vwapSeriesRef.current?.applyOptions({ visible: showVWAP })
+  }, [showVWAP])
 
   const positive = (instrument?.change ?? 0) >= 0
   // Официальные HIGH/LOW сессии с биржи — не считаем сами по загруженным
@@ -328,6 +386,24 @@ export function PriceChart({
             }`}
           >
             <BarChart3 size={13} /> Объём
+          </button>
+          <button
+            onClick={() => setShowBollinger((v) => !v)}
+            title="Полосы Боллинджера (20, 2σ)"
+            className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+              showBollinger ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
+            }`}
+          >
+            <Waves size={13} /> BB
+          </button>
+          <button
+            onClick={() => setShowVWAP((v) => !v)}
+            title="VWAP — средневзвешенная по объёму цена"
+            className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+              showVWAP ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
+            }`}
+          >
+            <Activity size={13} /> VWAP
           </button>
           <button
             onClick={() =>
