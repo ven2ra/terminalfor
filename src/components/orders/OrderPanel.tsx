@@ -1,0 +1,134 @@
+import { useState } from 'react'
+import { useMarketStore } from '@/store/useMarketStore'
+import { useOrderStore } from '@/store/useOrderStore'
+import { usePortfolioStore } from '@/store/usePortfolioStore'
+import { OrderType } from '@/types'
+import { Panel } from '@/components/common/Panel'
+import { formatMoney, formatPrice } from '@/lib/format'
+
+const ORDER_TYPES: Array<{ value: OrderType; label: string }> = [
+  { value: 'market', label: 'Рыночная' },
+  { value: 'limit', label: 'Лимитная' },
+  { value: 'stop', label: 'Стоп' },
+]
+
+const QUICK_VOLUMES = [10, 50, 100, 500]
+
+/** Панель выставления ордеров: покупка/продажа, тип, объём, цена, быстрые кнопки */
+export function OrderPanel() {
+  const { instruments, selectedTicker } = useMarketStore()
+  const { placeOrder } = useOrderStore()
+  const { account } = usePortfolioStore()
+  const instrument = instruments.find((i) => i.ticker === selectedTicker) ?? instruments[0]
+
+  const [side, setSide] = useState<'buy' | 'sell'>('buy')
+  const [type, setType] = useState<OrderType>('limit')
+  const [price, setPrice] = useState(instrument.lastPrice.toFixed(2))
+  const [size, setSize] = useState('10')
+  const [flash, setFlash] = useState<string | null>(null)
+
+  const numericPrice = type === 'market' ? instrument.lastPrice : Number(price) || 0
+  const numericSize = Number(size) || 0
+  const total = numericPrice * numericSize
+
+  const handleSubmit = () => {
+    if (numericSize <= 0) return
+    placeOrder({ ticker: instrument.ticker, side, type, price: numericPrice, size: numericSize })
+    setFlash(`Заявка ${side === 'buy' ? 'на покупку' : 'на продажу'} отправлена`)
+    setTimeout(() => setFlash(null), 2000)
+  }
+
+  return (
+    <Panel title="Выставление ордера">
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setSide('buy')}
+            className={`rounded-md py-2 text-sm font-bold transition-colors ${
+              side === 'buy' ? 'bg-buy text-white' : 'bg-buy-bg text-buy hover:brightness-110'
+            }`}
+          >
+            Купить
+          </button>
+          <button
+            onClick={() => setSide('sell')}
+            className={`rounded-md py-2 text-sm font-bold transition-colors ${
+              side === 'sell' ? 'bg-sell text-white' : 'bg-sell-bg text-sell hover:brightness-110'
+            }`}
+          >
+            Продать
+          </button>
+        </div>
+
+        <div className="flex gap-1 rounded-md bg-bg-elevated p-1">
+          {ORDER_TYPES.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setType(t.value)}
+              className={`flex-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                type === t.value ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <label className="block text-xs text-text-muted">
+          Цена, {instrument.currency}
+          <input
+            disabled={type === 'market'}
+            value={type === 'market' ? instrument.lastPrice.toFixed(2) : price}
+            onChange={(e) => setPrice(e.target.value)}
+            inputMode="decimal"
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-base px-2.5 py-1.5 font-tabular text-sm text-text-primary focus:border-accent focus:outline-none disabled:opacity-60"
+          />
+        </label>
+
+        <label className="block text-xs text-text-muted">
+          Количество, шт.
+          <input
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            inputMode="decimal"
+            className="mt-1 w-full rounded-md border border-border-color bg-bg-base px-2.5 py-1.5 font-tabular text-sm text-text-primary focus:border-accent focus:outline-none"
+          />
+        </label>
+
+        <div className="flex gap-1.5">
+          {QUICK_VOLUMES.map((v) => (
+            <button
+              key={v}
+              onClick={() => setSize(String(v))}
+              className="flex-1 rounded border border-border-color py-1 text-xs text-text-secondary hover:border-accent hover:text-accent"
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-1 rounded-md bg-bg-elevated px-3 py-2 text-xs">
+          <div className="flex justify-between text-text-muted">
+            <span>Сумма</span>
+            <span className="font-tabular text-text-secondary">{formatPrice(total)} {instrument.currency}</span>
+          </div>
+          <div className="flex justify-between text-text-muted">
+            <span>Доступно</span>
+            <span className="font-tabular text-text-secondary">{formatMoney(account.availableMargin)}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className={`rounded-md py-2.5 text-sm font-bold text-white transition-transform active:scale-[0.98] ${
+            side === 'buy' ? 'bg-buy hover:brightness-110' : 'bg-sell hover:brightness-110'
+          }`}
+        >
+          {side === 'buy' ? 'Купить' : 'Продать'} {instrument.ticker}
+        </button>
+
+        {flash && <div className="rounded-md bg-accent/10 px-2.5 py-1.5 text-center text-xs font-medium text-accent">{flash}</div>}
+      </div>
+    </Panel>
+  )
+}

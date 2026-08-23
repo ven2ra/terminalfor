@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Цветовые токены темы. Тёмная тема — основная (используется по умолчанию),
+   светлая тема переопределяет переменные через атрибут [data-theme="light"].
+   Переключение темы мгновенно перекрашивает весь интерфейс, т.к. все
+   компоненты используют только эти CSS-переменные через Tailwind-цвета.
+   ========================================================================== */
+:root,
+[data-theme='dark'] {
+  --bg-base: #0b0e14;
+  --bg-panel: #10141c;
+  --bg-elevated: #161b26;
+  --bg-hover: #1c2230;
+
+  --border-color: #232a38;
+  --border-subtle: #1a202c;
+
+  --text-primary: #e6e9ef;
+  --text-secondary: #9aa4b6;
+  --text-muted: #626d82;
+
+  --accent: #3b82f6;
+  --accent-hover: #5b93f7;
+
+  --buy: #26a65b;
+  --buy-bg: rgba(38, 166, 91, 0.12);
+  --sell: #e0473b;
+  --sell-bg: rgba(224, 71, 59, 0.12);
+
+  --flash-color: rgba(59, 130, 246, 0.25);
+
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --bg-base: #f4f6f9;
+  --bg-panel: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-hover: #eef1f6;
+
+  --border-color: #dfe4ec;
+  --border-subtle: #e9ecf2;
+
+  --text-primary: #12151c;
+  --text-secondary: #5b6472;
+  --text-muted: #8991a0;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4fd1;
+
+  --buy: #0f9d58;
+  --buy-bg: rgba(15, 157, 88, 0.08);
+  --sell: #d93025;
+  --sell-bg: rgba(217, 48, 37, 0.08);
+
+  --flash-color: rgba(37, 99, 235, 0.15);
+
+  color-scheme: light;
+}
+
+* {
+  border-color: var(--border-color);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Числа и тикеры — моноширинный шрифт для ровного выравнивания разрядов */
+.font-tabular {
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Скелетон-заглушка для состояния загрузки */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 37%, var(--bg-elevated) 63%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* Библиотека resizable-панелей рисует свой сплиттер — стилизуем под тему */
+.resize-handle {
+  background: var(--border-color);
+  transition: background-color 0.15s ease;
+}
+.resize-handle:hover,
+.resize-handle:active {
+  background: var(--accent);
+}

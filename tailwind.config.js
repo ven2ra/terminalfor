@@ -1,0 +1,60 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: ['class'],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Roboto Mono"', 'monospace'],
+      },
+      colors: {
+        bg: {
+          base: 'var(--bg-base)',
+          panel: 'var(--bg-panel)',
+          elevated: 'var(--bg-elevated)',
+          hover: 'var(--bg-hover)',
+        },
+        border: {
+          DEFAULT: 'var(--border-color)',
+          subtle: 'var(--border-subtle)',
+        },
+        text: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+        },
+        buy: {
+          DEFAULT: 'var(--buy)',
+          bg: 'var(--buy-bg)',
+        },
+        sell: {
+          DEFAULT: 'var(--sell)',
+          bg: 'var(--sell-bg)',
+        },
+      },
+      boxShadow: {
+        panel: '0 1px 2px rgba(0,0,0,0.24)',
+      },
+      keyframes: {
+        flash: {
+          '0%': { backgroundColor: 'var(--flash-color)' },
+          '100%': { backgroundColor: 'transparent' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-400px 0' },
+          '100%': { backgroundPosition: '400px 0' },
+        },
+      },
+      animation: {
+        flash: 'flash 0.6s ease-out',
+        shimmer: 'shimmer 1.4s infinite linear',
+      },
+    },
+  },
+  plugins: [],
+}
