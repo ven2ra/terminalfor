@@ -138,7 +138,7 @@ export function Watchlist({ onRemove }: WatchlistProps) {
             key={t.value}
             onClick={() => setTab(t.value)}
             className={`shrink-0 whitespace-nowrap rounded px-2 py-1 text-[11px] font-medium transition-all active:scale-95 ${
-              tab === t.value ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
+              tab === t.value ? 'bg-accent text-accent-contrast' : 'text-text-secondary hover:bg-bg-hover'
             }`}
           >
             {t.label}

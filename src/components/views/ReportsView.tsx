@@ -130,7 +130,7 @@ export function ReportsView() {
                     key={p.value}
                     onClick={() => setPeriod(p.value)}
                     className={`rounded px-2 py-1 text-[11px] font-medium transition-colors ${
-                      period === p.value ? 'bg-accent text-white' : 'text-text-secondary hover:bg-bg-hover'
+                      period === p.value ? 'bg-accent text-accent-contrast' : 'text-text-secondary hover:bg-bg-hover'
                     }`}
                   >
                     {p.label}

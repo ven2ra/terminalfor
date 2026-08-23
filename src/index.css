@@ -22,7 +22,9 @@
 
   --text-primary: #ffffff;
   --text-secondary: #8e96a8;
-  --text-muted: #565d6d;
+  /* Контраст поднят с 2.9:1 до 4.85:1 к bg-panel/bg-elevated — WCAG AA
+     для обычного текста (аудит через impeccable/audit.md, dimension A11y) */
+  --text-muted: #78808f;
 
   /* Фирменный акцент — тёплый янтарь вместо типового синего SaaS-акцента:
      считываемо как "терминал/пульт", а не очередная синяя админка.
@@ -31,6 +33,9 @@
   --accent: #df9b2e;
   --accent-hover: #e4aa4d;
   --accent-rgb: 223, 155, 46;
+  /* Белый текст на янтарном фоне даёт 2.4:1 — далеко от WCAG AA. Тёмный
+     текст поверх акцента: 8.1:1 */
+  --on-accent: #0b0e16;
 
   --buy: #10b981;
   --buy-bg: rgba(16, 185, 129, 0.12);
@@ -56,11 +61,13 @@
 
   --text-primary: #12151c;
   --text-secondary: #5b6472;
-  --text-muted: #8991a0;
+  /* Контраст поднят с 2.9:1 до 4.6:1+ к белому/bg-base — WCAG AA */
+  --text-muted: #697080;
 
   --accent: #a87619;
   --accent-hover: #926615;
   --accent-rgb: 168, 118, 25;
+  --on-accent: #000000;
 
   --buy: #0ea472;
   --buy-bg: rgba(16, 185, 129, 0.1);

@@ -43,6 +43,7 @@ export default {
         accent: {
           DEFAULT: 'var(--accent)',
           hover: 'var(--accent-hover)',
+          contrast: 'var(--on-accent)',
         },
         buy: {
           DEFAULT: 'var(--buy)',

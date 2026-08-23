@@ -118,7 +118,7 @@ export function Sidebar() {
         <button
           title="Аккаунт"
           aria-label="Аккаунт"
-          className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-white transition-transform active:scale-90 hover:brightness-110"
+          className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-accent-contrast transition-transform active:scale-90 hover:brightness-110"
         >
           КК
         </button>
