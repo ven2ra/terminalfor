@@ -8,7 +8,11 @@ export function AddWidgetMenu() {
   const { widgets, addWidget, resetLayout } = useDashboardStore()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  // Сброс стирает всю пользовательскую раскладку — необратимо, требуем повторного клика
+  // Сброс стирает всю пользовательскую раскладку — необратимо, требуем повторного клика.
+  // Подтверждение снимается кликом мимо кнопки, а не по таймеру: на странице с
+  // постоянно обновляющимися котировками таймер мог истечь до того, как второй
+  // клик реально доходил до кнопки (гонка), из-за чего "Сбросить" выглядел
+  // нерабочим — клик просто заново вооружал подтверждение вместо сброса
   const [confirmingReset, setConfirmingReset] = useState(false)
 
   const available = (Object.keys(WIDGET_REGISTRY) as WidgetType[]).filter((t) => !widgets.includes(t))
@@ -16,17 +20,13 @@ export function AddWidgetMenu() {
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (resetRef.current && !resetRef.current.contains(e.target as Node)) setConfirmingReset(false)
     }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  // Автосброс состояния подтверждения, если пользователь передумал и не кликнул повторно
-  useEffect(() => {
-    if (!confirmingReset) return
-    const t = setTimeout(() => setConfirmingReset(false), 3000)
-    return () => clearTimeout(t)
-  }, [confirmingReset])
+  const resetRef = useRef<HTMLButtonElement>(null)
 
   return (
     <div className="flex items-center gap-2">
@@ -57,6 +57,7 @@ export function AddWidgetMenu() {
         )}
       </div>
       <button
+        ref={resetRef}
         onClick={() => {
           if (confirmingReset) {
             resetLayout()

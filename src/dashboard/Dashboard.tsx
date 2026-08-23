@@ -17,7 +17,7 @@ const MARGIN: readonly [number, number] = [8, 8]
  * всегда под рукой, независимо от того, как пользователь настроил сетку.
  */
 export function Dashboard() {
-  const { widgets: storedWidgets, layout, setLayout, removeWidget } = useDashboardStore()
+  const { widgets: storedWidgets, layout, layoutEpoch, setLayout, removeWidget } = useDashboardStore()
   const { width, containerRef } = useContainerWidth({ initialWidth: 1400 })
   const isMobile = useIsMobile()
   // Без preventCollision перетаскивание/ресайз одного виджета может вытолкнуть
@@ -43,6 +43,7 @@ export function Dashboard() {
         </div>
         <div ref={containerRef as Ref<HTMLDivElement>} className="min-h-0 flex-1 overflow-auto bg-bg-base">
           <GridLayout
+            key={layoutEpoch}
             width={width}
             layout={layout}
             gridConfig={{ cols: GRID_COLS, rowHeight: ROW_HEIGHT, margin: MARGIN, containerPadding: MARGIN, maxRows: Infinity }}
@@ -53,12 +54,20 @@ export function Dashboard() {
             onLayoutChange={setLayout}
           >
             {widgets.map((type, i) => (
-              <div
-                key={type}
-                className="animate-widget-in overflow-hidden border border-border-color shadow-panel"
-                style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
-              >
-                {WIDGET_REGISTRY[type].render({ onRemove: () => removeWidget(type) })}
+              // Внешний div — прямой ребёнок GridLayout: он получает от неё
+              // позиционирующий inline-style transform: translate(x,y) и не должен
+              // трогать transform сам, иначе анимация перебивает позиционирование
+              // (обнаружено: animate-widget-in с fill-mode both держит transform
+              // последнего кадра поверх transform от react-grid-layout, и все
+              // виджеты рендерились в одной точке независимо от их координат).
+              // Анимация входа и рамка вынесены на внутреннюю обёртку.
+              <div key={type} className="overflow-hidden">
+                <div
+                  className="animate-widget-in h-full overflow-hidden border border-border-color shadow-panel"
+                  style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+                >
+                  {WIDGET_REGISTRY[type].render({ onRemove: () => removeWidget(type) })}
+                </div>
               </div>
             ))}
           </GridLayout>

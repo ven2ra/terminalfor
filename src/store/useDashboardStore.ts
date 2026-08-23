@@ -10,6 +10,13 @@ function buildDefaultLayout(): LayoutItem[] {
 interface DashboardState {
   widgets: WidgetType[]
   layout: LayoutItem[]
+  // Инкрементируется при сбросе раскладки и используется как React key для
+  // <GridLayout> (Dashboard.tsx): react-grid-layout v2 хранит собственное
+  // внутреннее layout-состояние и досинхронизирует его с новым props.layout
+  // через diffing-эффект, а не всегда пересобирает с нуля — смена key
+  // форсирует полный ремаунт, гарантируя чистый initial-mount синк вместо
+  // непредсказуемого merge с уже испорченным внутренним состоянием
+  layoutEpoch: number
   addWidget: (type: WidgetType) => void
   removeWidget: (type: WidgetType) => void
   setLayout: (layout: Layout) => void
@@ -22,6 +29,7 @@ export const useDashboardStore = create<DashboardState>()(
     (set, get) => ({
       widgets: DEFAULT_WIDGETS,
       layout: buildDefaultLayout(),
+      layoutEpoch: 0,
 
       addWidget: (type) => {
         if (get().widgets.includes(type)) return
@@ -41,7 +49,12 @@ export const useDashboardStore = create<DashboardState>()(
 
       setLayout: (layout) => set({ layout: [...layout] }),
 
-      resetLayout: () => set({ widgets: DEFAULT_WIDGETS, layout: buildDefaultLayout() }),
+      resetLayout: () =>
+        set((state) => ({
+          widgets: DEFAULT_WIDGETS,
+          layout: buildDefaultLayout(),
+          layoutEpoch: state.layoutEpoch + 1,
+        })),
     }),
     // v4: сетка сжата с 12 до 10 колонок и Watchlist убран из виджетов
     // (стал постоянной панелью) — координаты старых сохранённых раскладок
