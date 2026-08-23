@@ -2,7 +2,7 @@ import { XMLParser } from 'fast-xml-parser'
 import { cached } from './cache.js'
 import { stripHtml } from './text.js'
 import { getTelegramGroups } from './telegram.js'
-import { classifyTag } from './classify.js'
+import { classifyTag, isImportantNews } from './classify.js'
 
 const parser = new XMLParser({ ignoreAttributes: false })
 
@@ -35,6 +35,7 @@ async function loadFeed({ url, source, fallbackTag }) {
       source,
       tag: classifyTag(title, fallbackTag),
       time: Number.isFinite(pubDate) ? pubDate : Date.now(),
+      important: isImportantNews(title),
     }
   })
 }

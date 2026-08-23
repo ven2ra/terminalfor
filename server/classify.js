@@ -48,3 +48,36 @@ export function classifyTag(title, fallback) {
   const lower = title.toLowerCase()
   return POLITICAL_KEYWORDS.some((kw) => lower.includes(kw)) ? 'politics' : fallback
 }
+
+/**
+ * Рыночно-значимые заголовки — резкие движения, решения ЦБ, санкции,
+ * дефолты и т.п., которые обычно двигают котировки сильнее рядовых новостей.
+ */
+const IMPORTANT_KEYWORDS = [
+  'ключевую ставку',
+  'ключевой ставке',
+  'цб рф',
+  'банк росси',
+  'обвал',
+  'рухну',
+  'рекорд',
+  'дефолт',
+  'санкци',
+  'дефицит бюджет',
+  'девальвац',
+  'национализ',
+  'экстренн',
+  'остановил торги',
+  'приостановил торги',
+  'делистинг',
+  'банкрот',
+  'дивиденд',
+  'байбэк',
+  'buyback',
+  'ipo',
+]
+
+export function isImportantNews(title) {
+  const lower = title.toLowerCase()
+  return IMPORTANT_KEYWORDS.some((kw) => lower.includes(kw))
+}

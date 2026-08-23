@@ -1,6 +1,6 @@
 import { cached } from './cache.js'
 import { stripHtml } from './text.js'
-import { classifyTag } from './classify.js'
+import { classifyTag, isImportantNews } from './classify.js'
 
 /**
  * Публичные Telegram-каналы читаются через веб-превью t.me/s/<channel> —
@@ -42,6 +42,7 @@ async function loadChannel({ username, label }) {
       source: label,
       tag: classifyTag(title, 'market'),
       time: Number.isFinite(time) ? time : Date.now(),
+      important: isImportantNews(title),
     })
   }
 

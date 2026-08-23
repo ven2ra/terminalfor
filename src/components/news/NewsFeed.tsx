@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Flame } from 'lucide-react'
 import { NewsItem } from '@/types'
 import { fetchNews } from '@/api/client'
 import { Panel } from '@/components/common/Panel'
@@ -21,8 +21,9 @@ const TAG_COLORS: Record<NewsItem['tag'], string> = {
   society: 'text-text-secondary bg-bg-elevated',
 }
 
-const FILTERS: Array<{ value: NewsItem['tag'] | 'all'; label: string }> = [
+const FILTERS: Array<{ value: NewsItem['tag'] | 'all' | 'important'; label: string }> = [
   { value: 'all', label: 'Все' },
+  { value: 'important', label: 'Важное' },
   { value: 'market', label: 'Рынок' },
   { value: 'company', label: 'Компании' },
   { value: 'politics', label: 'Политика' },
@@ -39,7 +40,7 @@ interface NewsFeedProps {
 export function NewsFeed({ onRemove }: NewsFeedProps) {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<NewsItem['tag'] | 'all'>('all')
+  const [filter, setFilter] = useState<NewsItem['tag'] | 'all' | 'important'>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -59,7 +60,11 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
     }
   }, [])
 
-  const filtered = useMemo(() => (filter === 'all' ? news : news.filter((n) => n.tag === filter)), [news, filter])
+  const filtered = useMemo(() => {
+    if (filter === 'all') return news
+    if (filter === 'important') return news.filter((n) => n.important)
+    return news.filter((n) => n.tag === filter)
+  }, [news, filter])
 
   return (
     <Panel title="Новости и события" noPadding draggable={!!onRemove} onRemove={onRemove}>
@@ -91,9 +96,16 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
                   href={n.link}
                   target="_blank"
                   rel="noreferrer"
-                  className="group block px-3 py-2.5 hover:bg-bg-hover"
+                  className={`group block px-3 py-2.5 hover:bg-bg-hover ${
+                    n.important ? 'border-l-2 border-warning bg-warning-bg/40' : ''
+                  }`}
                 >
                   <div className="mb-1 flex items-center gap-2">
+                    {n.important && (
+                      <span className="flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-warning">
+                        <Flame size={10} /> Важное
+                      </span>
+                    )}
                     <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${TAG_COLORS[n.tag]}`}>
                       {TAG_LABELS[n.tag]}
                     </span>
@@ -101,14 +113,18 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
                       {formatDistanceToNow(n.time, { addSuffix: true, locale: ru })}
                     </span>
                   </div>
-                  <p className="flex items-start gap-1 text-xs leading-snug text-text-primary">
+                  <p className={`flex items-start gap-1 text-xs leading-snug ${n.important ? 'font-semibold text-text-primary' : 'text-text-primary'}`}>
                     <span>{n.title}</span>
                     <ExternalLink size={10} className="mt-0.5 shrink-0 text-text-muted opacity-0 group-hover:opacity-100" />
                   </p>
                   <span className="text-[10px] text-text-muted">{n.source}</span>
                 </a>
               ))}
-              {filtered.length === 0 && <div className="p-4 text-center text-xs text-text-muted">Новостей пока нет</div>}
+              {filtered.length === 0 && (
+                <div className="p-4 text-center text-xs text-text-muted">
+                  {filter === 'important' ? 'Важных новостей за последнее время нет' : 'Новостей пока нет'}
+                </div>
+              )}
             </div>
           )}
         </div>
