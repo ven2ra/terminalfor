@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
-import { useOrderStore } from '@/store/useOrderStore'
 import { Panel } from '@/components/common/Panel'
 import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
-import { X } from 'lucide-react'
 
-type Tab = 'positions' | 'orders' | 'structure'
+type Tab = 'positions' | 'structure'
 
 const ASSET_COLORS = ['#3b82f6', '#26a65b', '#f5a623', '#a367f5', '#e0473b']
 
@@ -13,13 +11,10 @@ interface PortfolioPanelProps {
   onRemove?: () => void
 }
 
-/** Портфель: открытые позиции, активные ордера, структура активов */
+/** Портфель: открытые позиции и структура активов (активные заявки — отдельный виджет) */
 export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
   const { positions, account } = usePortfolioStore()
-  const { orders, cancelOrder } = useOrderStore()
   const [tab, setTab] = useState<Tab>('positions')
-
-  const activeOrders = orders.filter((o) => o.status === 'new' || o.status === 'partial')
 
   const structure = positions.map((p, idx) => ({
     ticker: p.ticker,
@@ -45,7 +40,6 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
         <div className="flex shrink-0 gap-1 border-b border-border-subtle px-3 pt-2">
           {([
             ['positions', 'Позиции'],
-            ['orders', `Ордера${activeOrders.length ? ` (${activeOrders.length})` : ''}`],
             ['structure', 'Структура'],
           ] as [Tab, string][]).map(([value, label]) => (
             <button
@@ -91,45 +85,6 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
                 ))}
               </tbody>
             </table>
-          )}
-
-          {tab === 'orders' && (
-            <>
-              {activeOrders.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-xs text-text-muted">Нет активных заявок</div>
-              ) : (
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-left text-text-muted">
-                      <th className="pb-2 font-medium">Тикер</th>
-                      <th className="pb-2 font-medium">Тип</th>
-                      <th className="pb-2 text-right font-medium">Цена</th>
-                      <th className="pb-2 text-right font-medium">Объём</th>
-                      <th className="pb-2 text-right font-medium">Статус</th>
-                      <th className="pb-2" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeOrders.map((o) => (
-                      <tr key={o.id} className="border-t border-border-subtle">
-                        <td className="py-2 font-semibold text-text-primary">{o.ticker}</td>
-                        <td className={`py-2 ${o.side === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                          {o.side === 'buy' ? 'Buy' : 'Sell'} · {o.type}
-                        </td>
-                        <td className="py-2 text-right font-tabular text-text-secondary">{formatPrice(o.price)}</td>
-                        <td className="py-2 text-right font-tabular text-text-secondary">{o.size}</td>
-                        <td className="py-2 text-right text-text-muted">Новая</td>
-                        <td className="py-2 text-right">
-                          <button onClick={() => cancelOrder(o.id)} className="text-text-muted hover:text-sell">
-                            <X size={13} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
           )}
 
           {tab === 'structure' && (

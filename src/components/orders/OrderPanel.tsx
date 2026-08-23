@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Minus, Plus } from 'lucide-react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useOrderStore } from '@/store/useOrderStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
@@ -51,6 +52,12 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   const numericPrice = type === 'market' ? lastPrice : Number(price) || 0
   const numericSize = Number(size) || 0
   const total = numericPrice * numericSize
+  const step = instrument?.lotSize ?? 1
+
+  const adjustSize = (delta: number) => {
+    const next = Math.max(step, (Number(size) || 0) + delta)
+    setSize(String(next))
+  }
 
   const handleSubmit = () => {
     if (!instrument || numericSize <= 0) return
@@ -108,12 +115,30 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
 
         <label className="block text-xs text-text-muted">
           Количество, шт.
-          <input
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            inputMode="decimal"
-            className="mt-1 w-full rounded-md border border-border-color bg-bg-base px-2.5 py-1.5 font-tabular text-sm text-text-primary focus:border-accent focus:outline-none"
-          />
+          <div className="mt-1 flex items-stretch overflow-hidden rounded-md border border-border-color focus-within:border-accent">
+            <button
+              type="button"
+              onClick={() => adjustSize(-step)}
+              aria-label="Уменьшить количество"
+              className="flex w-8 shrink-0 items-center justify-center bg-bg-elevated text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+            >
+              <Minus size={13} />
+            </button>
+            <input
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+              inputMode="decimal"
+              className="min-w-0 flex-1 bg-bg-base px-2 py-1.5 text-center font-tabular text-sm text-text-primary focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => adjustSize(step)}
+              aria-label="Увеличить количество"
+              className="flex w-8 shrink-0 items-center justify-center bg-bg-elevated text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+            >
+              <Plus size={13} />
+            </button>
+          </div>
         </label>
 
         <div className="flex gap-1.5">

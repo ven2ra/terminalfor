@@ -43,6 +43,6 @@ export const useDashboardStore = create<DashboardState>()(
 
       resetLayout: () => set({ widgets: DEFAULT_WIDGETS, layout: buildDefaultLayout() }),
     }),
-    { name: 'terminalfor-dashboard-v2' }
+    { name: 'terminalfor-dashboard-v3' }
   )
 )

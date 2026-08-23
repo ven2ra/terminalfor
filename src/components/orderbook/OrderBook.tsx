@@ -1,6 +1,7 @@
 import { useMarketStore } from '@/store/useMarketStore'
 import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { Panel } from '@/components/common/Panel'
+import { OrderBookDepthChart } from './OrderBookDepthChart'
 import { formatPrice } from '@/lib/format'
 
 interface OrderBookProps {
@@ -21,6 +22,9 @@ export function OrderBook({ onRemove }: OrderBookProps) {
   return (
     <Panel title="Стакан заявок" noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="flex h-full flex-col text-xs">
+        <div className="shrink-0 border-b border-border-subtle px-2 pt-2">
+          <OrderBookDepthChart bids={orderBook.bids} asks={orderBook.asks} />
+        </div>
         <div className="grid shrink-0 grid-cols-3 gap-1 px-3 py-1.5 text-text-muted">
           <span>Цена</span>
           <span className="text-right">Объём</span>

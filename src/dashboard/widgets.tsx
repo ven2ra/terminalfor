@@ -1,14 +1,23 @@
 import { ReactNode } from 'react'
-import { Activity, BookOpen, CandlestickChart, LineChart, Newspaper, Star, Wallet } from 'lucide-react'
+import { Activity, BookOpen, CandlestickChart, ClipboardList, LineChart, Newspaper, Star, Wallet } from 'lucide-react'
 import { Watchlist } from '@/components/watchlist/Watchlist'
 import { ChartArea } from '@/components/chart/ChartArea'
 import { OrderBook } from '@/components/orderbook/OrderBook'
 import { TradesTape } from '@/components/orderbook/TradesTape'
 import { OrderPanel } from '@/components/orders/OrderPanel'
+import { ActiveOrdersPanel } from '@/components/orders/ActiveOrdersPanel'
 import { PortfolioPanel } from '@/components/portfolio/PortfolioPanel'
 import { NewsFeed } from '@/components/news/NewsFeed'
 
-export type WidgetType = 'watchlist' | 'chart' | 'orderbook' | 'trades' | 'orderPanel' | 'portfolio' | 'news'
+export type WidgetType =
+  | 'watchlist'
+  | 'chart'
+  | 'orderbook'
+  | 'trades'
+  | 'orderPanel'
+  | 'activeOrders'
+  | 'portfolio'
+  | 'news'
 
 interface WidgetLayoutDefaults {
   x: number
@@ -48,28 +57,44 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
   orderbook: {
     label: 'Стакан заявок',
     icon: <BookOpen size={14} />,
-    layout: { x: 9, y: 0, w: 3, h: 7, minW: 2, minH: 5 },
+    // +глубина рынка над лесенкой
+    layout: { x: 9, y: 0, w: 3, h: 10, minW: 2, minH: 7 },
     render: ({ onRemove }) => <OrderBook onRemove={onRemove} />,
   },
   trades: {
     label: 'Лента сделок',
     icon: <Activity size={14} />,
-    layout: { x: 9, y: 7, w: 3, h: 7, minW: 2, minH: 5 },
+    layout: { x: 9, y: 10, w: 3, h: 7, minW: 2, minH: 5 },
     render: ({ onRemove }) => <TradesTape onRemove={onRemove} />,
   },
   orderPanel: {
     label: 'Ордер',
     icon: <LineChart size={14} />,
     // Высота с запасом: кнопки, тип, цена, объём, быстрые кнопки, сумма/остаток и submit целиком помещаются без обрезки
-    layout: { x: 9, y: 14, w: 3, h: 17, minW: 2, minH: 13 },
+    layout: { x: 9, y: 17, w: 3, h: 17, minW: 2, minH: 13 },
     render: ({ onRemove }) => <OrderPanel onRemove={onRemove} />,
+  },
+  activeOrders: {
+    label: 'Активные заявки',
+    icon: <ClipboardList size={14} />,
+    layout: { x: 9, y: 34, w: 3, h: 7, minW: 2, minH: 5 },
+    render: ({ onRemove }) => <ActiveOrdersPanel onRemove={onRemove} />,
   },
   news: {
     label: 'Новости',
     icon: <Newspaper size={14} />,
-    layout: { x: 9, y: 31, w: 3, h: 8, minW: 2, minH: 5 },
+    layout: { x: 9, y: 41, w: 3, h: 8, minW: 2, minH: 5 },
     render: ({ onRemove }) => <NewsFeed onRemove={onRemove} />,
   },
 }
 
-export const DEFAULT_WIDGETS: WidgetType[] = ['watchlist', 'chart', 'portfolio', 'orderbook', 'trades', 'orderPanel', 'news']
+export const DEFAULT_WIDGETS: WidgetType[] = [
+  'watchlist',
+  'chart',
+  'portfolio',
+  'orderbook',
+  'trades',
+  'orderPanel',
+  'activeOrders',
+  'news',
+]
