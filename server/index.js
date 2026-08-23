@@ -3,6 +3,7 @@ import express from 'express'
 import { getSecurities, getExtraSecurities, getCandles, getOlderCandles, getTrades, isValidTicker } from './moex.js'
 import { getNews } from './news.js'
 import { getCalendar } from './calendar.js'
+import { proxyLogo } from './logos.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
 
@@ -96,6 +97,10 @@ app.get('/api/news', async (_req, res) => {
     console.error('news error:', err.message)
     res.status(502).json({ error: 'news_unavailable' })
   }
+})
+
+app.get('/api/logo/:isin', (req, res) => {
+  proxyLogo(req.params.isin.toUpperCase(), res)
 })
 
 app.get('/api/calendar', async (_req, res) => {
