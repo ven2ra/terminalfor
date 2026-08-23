@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { GripVertical, X } from 'lucide-react'
+import { DotsSixVertical, X } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useLiveCandles } from '@/hooks/useLiveCandles'
 import { TIMEFRAMES } from '@/lib/timeframes'
@@ -35,7 +35,7 @@ export function ChartArea({ onRemove }: ChartAreaProps) {
       {onRemove && (
         <div className="widget-drag-handle flex shrink-0 cursor-move select-none items-center justify-between border-b border-border-subtle bg-bg-panel px-3 py-1">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-            <GripVertical size={12} /> График
+            <DotsSixVertical size={12} /> График
           </div>
           <button
             onClick={onRemove}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus, RotateCcw } from 'lucide-react'
+import { ArrowCounterClockwise, Plus } from '@phosphor-icons/react'
 import { useDashboardStore } from '@/store/useDashboardStore'
 import { WIDGET_REGISTRY, WidgetType } from '@/dashboard/widgets'
 
@@ -72,7 +72,7 @@ export function AddWidgetMenu() {
             : 'border-border-color text-text-secondary hover:bg-bg-hover hover:text-text-primary'
         }`}
       >
-        <RotateCcw size={13} /> {confirmingReset ? 'Точно сбросить?' : 'Сбросить'}
+        <ArrowCounterClockwise size={13} /> {confirmingReset ? 'Точно сбросить?' : 'Сбросить'}
       </button>
     </div>
   )

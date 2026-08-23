@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Minus } from 'lucide-react'
+import { Minus, TrendDown, TrendUp } from '@phosphor-icons/react'
 
 interface SentimentBadgeProps {
   changePercent: number
@@ -13,7 +13,7 @@ export function SentimentBadge({ changePercent }: SentimentBadgeProps) {
   const label = neutral ? 'Нейтрально' : bullish ? 'Бычий тренд' : 'Медвежий тренд'
   const color = neutral ? 'text-text-secondary' : bullish ? 'text-buy' : 'text-sell'
   const bg = neutral ? 'bg-bg-elevated' : bullish ? 'bg-buy-bg' : 'bg-sell-bg'
-  const Icon = neutral ? Minus : bullish ? TrendingUp : TrendingDown
+  const Icon = neutral ? Minus : bullish ? TrendUp : TrendDown
 
   // Сила движения — 5 делений, насыщенность растёт с |change%| (условная шкала до 3%)
   const strength = Math.min(5, Math.max(1, Math.round((abs / 3) * 5) || 1))

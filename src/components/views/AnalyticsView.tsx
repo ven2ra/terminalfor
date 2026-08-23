@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useViewStore } from '@/store/useViewStore'
 import { Panel } from '@/components/common/Panel'

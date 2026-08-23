@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
-import { Download } from 'lucide-react'
+import { DownloadSimple } from '@phosphor-icons/react'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useOrderStore } from '@/store/useOrderStore'
 import { useEquityHistoryStore } from '@/store/useEquityHistoryStore'
@@ -158,7 +158,7 @@ export function ReportsView() {
                 disabled={filteredOrders.length === 0}
                 className="flex items-center gap-1 rounded border border-border-color px-2 py-1 text-text-secondary transition-colors hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Download size={12} /> CSV
+                <DownloadSimple size={12} /> CSV
               </button>
             </div>
           }
@@ -209,7 +209,7 @@ export function ReportsView() {
               disabled={positions.length === 0}
               className="flex items-center gap-1 rounded border border-border-color px-2 py-1 text-xs text-text-secondary transition-colors hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <Download size={12} /> CSV
+              <DownloadSimple size={12} /> CSV
             </button>
           }
         >

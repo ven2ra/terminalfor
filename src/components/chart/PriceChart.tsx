@@ -12,7 +12,18 @@ import {
   LineSeries,
   createChart,
 } from 'lightweight-charts'
-import { BarChart3, Maximize2, TrendingUp, Waves, Activity, Minus as MinusIcon, Expand, Shrink, GitCompare, X } from 'lucide-react'
+import {
+  ArrowsLeftRight,
+  ArrowsIn,
+  ArrowsOut,
+  ChartBar,
+  CornersOut,
+  Minus as MinusIcon,
+  Pulse,
+  TrendUp,
+  Waves,
+  X,
+} from '@phosphor-icons/react'
 import { Candle } from '@/types'
 import { CandleInterval, fetchCandles } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
@@ -506,7 +517,7 @@ export function PriceChart({
               showMA ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
             }`}
           >
-            <TrendingUp size={13} /> MA
+            <TrendUp size={13} /> MA
           </button>
           <button
             onClick={() => setShowVolume((v) => !v)}
@@ -514,7 +525,7 @@ export function PriceChart({
               showVolume ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
             }`}
           >
-            <BarChart3 size={13} /> Объём
+            <ChartBar size={13} /> Объём
           </button>
           <button
             onClick={() => setShowBollinger((v) => !v)}
@@ -532,7 +543,7 @@ export function PriceChart({
               showVWAP ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
             }`}
           >
-            <Activity size={13} /> VWAP
+            <Pulse size={13} /> VWAP
           </button>
           <button
             onClick={() => setShowLevels((v) => !v)}
@@ -550,7 +561,7 @@ export function PriceChart({
                 title="Убрать сравнение"
                 className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-[#f97316] transition-colors hover:bg-bg-hover"
               >
-                <GitCompare size={13} /> {compareTicker} <X size={11} />
+                <ArrowsLeftRight size={13} /> {compareTicker} <X size={11} />
               </button>
             ) : (
               <button
@@ -560,7 +571,7 @@ export function PriceChart({
                   compareOpen ? 'bg-bg-hover text-text-primary' : 'text-text-muted hover:bg-bg-hover'
                 }`}
               >
-                <GitCompare size={13} /> Сравнить
+                <ArrowsLeftRight size={13} /> Сравнить
               </button>
             )}
             {compareOpen && !compareTicker && (
@@ -601,14 +612,14 @@ export function PriceChart({
             title="Сбросить масштаб"
             className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover"
           >
-            <Maximize2 size={13} />
+            <CornersOut size={13} />
           </button>
           <button
             onClick={() => setIsFullscreen((v) => !v)}
             title={isFullscreen ? 'Свернуть (Esc)' : 'На весь экран'}
             className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-hover"
           >
-            {isFullscreen ? <Shrink size={13} /> : <Expand size={13} />}
+            {isFullscreen ? <ArrowsIn size={13} /> : <ArrowsOut size={13} />}
           </button>
         </div>
       </div>

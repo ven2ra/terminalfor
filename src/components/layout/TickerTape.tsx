@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus, X } from '@phosphor-icons/react'
 import { fetchTapeCatalog, fetchTapeQuotes, TapeCatalogEntry, TapeQuote } from '@/api/client'
 import { useTapeStore } from '@/store/useTapeStore'
 import { useMarketStore } from '@/store/useMarketStore'

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Grid3x3 } from 'lucide-react'
+import { GridFour } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { Panel } from '@/components/common/Panel'
 import { formatPercent } from '@/lib/format'
@@ -27,7 +27,7 @@ export function Heatmap({ onRemove }: HeatmapProps) {
   const intensity = (pct: number) => Math.min(1, Math.abs(pct) / 4)
 
   return (
-    <Panel title="Тепловая карта" icon={<Grid3x3 size={14} />} noPadding draggable={!!onRemove} onRemove={onRemove}>
+    <Panel title="Тепловая карта" icon={<GridFour size={14} />} noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="grid h-full auto-rows-fr grid-cols-4 gap-1 overflow-auto p-2 sm:grid-cols-6">
         {tiles.map((t) => {
           const positive = t.changePercent >= 0

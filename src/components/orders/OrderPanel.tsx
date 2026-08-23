@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useOrderStore } from '@/store/useOrderStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'

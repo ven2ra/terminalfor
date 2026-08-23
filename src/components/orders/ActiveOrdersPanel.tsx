@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ClipboardList, X } from 'lucide-react'
+import { Check, ClipboardText, X } from '@phosphor-icons/react'
 import { useOrderStore } from '@/store/useOrderStore'
 import { Panel } from '@/components/common/Panel'
 import { formatPrice } from '@/lib/format'
@@ -24,7 +24,7 @@ export function ActiveOrdersPanel({ onRemove }: ActiveOrdersPanelProps) {
     >
       {activeOrders.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-2 text-text-muted">
-          <ClipboardList size={28} className="opacity-40" />
+          <ClipboardText size={28} className="opacity-40" />
           <span className="text-xs">Активных заявок нет</span>
         </div>
       ) : (

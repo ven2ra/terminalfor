@@ -1,5 +1,5 @@
 import { PropsWithChildren, ReactNode } from 'react'
-import { GripVertical, X } from 'lucide-react'
+import { DotsSixVertical, X } from '@phosphor-icons/react'
 
 interface PanelProps {
   title: string
@@ -32,7 +32,7 @@ export function Panel({
         }`}
       >
         <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
-          {draggable && <GripVertical size={13} className="shrink-0 text-text-muted" />}
+          {draggable && <DotsSixVertical size={13} className="shrink-0 text-text-muted" />}
           {icon}
           <span className="truncate">{title}</span>
         </div>

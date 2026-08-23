@@ -1,3 +1,4 @@
+import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { TickerTape } from '@/components/layout/TickerTape'
 import { MainGrid } from '@/components/layout/MainGrid'
@@ -11,10 +12,13 @@ export default function App() {
   useAlertsWatcher()
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg-base">
-      <Header />
-      <TickerTape />
-      <MainGrid />
+    <div className="flex h-screen w-screen overflow-hidden bg-bg-base">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Header />
+        <TickerTape />
+        <MainGrid />
+      </div>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Activity, TrendingDown, TrendingUp } from 'lucide-react'
+import { Pulse, TrendDown, TrendUp } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { Panel } from '@/components/common/Panel'
 import { formatCompact, formatPercent } from '@/lib/format'
@@ -27,7 +27,7 @@ export function MarketOverview({ onRemove }: MarketOverviewProps) {
   const advancersShare = (stats.advancers / total) * 100
 
   return (
-    <Panel title="Обзор рынка" icon={<Activity size={14} />} noPadding draggable={!!onRemove} onRemove={onRemove}>
+    <Panel title="Обзор рынка" icon={<Pulse size={14} />} noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="flex h-full flex-col gap-3 overflow-auto p-3">
         <div>
           <div className="mb-1 flex items-center justify-between text-[11px] text-text-muted">
@@ -50,7 +50,7 @@ export function MarketOverview({ onRemove }: MarketOverviewProps) {
 
         <div>
           <div className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-buy">
-            <TrendingUp size={11} /> Лидеры роста
+            <TrendUp size={11} /> Лидеры роста
           </div>
           <div className="space-y-1">
             {stats.top.map((i) => (
@@ -64,7 +64,7 @@ export function MarketOverview({ onRemove }: MarketOverviewProps) {
 
         <div>
           <div className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-sell">
-            <TrendingDown size={11} /> Лидеры падения
+            <TrendDown size={11} /> Лидеры падения
           </div>
           <div className="space-y-1">
             {stats.bottom.map((i) => (

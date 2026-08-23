@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, Star } from 'lucide-react'
+import { MagnifyingGlass, Star } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePriceHistoryStore } from '@/store/usePriceHistoryStore'
 import { Panel } from '@/components/common/Panel'
@@ -112,7 +112,7 @@ export function Watchlist({ onRemove }: WatchlistProps) {
       onRemove={onRemove}
       actions={
         <div className="relative">
-          <Search size={12} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-text-muted" />
+          <MagnifyingGlass size={12} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}

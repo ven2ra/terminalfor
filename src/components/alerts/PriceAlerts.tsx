@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Bell, Trash2 } from 'lucide-react'
+import { Bell, Trash } from '@phosphor-icons/react'
 import { Panel } from '@/components/common/Panel'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useAlertsStore, AlertCondition } from '@/store/useAlertsStore'
@@ -122,7 +122,7 @@ export function PriceAlerts({ onRemove }: PriceAlertsProps) {
                     aria-label="Удалить алерт"
                     className="text-text-muted transition-colors hover:text-sell"
                   >
-                    <Trash2 size={13} />
+                    <Trash size={13} />
                   </button>
                 </div>
               ))}
@@ -147,7 +147,7 @@ export function PriceAlerts({ onRemove }: PriceAlertsProps) {
                     aria-label="Удалить алерт"
                     className="text-text-muted transition-colors hover:text-sell"
                   >
-                    <Trash2 size={13} />
+                    <Trash size={13} />
                   </button>
                 </div>
               ))}

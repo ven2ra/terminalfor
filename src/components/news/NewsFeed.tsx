@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { ExternalLink, Flame } from 'lucide-react'
+import { ArrowSquareOut, Fire } from '@phosphor-icons/react'
 import { NewsItem } from '@/types'
 import { fetchNews } from '@/api/client'
 import { Panel } from '@/components/common/Panel'
@@ -103,7 +103,7 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
                   <div className="mb-1 flex items-center gap-2">
                     {n.important && (
                       <span className="flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-warning">
-                        <Flame size={10} /> Важное
+                        <Fire size={10} /> Важное
                       </span>
                     )}
                     <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${TAG_COLORS[n.tag]}`}>
@@ -115,7 +115,7 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
                   </div>
                   <p className={`flex items-start gap-1 text-xs leading-snug ${n.important ? 'font-semibold text-text-primary' : 'text-text-primary'}`}>
                     <span>{n.title}</span>
-                    <ExternalLink size={10} className="mt-0.5 shrink-0 text-text-muted opacity-0 group-hover:opacity-100" />
+                    <ArrowSquareOut size={10} className="mt-0.5 shrink-0 text-text-muted opacity-0 group-hover:opacity-100" />
                   </p>
                   <span className="text-[10px] text-text-muted">{n.source}</span>
                 </a>
