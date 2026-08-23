@@ -15,7 +15,7 @@ async function loadFutures() {
   const url =
     `${ISS_BASE}/engines/futures/markets/forts/boards/${BOARD}/securities.json` +
     `?iss.meta=off&securities.columns=SECID,SHORTNAME,ASSETCODE,LASTTRADEDATE,PREVSETTLEPRICE,LOTVOLUME` +
-    `&marketdata.columns=SECID,LAST,VOLTODAY,VALTODAY,HIGH,LOW,BID,OFFER,UPDATETIME`
+    `&marketdata.columns=SECID,LAST,VOLTODAY,VALTODAY,HIGH,LOW,OPEN,BID,OFFER,UPDATETIME`
 
   const json = await fetchJson(url)
   const securities = rowsToObjects(json.securities)
@@ -49,6 +49,7 @@ async function loadFutures() {
         offer: md?.OFFER ?? null,
         dayHigh: md?.HIGH ?? null,
         dayLow: md?.LOW ?? null,
+        dayOpen: md?.OPEN ?? null,
         updatedAt: md?.UPDATETIME ?? null,
       }
     })

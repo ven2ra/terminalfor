@@ -26,6 +26,7 @@ export interface Instrument {
   offer: number | null
   dayHigh: number | null
   dayLow: number | null
+  dayOpen: number | null
   isFavorite?: boolean
 }
 

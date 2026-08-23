@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useEquityHistoryStore } from '@/store/useEquityHistoryStore'
+import { usePriceHistoryStore } from '@/store/usePriceHistoryStore'
 
 const SECURITIES_POLL_MS = 1500
 const EXTRA_SECURITIES_POLL_MS = 20000 // облигации/фьючерсы обновляются реже — список тяжёлый для ISS
@@ -16,6 +17,7 @@ export function useMarketFeed() {
   const { loadSecurities, loadExtraSecurities, refreshOrderBook, loadTrades, instruments } = useMarketStore()
   const { revalue, account } = usePortfolioStore()
   const recordEquity = useEquityHistoryStore((s) => s.record)
+  const recordPrice = usePriceHistoryStore((s) => s.record)
 
   useEffect(() => {
     loadSecurities()
@@ -48,4 +50,12 @@ export function useMarketFeed() {
     if (!account.equity) return
     recordEquity(account.equity)
   }, [account.equity, recordEquity])
+
+  useEffect(() => {
+    // Историю копим только для избранного — иначе на 500+ инструментов это
+    // лишняя нагрузка на стейт ради спарклайнов, которые всё равно не видны
+    for (const i of instruments) {
+      if (i.isFavorite) recordPrice(i.ticker, i.lastPrice)
+    }
+  }, [instruments, recordPrice])
 }

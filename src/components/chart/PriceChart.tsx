@@ -16,6 +16,7 @@ import { CandleInterval } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useThemeStore } from '@/store/useThemeStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
+import { SentimentBadge } from '@/components/chart/SentimentBadge'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { calcSMA } from '@/lib/indicators'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
@@ -271,18 +272,25 @@ export function PriceChart({
                 {instrument.priceUnit === 'percent' ? '%' : ''} ({formatPercent(instrument.changePercent)})
               </span>
             )}
+            {instrument && <SentimentBadge changePercent={instrument.changePercent} />}
           </div>
         </div>
 
         <div className="hidden gap-4 text-xs text-text-muted md:flex">
           <div>
+            <div className="text-text-muted">Открытие</div>
+            <div className="font-tabular text-text-secondary">
+              {instrument?.dayOpen != null ? formatPrice(instrument.dayOpen, 3) : '—'}
+            </div>
+          </div>
+          <div>
             <div className="text-text-muted">Макс</div>
             {/* 3 знака после запятой — у части бумаг шаг цены мельче 1 копейки, округление до 2 искажало значение */}
-            <div className="font-tabular text-text-secondary">{dayHigh != null ? formatPrice(dayHigh, 3) : '—'}</div>
+            <div className="font-tabular text-buy">{dayHigh != null ? formatPrice(dayHigh, 3) : '—'}</div>
           </div>
           <div>
             <div className="text-text-muted">Мин</div>
-            <div className="font-tabular text-text-secondary">{dayLow != null ? formatPrice(dayLow, 3) : '—'}</div>
+            <div className="font-tabular text-sell">{dayLow != null ? formatPrice(dayLow, 3) : '—'}</div>
           </div>
           <div>
             <div className="text-text-muted">Объём торгов</div>

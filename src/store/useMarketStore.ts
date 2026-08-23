@@ -25,6 +25,7 @@ function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Inst
     offer: dto.offer,
     dayHigh: dto.dayHigh,
     dayLow: dto.dayLow,
+    dayOpen: dto.dayOpen,
     isFavorite: prevFavorite,
   }
 }

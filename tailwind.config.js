@@ -37,9 +37,18 @@ export default {
           DEFAULT: 'var(--sell)',
           bg: 'var(--sell-bg)',
         },
+        warning: {
+          DEFAULT: 'var(--warning)',
+          bg: 'var(--warning-bg)',
+        },
+        cyan: {
+          DEFAULT: 'var(--accent-cyan)',
+        },
       },
       boxShadow: {
         panel: '0 1px 2px rgba(0,0,0,0.24)',
+        elevated: '0 8px 24px rgba(0,0,0,0.28)',
+        glow: '0 0 0 1px var(--accent), 0 0 16px -2px var(--accent)',
       },
       keyframes: {
         flash: {
@@ -62,6 +71,14 @@ export default {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+        'row-in': {
+          '0%': { opacity: '0', transform: 'translateY(-4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'pop-in': {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
       animation: {
         flash: 'flash 0.6s ease-out',
@@ -69,6 +86,8 @@ export default {
         'flash-down': 'flash-down 0.7s ease-out',
         shimmer: 'shimmer 1.4s infinite linear',
         'tape-scroll': 'tape-scroll 30s linear infinite',
+        'row-in': 'row-in 0.25s ease-out',
+        'pop-in': 'pop-in 0.15s ease-out',
       },
     },
   },

@@ -29,6 +29,9 @@
   --buy-bg: rgba(16, 185, 129, 0.12);
   --sell: #f87171;
   --sell-bg: rgba(248, 113, 113, 0.12);
+  --warning: #f0b429;
+  --warning-bg: rgba(240, 180, 41, 0.12);
+  --accent-cyan: #22d3ee;
 
   --flash-color: rgba(59, 130, 246, 0.25);
 
@@ -55,6 +58,9 @@
   --buy-bg: rgba(16, 185, 129, 0.1);
   --sell: #e2554f;
   --sell-bg: rgba(248, 113, 113, 0.1);
+  --warning: #b7791f;
+  --warning-bg: rgba(183, 121, 31, 0.1);
+  --accent-cyan: #0891b2;
 
   --flash-color: rgba(37, 99, 235, 0.15);
 

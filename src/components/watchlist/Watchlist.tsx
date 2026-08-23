@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Search, Star } from 'lucide-react'
 import { useMarketStore } from '@/store/useMarketStore'
+import { usePriceHistoryStore } from '@/store/usePriceHistoryStore'
 import { Panel } from '@/components/common/Panel'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
+import { Sparkline } from '@/components/common/Sparkline'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
 import { formatPercent, formatPrice } from '@/lib/format'
 import { AssetType, Instrument } from '@/types'
@@ -32,6 +34,7 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
   const positive = inst.change >= 0
   const priceFlash = usePriceFlash(inst.lastPrice)
   const priceSuffix = inst.priceUnit === 'percent' ? '%' : ''
+  const sparkValues = usePriceHistoryStore((s) => (inst.isFavorite ? s.history[inst.ticker] : undefined))
 
   return (
     <button
@@ -66,11 +69,16 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
             {priceSuffix}
           </span>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <span className="truncate text-xs text-text-muted">{inst.name}</span>
-          <span className={`font-tabular text-xs ${positive ? 'text-buy' : 'text-sell'}`}>
-            {formatPercent(inst.changePercent)}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            {inst.isFavorite && sparkValues && sparkValues.length >= 2 && (
+              <Sparkline values={sparkValues} width={44} height={16} />
+            )}
+            <span className={`font-tabular text-xs ${positive ? 'text-buy' : 'text-sell'}`}>
+              {formatPercent(inst.changePercent)}
+            </span>
+          </div>
         </div>
       </div>
     </button>

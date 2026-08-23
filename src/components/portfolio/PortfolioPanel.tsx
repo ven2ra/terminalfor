@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
+import { useEquityHistoryStore } from '@/store/useEquityHistoryStore'
 import { Panel } from '@/components/common/Panel'
+import { Sparkline } from '@/components/common/Sparkline'
 import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
 
 type Tab = 'positions' | 'structure'
@@ -14,6 +16,7 @@ interface PortfolioPanelProps {
 /** Портфель: открытые позиции и структура активов (активные заявки — отдельный виджет) */
 export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
   const { positions, account } = usePortfolioStore()
+  const equityPoints = useEquityHistoryStore((s) => s.points)
   const [tab, setTab] = useState<Tab>('positions')
 
   const structure = positions.map((p, idx) => ({
@@ -22,21 +25,27 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
     color: ASSET_COLORS[idx % ASSET_COLORS.length],
   }))
   const totalValue = structure.reduce((sum, s) => sum + s.value, 0) || 1
+  const pnlPositive = account.todayPnl >= 0
+  const sparkValues = equityPoints.slice(-60).map((p) => p.equity)
 
   return (
-    <Panel
-      title="Портфель"
-      noPadding
-      draggable={!!onRemove}
-      onRemove={onRemove}
-      actions={
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-text-muted">Баланс</span>
-          <span className="font-tabular font-semibold text-text-primary">{formatMoney(account.balance)}</span>
-        </div>
-      }
-    >
+    <Panel title="Портфель" noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="flex h-full flex-col">
+        <div className="flex shrink-0 items-center gap-4 border-b border-border-subtle px-3 py-2.5">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-text-muted">Капитал</div>
+            <div className="font-tabular text-lg font-bold text-text-primary">{formatMoney(account.equity)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-text-muted">P&L сегодня</div>
+            <div className={`font-tabular text-sm font-semibold ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
+              {pnlPositive ? '+' : ''}
+              {formatMoney(account.todayPnl)} <span className="opacity-80">({formatPercent(account.todayPnlPercent)})</span>
+            </div>
+          </div>
+          <Sparkline values={sparkValues} width={90} height={30} className="ml-auto shrink-0" />
+        </div>
+
         <div className="flex shrink-0 gap-1 border-b border-border-subtle px-3 pt-2">
           {([
             ['positions', 'Позиции'],

@@ -16,7 +16,7 @@ async function loadBoard(board) {
   const url =
     `${ISS_BASE}/engines/stock/markets/bonds/boards/${board}/securities.json` +
     `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVPRICE,FACEVALUE,MATDATE,COUPONPERCENT,CURRENCYID` +
-    `&marketdata.columns=SECID,LAST,VOLTODAY,VALTODAY,BID,OFFER,HIGH,LOW,UPDATETIME`
+    `&marketdata.columns=SECID,LAST,VOLTODAY,VALTODAY,BID,OFFER,HIGH,LOW,OPEN,UPDATETIME`
 
   const json = await fetchJson(url)
   const securities = rowsToObjects(json.securities)
@@ -48,6 +48,7 @@ async function loadBoard(board) {
         offer: md?.OFFER ?? null,
         dayHigh: md?.HIGH ?? null,
         dayLow: md?.LOW ?? null,
+        dayOpen: md?.OPEN ?? null,
         updatedAt: md?.UPDATETIME ?? null,
         board,
       }

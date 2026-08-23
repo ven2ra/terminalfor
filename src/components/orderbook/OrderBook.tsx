@@ -26,6 +26,14 @@ export function OrderBook({ onRemove }: OrderBookProps) {
     orderBook.asks[orderBook.asks.length - 1]?.total ?? 1
   )
 
+  const bestBid = orderBook.bids[0]?.price
+  const bestAsk = orderBook.asks[0]?.price
+  const spread = bestBid != null && bestAsk != null ? bestAsk - bestBid : null
+  const bidVolume = orderBook.bids[orderBook.bids.length - 1]?.total ?? 0
+  const askVolume = orderBook.asks[orderBook.asks.length - 1]?.total ?? 0
+  const totalVolume = bidVolume + askVolume
+  const bidShare = totalVolume > 0 ? (bidVolume / totalVolume) * 100 : 50
+
   return (
     <Panel title="Стакан заявок" noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="relative flex h-full flex-col text-xs">
@@ -38,6 +46,19 @@ export function OrderBook({ onRemove }: OrderBookProps) {
         <div className="shrink-0 border-b border-border-subtle px-2 pt-2">
           <OrderBookDepthChart bids={orderBook.bids} asks={orderBook.asks} />
         </div>
+
+        <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-3 py-1.5 text-[11px]">
+          <span className="text-text-muted">
+            Спред <span className="font-tabular text-text-secondary">{spread != null ? formatPrice(spread) : '—'}</span>
+          </span>
+          <div className="flex h-1.5 flex-1 overflow-hidden rounded-full bg-sell-bg" title="Дисбаланс bid/ask">
+            <div className="h-full bg-buy" style={{ width: `${bidShare}%` }} />
+          </div>
+          <span className="font-tabular text-buy">{bidShare.toFixed(0)}%</span>
+          <span className="text-text-muted">/</span>
+          <span className="font-tabular text-sell">{(100 - bidShare).toFixed(0)}%</span>
+        </div>
+
         <div className="grid shrink-0 grid-cols-3 gap-1 px-3 py-1.5 text-text-muted">
           <span>Цена</span>
           <span className="text-right">Объём</span>

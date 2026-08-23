@@ -19,6 +19,7 @@ export interface SecurityDto {
   offer: number | null
   dayHigh: number | null
   dayLow: number | null
+  dayOpen: number | null
   updatedAt: string | null
 }
 

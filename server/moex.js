@@ -25,7 +25,7 @@ async function loadSecurities() {
   const url =
     `${ISS_BASE}/engines/stock/markets/shares/boards/${BOARD}/securities.json` +
     `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVLEGALCLOSEPRICE,PREVPRICE,SECTYPE` +
-    `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME,HIGH,LOW`
+    `&marketdata.columns=SECID,LAST,PREVPRICE,CHANGE,LASTCHANGEPRCNT,VOLTODAY,VALTODAY,BID,OFFER,UPDATETIME,HIGH,LOW,OPEN`
 
   const json = await fetchJson(url)
   const securities = rowsToObjects(json.securities)
@@ -61,6 +61,7 @@ async function loadSecurities() {
         offer: md?.OFFER ?? null,
         dayHigh: md?.HIGH ?? null,
         dayLow: md?.LOW ?? null,
+        dayOpen: md?.OPEN ?? null,
         updatedAt: md?.UPDATETIME ?? null,
       }
     })
