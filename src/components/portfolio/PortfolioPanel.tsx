@@ -33,11 +33,11 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
       <div className="flex h-full flex-col">
         <div className="flex shrink-0 items-center gap-4 border-b border-border-subtle px-3 py-2.5">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-text-muted">Капитал</div>
+            <div className="text-[11px] uppercase tracking-wide text-text-muted">Капитал</div>
             <div className="font-tabular text-lg font-bold text-text-primary">{formatMoney(account.equity)}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-text-muted">P&L сегодня</div>
+            <div className="text-[11px] uppercase tracking-wide text-text-muted">P&L сегодня</div>
             <div className={`font-tabular text-sm font-semibold ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
               {pnlPositive ? '+' : ''}
               {formatMoney(account.todayPnl)} <span className="opacity-80">({formatPercent(account.todayPnlPercent)})</span>
@@ -81,14 +81,14 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
                   <tr key={p.ticker} className="border-t border-border-subtle">
                     <td className="py-2 font-semibold text-text-primary">{p.ticker}</td>
                     <td className={`py-2 font-medium ${p.side === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                      {p.side === 'buy' ? 'Long' : 'Short'}
+                      {p.side === 'buy' ? 'Лонг' : 'Шорт'}
                     </td>
                     <td className="py-2 text-right font-tabular text-text-secondary">{p.size}</td>
                     <td className="py-2 text-right font-tabular text-text-secondary">{formatPrice(p.avgPrice)}</td>
                     <td className="py-2 text-right font-tabular text-text-secondary">{formatPrice(p.currentPrice)}</td>
                     <td className={`py-2 text-right font-tabular font-semibold ${p.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
                       {formatMoney(p.pnl)}
-                      <span className="ml-1 text-[10px] font-normal opacity-80">({formatPercent(p.pnlPercent)})</span>
+                      <span className="ml-1 text-[11px] font-normal opacity-80">({formatPercent(p.pnlPercent)})</span>
                     </td>
                   </tr>
                 ))}

@@ -42,7 +42,7 @@ export function MobileDashboard() {
       <div className="flex shrink-0 gap-0.5 overflow-x-auto border-t border-border-subtle bg-bg-panel px-1 py-1">
         <button
           onClick={() => setActiveTab('watchlist')}
-          className={`flex min-w-[64px] flex-1 flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+          className={`flex min-w-[64px] flex-1 flex-col items-center gap-0.5 px-2 py-1.5 text-[11px] font-medium transition-colors ${
             activeTab === 'watchlist' ? 'bg-bg-hover text-accent' : 'text-text-muted hover:text-text-secondary'
           }`}
         >
@@ -53,7 +53,7 @@ export function MobileDashboard() {
           <button
             key={type}
             onClick={() => setActiveTab(type)}
-            className={`flex min-w-[64px] flex-1 flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+            className={`flex min-w-[64px] flex-1 flex-col items-center gap-0.5 px-2 py-1.5 text-[11px] font-medium transition-colors ${
               activeTab === type ? 'bg-bg-hover text-accent' : 'text-text-muted hover:text-text-secondary'
             }`}
           >

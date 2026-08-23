@@ -38,6 +38,12 @@ interface MarketState {
   orderBook: OrderBookData
   trades: Trade[]
   status: 'loading' | 'ready' | 'error'
+  // Метка последнего успешного обновления и счётчик подряд идущих сбоев —
+  // на них строится индикатор "не в сети"/"устарело" в Header: одиночный
+  // сетевой сбой не должен пугать трейдера, а вот несколько подряд — сигнал,
+  // что котировки могут быть неактуальны
+  lastUpdatedAt: number | null
+  consecutiveErrors: number
   loadSecurities: () => Promise<void>
   loadExtraSecurities: () => Promise<void>
   refreshOrderBook: () => void
@@ -57,6 +63,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   orderBook: { bids: [], asks: [] },
   trades: [],
   status: 'loading',
+  lastUpdatedAt: null,
+  consecutiveErrors: 0,
 
   loadSecurities: async () => {
     try {
@@ -66,10 +74,13 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       // Акции/фонды заменяем целиком, а ранее подгруженные облигации/фьючерсы
       // (из loadExtraSecurities) сохраняем — у них свой, более редкий опрос
       const extra = get().instruments.filter((i) => i.assetType === 'bond' || i.assetType === 'future')
-      set({ instruments: [...fresh, ...extra], status: 'ready' })
+      set({ instruments: [...fresh, ...extra], status: 'ready', lastUpdatedAt: Date.now(), consecutiveErrors: 0 })
       get().refreshOrderBook()
     } catch {
-      set({ status: 'error' })
+      const consecutiveErrors = get().consecutiveErrors + 1
+      // Один сбой опроса — обычная сетевая рябь; статус "ошибка" показываем
+      // трейдеру только после нескольких подряд, чтобы не мигать зря
+      set({ consecutiveErrors, status: consecutiveErrors >= 3 ? 'error' : get().status })
     }
   },
 

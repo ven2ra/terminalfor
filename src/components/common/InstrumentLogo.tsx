@@ -31,7 +31,7 @@ export function InstrumentLogo({ ticker, isin, size = 28, className = '' }: Inst
   if (!showImage) {
     return (
       <div
-        className={`flex shrink-0 items-center justify-center rounded-full font-display text-[10px] font-bold text-white ${className}`}
+        className={`flex shrink-0 items-center justify-center rounded-full font-display text-[11px] font-bold text-white ${className}`}
         style={{ width: size, height: size, backgroundColor: colorForTicker(ticker) }}
       >
         {ticker.slice(0, 2)}

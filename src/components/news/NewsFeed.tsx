@@ -102,14 +102,14 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
                 >
                   <div className="mb-1 flex items-center gap-2">
                     {n.important && (
-                      <span className="flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-warning">
+                      <span className="flex items-center gap-0.5 rounded bg-warning/15 px-1.5 py-0.5 text-[11px] font-semibold uppercase text-warning">
                         <Fire size={10} /> Важное
                       </span>
                     )}
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${TAG_COLORS[n.tag]}`}>
+                    <span className={`rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase ${TAG_COLORS[n.tag]}`}>
                       {TAG_LABELS[n.tag]}
                     </span>
-                    <span className="ml-auto text-[10px] text-text-muted">
+                    <span className="ml-auto text-[11px] text-text-muted">
                       {formatDistanceToNow(n.time, { addSuffix: true, locale: ru })}
                     </span>
                   </div>
@@ -117,7 +117,7 @@ export function NewsFeed({ onRemove }: NewsFeedProps) {
                     <span>{n.title}</span>
                     <ArrowSquareOut size={10} className="mt-0.5 shrink-0 text-text-muted opacity-0 group-hover:opacity-100" />
                   </p>
-                  <span className="text-[10px] text-text-muted">{n.source}</span>
+                  <span className="text-[11px] text-text-muted">{n.source}</span>
                 </a>
               ))}
               {filtered.length === 0 && (

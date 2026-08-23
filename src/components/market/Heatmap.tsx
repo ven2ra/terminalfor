@@ -45,7 +45,7 @@ export function Heatmap({ onRemove }: HeatmapProps) {
               className="flex flex-col items-center justify-center rounded-md px-1 py-2 text-center transition-transform hover:z-10 hover:scale-105"
             >
               <span className="text-[11px] font-bold text-text-primary">{t.ticker}</span>
-              <span className={`font-tabular text-[10px] font-semibold ${positive ? 'text-buy' : 'text-sell'}`}>
+              <span className={`font-tabular text-[11px] font-semibold ${positive ? 'text-buy' : 'text-sell'}`}>
                 {formatPercent(t.changePercent)}
               </span>
             </button>

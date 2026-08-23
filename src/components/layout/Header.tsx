@@ -1,10 +1,43 @@
-import { useState } from 'react'
-import { MagnifyingGlass } from '@phosphor-icons/react'
+import { useEffect, useState } from 'react'
+import { MagnifyingGlass, WifiSlash } from '@phosphor-icons/react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useViewStore } from '@/store/useViewStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { formatMoney, formatPercent } from '@/lib/format'
+
+/** Секунд с последнего успешного обновления фида — тикается раз в секунду, только пока индикатор реально виден (status !== 'ready') */
+function useSecondsSince(timestamp: number | null): number | null {
+  const [, tick] = useState(0)
+  useEffect(() => {
+    if (timestamp === null) return
+    const id = setInterval(() => tick((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [timestamp])
+  if (timestamp === null) return null
+  return Math.floor((Date.now() - timestamp) / 1000)
+}
+
+/** Индикатор состояния рыночного фида: скрыт, пока данные живые, иначе явно предупреждает — "молчаливого" зависшего фида быть не должно */
+function FeedStatusIndicator() {
+  const { status, lastUpdatedAt } = useMarketStore()
+  const secondsStale = useSecondsSince(status === 'error' ? lastUpdatedAt : null)
+
+  if (status !== 'error') return null
+
+  return (
+    <div
+      className="flex shrink-0 items-center gap-1.5 border border-sell bg-sell-bg px-2 py-1 text-xs font-medium text-sell"
+      role="status"
+      title="Не удаётся обновить рыночные данные — цены могут быть неактуальны"
+    >
+      <WifiSlash size={13} weight="bold" />
+      <span className="hidden sm:inline">
+        Нет связи с биржей{secondsStale !== null && secondsStale > 0 ? ` · обновлено ${secondsStale} с назад` : ''}
+      </span>
+    </div>
+  )
+}
 
 /** Тонкая верхняя строка терминала: поиск инструмента + текущий баланс/P&L. Навигация и аккаунт — в боковом рейле (Sidebar) */
 export function Header() {
@@ -100,6 +133,8 @@ export function Header() {
           )}
         </div>
       )}
+
+      <FeedStatusIndicator />
 
       <div className="ml-auto flex items-center leading-tight">
         <span className="font-tabular text-sm font-semibold text-text-primary">{formatMoney(account.equity)}</span>

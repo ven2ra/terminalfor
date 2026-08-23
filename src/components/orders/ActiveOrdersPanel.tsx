@@ -3,6 +3,7 @@ import { Check, ClipboardText, X } from '@phosphor-icons/react'
 import { useOrderStore } from '@/store/useOrderStore'
 import { Panel } from '@/components/common/Panel'
 import { formatPrice } from '@/lib/format'
+import { ORDER_TYPE_LABELS } from '@/lib/orderLabels'
 
 interface ActiveOrdersPanelProps {
   onRemove?: () => void
@@ -44,7 +45,7 @@ export function ActiveOrdersPanel({ onRemove }: ActiveOrdersPanelProps) {
               <tr key={o.id} className="border-b border-border-subtle">
                 <td className="px-3 py-2 font-semibold text-text-primary">{o.ticker}</td>
                 <td className={`px-3 py-2 ${o.side === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                  {o.side === 'buy' ? 'Buy' : 'Sell'} · {o.type}
+                  {o.side === 'buy' ? 'Покупка' : 'Продажа'} · {ORDER_TYPE_LABELS[o.type]}
                 </td>
                 <td className="px-3 py-2 text-right font-tabular text-text-secondary">{formatPrice(o.price)}</td>
                 <td className="px-3 py-2 text-right font-tabular text-text-secondary">{o.size}</td>

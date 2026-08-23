@@ -7,12 +7,12 @@ import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { OrderType } from '@/types'
 import { Panel } from '@/components/common/Panel'
 import { formatMoney, formatPrice } from '@/lib/format'
+import { ORDER_TYPE_LABELS } from '@/lib/orderLabels'
 
-const ORDER_TYPES: Array<{ value: OrderType; label: string }> = [
-  { value: 'market', label: 'Рыночная' },
-  { value: 'limit', label: 'Лимитная' },
-  { value: 'stop', label: 'Стоп' },
-]
+const ORDER_TYPES = (Object.entries(ORDER_TYPE_LABELS) as Array<[OrderType, string]>).map(([value, label]) => ({
+  value,
+  label,
+}))
 
 const QUICK_PERCENTS = [25, 50, 75, 100]
 // Условная комиссия брокера — как у большинства тарифов "Инвестор" (демо-расчёт, не влияет на баланс)
@@ -68,6 +68,11 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
         : numericSize % step !== 0
           ? `Кратно лоту: ${step} шт.`
           : null
+  // Быстрые % уже ограничивают объём доступной маржой (applyPercent), но при
+  // ручном вводе числа этой проверки не было вообще — трейдер мог набрать
+  // объём, кратно превышающий средства, и узнать об этом только на экране
+  // подтверждения (или не узнать, если бэкенд молча примет)
+  const marginError = !sizeError && total > account.availableMargin ? 'Недостаточно средств' : null
 
   const adjustSize = (delta: number) => {
     const next = Math.max(step, (Number(size) || 0) + delta)
@@ -93,7 +98,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
     <Panel title="Выставление ордера" draggable={!!onRemove} onRemove={onRemove}>
       {confirming && instrument ? (
         <div className="flex flex-col gap-3">
-          <div className={`rounded-md px-3 py-2 text-center text-sm font-bold text-white ${side === 'buy' ? 'bg-buy' : 'bg-sell'}`}>
+          <div className={`rounded-md px-3 py-2 text-center text-sm font-bold text-accent-contrast ${side === 'buy' ? 'bg-buy' : 'bg-sell'}`}>
             {side === 'buy' ? 'Покупка' : 'Продажа'} {numericSize} × {instrument.ticker}
           </div>
           <div className="space-y-1.5 rounded-md bg-bg-elevated px-3 py-2.5 text-xs">
@@ -126,7 +131,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
             </button>
             <button
               onClick={handleConfirm}
-              className={`rounded-md py-2 text-sm font-bold text-white transition-transform active:scale-[0.98] ${
+              className={`rounded-md py-2 text-sm font-bold text-accent-contrast transition-transform active:scale-[0.98] ${
                 side === 'buy' ? 'bg-buy hover:brightness-110' : 'bg-sell hover:brightness-110'
               }`}
             >
@@ -140,7 +145,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
             <button
               onClick={() => setSide('buy')}
               className={`rounded-md py-2 text-sm font-bold transition-colors ${
-                side === 'buy' ? 'bg-buy text-white' : 'bg-buy-bg text-buy hover:brightness-110'
+                side === 'buy' ? 'bg-buy text-accent-contrast' : 'bg-buy-bg text-buy hover:brightness-110'
               }`}
             >
               Купить
@@ -148,7 +153,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
             <button
               onClick={() => setSide('sell')}
               className={`rounded-md py-2 text-sm font-bold transition-colors ${
-                side === 'sell' ? 'bg-sell text-white' : 'bg-sell-bg text-sell hover:brightness-110'
+                side === 'sell' ? 'bg-sell text-accent-contrast' : 'bg-sell-bg text-sell hover:brightness-110'
               }`}
             >
               Продать
@@ -193,7 +198,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
             Количество, шт.
             <div
               className={`mt-1 flex items-stretch overflow-hidden rounded-md border focus-within:border-accent ${
-                sizeError ? 'border-sell' : 'border-border-color'
+                sizeError || marginError ? 'border-sell' : 'border-border-color'
               }`}
             >
               <button
@@ -208,8 +213,8 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 inputMode="decimal"
-                aria-invalid={!!sizeError}
-                aria-describedby={sizeError ? 'order-size-error' : undefined}
+                aria-invalid={!!sizeError || !!marginError}
+                aria-describedby={sizeError ? 'order-size-error' : marginError ? 'order-margin-error' : undefined}
                 className="min-w-0 flex-1 bg-bg-base px-2 py-1.5 text-center font-tabular text-sm text-text-primary focus:outline-none"
               />
               <button
@@ -224,6 +229,11 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
             {sizeError && (
               <span id="order-size-error" className="mt-1 block text-[11px] font-normal text-sell">
                 {sizeError}
+              </span>
+            )}
+            {!sizeError && marginError && (
+              <span id="order-margin-error" className="mt-1 block text-[11px] font-normal text-sell">
+                {marginError}: доступно {formatMoney(account.availableMargin)}
               </span>
             )}
           </label>
@@ -258,8 +268,8 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
 
           <button
             onClick={() => setConfirming(true)}
-            disabled={!instrument || numericSize <= 0 || !!priceError || !!sizeError}
-            className={`rounded-md py-2.5 text-sm font-bold text-white transition-transform active:scale-[0.98] disabled:opacity-50 ${
+            disabled={!instrument || numericSize <= 0 || !!priceError || !!sizeError || !!marginError}
+            className={`rounded-md py-2.5 text-sm font-bold text-accent-contrast transition-transform active:scale-[0.98] disabled:opacity-50 ${
               side === 'buy' ? 'bg-buy hover:brightness-110' : 'bg-sell hover:brightness-110'
             }`}
           >

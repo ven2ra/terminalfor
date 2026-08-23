@@ -41,7 +41,7 @@ export function OrderBookDepthChart({ bids, asks }: OrderBookDepthChartProps) {
         <polyline points={askPoints.join(' ')} fill="none" stroke="var(--sell)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
         <line x1={half} y1="0" x2={half} y2={HEIGHT} stroke="var(--border-color)" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between px-1 text-[10px] font-tabular text-text-muted">
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between px-1 text-[11px] font-tabular text-text-muted">
         <span>{formatCompact(bids[bids.length - 1].total)}</span>
         <span>{formatCompact(asks[asks.length - 1].total)}</span>
       </div>
