@@ -1,5 +1,5 @@
-import type { Ref } from 'react'
-import { GridLayout, useContainerWidth } from 'react-grid-layout'
+import { useMemo, type Ref } from 'react'
+import { GridLayout, getCompactor, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import { useDashboardStore } from '@/store/useDashboardStore'
 import { GRID_COLS, WIDGET_REGISTRY, WidgetType } from '@/dashboard/widgets'
@@ -20,6 +20,11 @@ export function Dashboard() {
   const { widgets: storedWidgets, layout, setLayout, removeWidget } = useDashboardStore()
   const { width, containerRef } = useContainerWidth({ initialWidth: 1400 })
   const isMobile = useIsMobile()
+  // Без preventCollision перетаскивание/ресайз одного виджета может вытолкнуть
+  // другой в произвольную, не связанную позицию (воспроизведено: перетаскивание
+  // графика перекидывало "Новости" с x7,y41 на x0,y0) — с preventCollision
+  // виджет просто не даёт себя бросить поверх другого, а не ломает раскладку
+  const compactor = useMemo(() => getCompactor('vertical', false, true), [])
 
   // Защита от значений "watchlist", оставшихся в localStorage со времён,
   // когда список инструментов ещё был обычным виджетом сетки
@@ -43,6 +48,7 @@ export function Dashboard() {
             gridConfig={{ cols: GRID_COLS, rowHeight: ROW_HEIGHT, margin: MARGIN, containerPadding: MARGIN, maxRows: Infinity }}
             dragConfig={{ handle: '.widget-drag-handle' }}
             resizeConfig={{ handles: ['se'] }}
+            compactor={compactor}
             autoSize
             onLayoutChange={setLayout}
           >
