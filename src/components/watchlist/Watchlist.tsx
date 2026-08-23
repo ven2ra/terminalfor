@@ -68,10 +68,10 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
       </button>
       <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-text-primary">{inst.ticker}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-sm font-semibold text-text-primary">{inst.name}</span>
           <span
-            className={`rounded font-tabular text-sm text-text-primary ${
+            className={`shrink-0 rounded font-tabular text-sm text-text-primary ${
               priceFlash === 'up' ? 'animate-flash-up' : priceFlash === 'down' ? 'animate-flash-down' : ''
             }`}
           >
@@ -80,7 +80,7 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-xs text-text-muted">{inst.name}</span>
+          <span className="text-xs text-text-muted">{inst.ticker}</span>
           <div className="flex shrink-0 items-center gap-2">
             {inst.isFavorite && sparkValues && sparkValues.length >= 2 && (
               <Sparkline values={sparkValues} width={44} height={16} />
