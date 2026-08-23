@@ -1,5 +1,16 @@
 import { ReactNode } from 'react'
-import { Activity, Bell, BookOpen, CandlestickChart, ClipboardList, LineChart, Newspaper, Star, Wallet } from 'lucide-react'
+import {
+  Activity,
+  Bell,
+  BookOpen,
+  CandlestickChart,
+  ClipboardList,
+  Grid3x3,
+  LineChart,
+  Newspaper,
+  Star,
+  Wallet,
+} from 'lucide-react'
 import { Watchlist } from '@/components/watchlist/Watchlist'
 import { ChartArea } from '@/components/chart/ChartArea'
 import { OrderBook } from '@/components/orderbook/OrderBook'
@@ -9,6 +20,8 @@ import { ActiveOrdersPanel } from '@/components/orders/ActiveOrdersPanel'
 import { PortfolioPanel } from '@/components/portfolio/PortfolioPanel'
 import { NewsFeed } from '@/components/news/NewsFeed'
 import { PriceAlerts } from '@/components/alerts/PriceAlerts'
+import { MarketOverview } from '@/components/market/MarketOverview'
+import { Heatmap } from '@/components/market/Heatmap'
 
 export type WidgetType =
   | 'watchlist'
@@ -20,6 +33,8 @@ export type WidgetType =
   | 'portfolio'
   | 'news'
   | 'alerts'
+  | 'marketOverview'
+  | 'heatmap'
 
 interface WidgetLayoutDefaults {
   x: number
@@ -93,6 +108,18 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
     icon: <Bell size={14} />,
     layout: { x: 2, y: 22, w: 4, h: 10, minW: 3, minH: 6 },
     render: ({ onRemove }) => <PriceAlerts onRemove={onRemove} />,
+  },
+  marketOverview: {
+    label: 'Обзор рынка',
+    icon: <Activity size={14} />,
+    layout: { x: 0, y: 22, w: 2, h: 12, minW: 2, minH: 7 },
+    render: ({ onRemove }) => <MarketOverview onRemove={onRemove} />,
+  },
+  heatmap: {
+    label: 'Тепловая карта',
+    icon: <Grid3x3 size={14} />,
+    layout: { x: 6, y: 22, w: 3, h: 10, minW: 3, minH: 6 },
+    render: ({ onRemove }) => <Heatmap onRemove={onRemove} />,
   },
 }
 
