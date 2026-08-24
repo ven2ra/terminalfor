@@ -107,7 +107,7 @@ export function Header() {
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-bg-hover"
               >
-                <InstrumentLogo ticker={i.ticker} isin={i.isin} size={20} />
+                <InstrumentLogo ticker={i.ticker} isin={i.isin} size={20} isOfz={i.isOfz} />
                 <span className="font-semibold">{i.ticker}</span>
                 <span className="ml-auto truncate text-text-muted">{i.name}</span>
               </button>
@@ -150,7 +150,7 @@ export function Header() {
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-bg-hover"
                 >
-                  <InstrumentLogo ticker={i.ticker} isin={i.isin} size={20} />
+                  <InstrumentLogo ticker={i.ticker} isin={i.isin} size={20} isOfz={i.isOfz} />
                   <span className="font-semibold">{i.ticker}</span>
                   <span className="ml-auto truncate text-text-muted">{i.name}</span>
                 </button>

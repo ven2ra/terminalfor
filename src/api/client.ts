@@ -10,6 +10,7 @@ export interface SecurityDto {
   assetType: AssetType
   priceUnit: 'currency' | 'percent'
   faceValue?: number | null
+  isOfz?: boolean
   lotSize: number
   lastPrice: number
   change: number

@@ -75,7 +75,7 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
           }
         />
       </button>
-      <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} />
+      <InstrumentLogo ticker={inst.ticker} isin={inst.isin} size={26} isOfz={inst.isOfz} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-sm font-semibold text-text-primary">{inst.name}</span>

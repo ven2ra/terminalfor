@@ -196,7 +196,7 @@ export function CalendarView() {
                       }`}
                     >
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${meta.dot}`} />
-                      <InstrumentLogo ticker={e.ticker} isin={e.isin} size={26} />
+                      <InstrumentLogo ticker={e.ticker} isin={e.isin} size={26} isOfz={e.isOfz} />
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-semibold text-text-primary">{e.name}</div>
                         <div className="font-tabular text-[11px] text-text-muted">{e.ticker}</div>

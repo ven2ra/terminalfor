@@ -68,7 +68,7 @@ export function PriceAlerts({ onRemove }: PriceAlertsProps) {
                       }}
                       className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs hover:bg-bg-hover"
                     >
-                      <InstrumentLogo ticker={i.ticker} isin={i.isin} size={18} />
+                      <InstrumentLogo ticker={i.ticker} isin={i.isin} size={18} isOfz={i.isOfz} />
                       <span className="font-semibold text-text-primary">{i.ticker}</span>
                       <span className="truncate text-text-muted">{i.name}</span>
                     </button>

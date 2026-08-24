@@ -459,7 +459,7 @@ export function PriceChart({
       <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-border-subtle px-4 py-2.5">
         <div>
           <div className="flex items-center gap-2">
-            <InstrumentLogo ticker={selectedTicker} isin={instrument?.isin ?? null} size={22} />
+            <InstrumentLogo ticker={selectedTicker} isin={instrument?.isin ?? null} size={22} isOfz={instrument?.isOfz} />
             <span className="text-lg font-bold text-text-primary">{instrument?.name ?? '…'}</span>
           </div>
           <div className="text-xs text-text-muted">

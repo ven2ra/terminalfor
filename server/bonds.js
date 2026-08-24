@@ -39,6 +39,7 @@ async function loadBoard(board) {
         // ISS отдаёт рубли под историческим кодом SUR, а не RUB
         currency: s.CURRENCYID === 'SUR' ? 'RUB' : (s.CURRENCYID ?? 'RUB'),
         assetType: 'bond',
+        isOfz: board === 'TQOB', // гособлигации (ОФЗ) — доска TQOB, эмитент Минфин
         priceUnit: 'percent', // цена — % от номинала, не абсолютная валюта
         faceValue: s.FACEVALUE ?? null,
         lotSize: s.LOTSIZE ?? 1,

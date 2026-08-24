@@ -18,6 +18,8 @@ export interface Instrument {
   priceUnit: 'currency' | 'percent'
   /** Номинал облигации — нужен, чтобы перевести цену из % в реальную сумму сделки. Есть только у priceUnit === 'percent' */
   faceValue: number | null
+  /** Государственная облигация (ОФЗ, доска TQOB, эмитент — Минфин) — показываем герб Минфина вместо обычного логотипа */
+  isOfz?: boolean
   lotSize: number
   lastPrice: number
   change: number
@@ -135,6 +137,7 @@ export interface CalendarEvent {
   name: string
   isin: string | null
   currency: string
+  isOfz?: boolean
   type: 'offer' | 'coupon' | 'maturity'
   date: string
   value: number | null

@@ -29,7 +29,7 @@ async function loadBoard(board) {
   const json = await fetchJson(url)
   const securities = rowsToObjects(json.securities)
   const marketdata = new Map(rowsToObjects(json.marketdata).map((r) => [r.SECID, r]))
-  return securities.map((s) => ({ ...s, turnover: marketdata.get(s.SECID)?.VALTODAY ?? 0 }))
+  return securities.map((s) => ({ ...s, turnover: marketdata.get(s.SECID)?.VALTODAY ?? 0, board }))
 }
 
 function daysUntil(dateStr, today) {
@@ -50,7 +50,7 @@ async function loadCalendar() {
     // ISS отдаёт рубли под историческим кодом SUR, а не RUB — приводим к
     // обычному ISO-коду, иначе формат суммы на фронтенде не узнает валюту
     const currency = s.CURRENCYID === 'SUR' ? 'RUB' : (s.CURRENCYID ?? 'RUB')
-    const base = { ticker: s.SECID, name: s.SHORTNAME, isin: s.ISIN ?? null, currency }
+    const base = { ticker: s.SECID, name: s.SHORTNAME, isin: s.ISIN ?? null, currency, isOfz: s.board === 'TQOB' }
 
     if (s.OFFERDATE) {
       const days = daysUntil(s.OFFERDATE, today)

@@ -5,6 +5,8 @@ interface InstrumentLogoProps {
   isin: string | null
   size?: number
   className?: string
+  /** Гособлигация (ОФЗ) — показываем герб Минфина вместо поиска логотипа по ISIN */
+  isOfz?: boolean
 }
 
 const AVATAR_COLORS = ['#3b82f6', '#10b981', '#fbbf24', '#a367f5', '#f87171', '#0ea5e9', '#ec4899', '#14b8a6']
@@ -26,13 +28,26 @@ function colorForTicker(ticker: string): string {
  * недавно переименованных тикеров, есть логотип) — при ошибке или
  * отсутствии ISIN показываем аватар с инициалами тикера.
  */
-export function InstrumentLogo({ ticker, isin, size = 28, className = '' }: InstrumentLogoProps) {
+export function InstrumentLogo({ ticker, isin, size = 28, className = '', isOfz }: InstrumentLogoProps) {
   // Храним ISIN, для которого загрузка провалилась — а не просто boolean,
   // иначе при смене инструмента в ДОЛГОЖИВУЩЕМ экземпляре компонента (график,
   // где он не пересоздаётся при переключении тикера) состояние ошибки
   // "залипало" навсегда, даже когда у нового ISIN логотип на самом деле есть.
   const [failedIsin, setFailedIsin] = useState<string | null>(null)
   const showImage = isin && isin !== failedIsin
+
+  if (isOfz) {
+    return (
+      <img
+        src="/logos/minfin.svg"
+        alt=""
+        width={size}
+        height={size}
+        className={`shrink-0 rounded-full object-cover ${className}`}
+        style={{ width: size, height: size }}
+      />
+    )
+  }
 
   if (!showImage) {
     return (
