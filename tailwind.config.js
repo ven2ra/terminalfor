@@ -22,7 +22,6 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', '"Roboto Mono"', 'monospace'],
       },
       colors: {
         bg: {
