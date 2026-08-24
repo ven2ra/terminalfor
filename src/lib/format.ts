@@ -4,8 +4,18 @@ export function formatPrice(value: number, decimals = 2): string {
   return value.toLocaleString('ru-RU', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  RUB: '₽',
+  USD: '$',
+  USDT: '$',
+  EUR: '€',
+  CNY: '¥',
+  GBP: '£',
+  HKD: 'HK$',
+}
+
 export function formatMoney(value: number, currency = 'RUB'): string {
-  const symbol = currency === 'RUB' ? '₽' : currency === 'USDT' ? '$' : currency
+  const symbol = CURRENCY_SYMBOLS[currency] ?? currency
   const sign = value < 0 ? '-' : ''
   return `${sign}${symbol}${Math.abs(value).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }

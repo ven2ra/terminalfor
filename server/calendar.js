@@ -23,7 +23,7 @@ const HORIZON_DAYS = 120
 async function loadBoard(board) {
   const url =
     `${ISS_BASE}/engines/stock/markets/bonds/boards/${board}/securities.json` +
-    `?iss.meta=off&securities.columns=SECID,SHORTNAME,ISIN,MATDATE,OFFERDATE,NEXTCOUPON,COUPONVALUE,FACEVALUE,CURRENCYID` +
+    `?iss.meta=off&securities.columns=SECID,SHORTNAME,ISIN,MATDATE,OFFERDATE,NEXTCOUPON,COUPONVALUE,FACEVALUE,FACEUNIT` +
     `&marketdata.columns=SECID,VALTODAY`
 
   const json = await fetchJson(url)
@@ -47,9 +47,11 @@ async function loadCalendar() {
 
   const events = []
   for (const s of securities) {
-    // ISS отдаёт рубли под историческим кодом SUR, а не RUB — приводим к
-    // обычному ISO-коду, иначе формат суммы на фронтенде не узнает валюту
-    const currency = s.CURRENCYID === 'SUR' ? 'RUB' : (s.CURRENCYID ?? 'RUB')
+    // Валюта НОМИНАЛА — FACEUNIT, а не CURRENCYID (это валюта расчётов на
+    // бирже, почти всегда SUR/рубли). У замещающих облигаций и части ОФЗ
+    // расчёты идут в рублях по курсу ЦБ, а сам купон/номинал считается в
+    // USD/CNY — с CURRENCYID купон в $30 показывался бы как "₽30"
+    const currency = s.FACEUNIT === 'SUR' ? 'RUB' : (s.FACEUNIT ?? 'RUB')
     const base = { ticker: s.SECID, name: s.SHORTNAME, isin: s.ISIN ?? null, currency, isOfz: s.board === 'TQOB' }
 
     if (s.OFFERDATE) {

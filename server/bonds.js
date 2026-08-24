@@ -4,6 +4,13 @@
  * как и с акциями, иначе список не пролистать и в нём не найти ничего полезного.
  * Цена облигации в LAST/PREVPRICE — это % от номинала (FACEVALUE), не рубли,
  * это общепринятый способ котирования облигаций, оставляем как есть.
+ *
+ * Валюта номинала — FACEUNIT, а не CURRENCYID (та почти всегда SUR, это
+ * валюта РАСЧЁТОВ на бирже). У замещающих облигаций (РесБел и т.п.) и части
+ * ОФЗ CURRENCYID=SUR, но FACEVALUE/COUPONVALUE считаются в USD/CNY —
+ * расчёты в рублях по курсу ЦБ на дату выплаты, а не сама номинация.
+ * CURRENCYID для этого не подходит: с ним купон в $30 показывался бы как
+ * "₽30", то есть примерно в 80 раз меньше реальной суммы.
  */
 import { cached } from './cache.js'
 import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
@@ -16,7 +23,7 @@ const MAX_BONDS = 150
 async function loadBoard(board) {
   const url =
     `${ISS_BASE}/engines/stock/markets/bonds/boards/${board}/securities.json` +
-    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVPRICE,FACEVALUE,MATDATE,COUPONPERCENT,CURRENCYID` +
+    `?iss.meta=off&securities.columns=SECID,SHORTNAME,LOTSIZE,ISIN,PREVPRICE,FACEVALUE,MATDATE,COUPONPERCENT,FACEUNIT` +
     `&marketdata.columns=SECID,LAST,VOLTODAY,VALTODAY,BID,OFFER,HIGH,LOW,OPEN,UPDATETIME`
 
   const json = await fetchJson(url)
@@ -37,7 +44,7 @@ async function loadBoard(board) {
         isin: s.ISIN ?? null,
         exchange: 'MOEX',
         // ISS отдаёт рубли под историческим кодом SUR, а не RUB
-        currency: s.CURRENCYID === 'SUR' ? 'RUB' : (s.CURRENCYID ?? 'RUB'),
+        currency: s.FACEUNIT === 'SUR' ? 'RUB' : (s.FACEUNIT ?? 'RUB'),
         assetType: 'bond',
         isOfz: board === 'TQOB', // гособлигации (ОФЗ) — доска TQOB, эмитент Минфин
         priceUnit: 'percent', // цена — % от номинала, не абсолютная валюта
