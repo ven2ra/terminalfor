@@ -1,4 +1,4 @@
-import { ProxyAgent, setGlobalDispatcher } from 'undici'
+import { ProxyAgent, fetch as undiciFetch, setGlobalDispatcher } from 'undici'
 
 /**
  * Если сервер сидит в сети, откуда t.me (или вообще внешние домены) недоступны
@@ -10,5 +10,14 @@ const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy || process.e
 
 if (proxyUrl) {
   setGlobalDispatcher(new ProxyAgent(proxyUrl))
+  // Node сам вшивает undici как глобальный fetch() — это ДРУГОЙ инстанс
+  // модуля, чем пакет "undici" из node_modules (может быть другая версия),
+  // со своим отдельным реестром диспетчеров. setGlobalDispatcher() выше
+  // настраивает прокси только для пакета "undici", а весь код проекта
+  // вызывает голый fetch()/globalThis.fetch — он прокси не видел и ходил
+  // напрямую в обход, даже когда сам прокси был настроен верно. Подменяем
+  // глобальный fetch на fetch из настроенного пакета "undici", чтобы весь
+  // существующий код (вызывающий обычный fetch()) реально пошёл через прокси.
+  globalThis.fetch = undiciFetch
   console.log(`[proxy] исходящие запросы бэкенда идут через ${proxyUrl}`)
 }
