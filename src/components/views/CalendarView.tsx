@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { format, isToday, isTomorrow } from 'date-fns'
+import { differenceInCalendarDays, format, isToday, isTomorrow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { CalendarBlank, CurrencyCircleDollar, FlagCheckered, HandCoins } from '@phosphor-icons/react'
 import { fetchCalendar } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
 import { useViewStore } from '@/store/useViewStore'
+import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import { formatMoney } from '@/lib/format'
 import { CalendarEvent } from '@/types'
 
-const TYPE_META: Record<CalendarEvent['type'], { label: string; icon: typeof HandCoins; className: string }> = {
-  coupon: { label: 'Купон', icon: HandCoins, className: 'text-accent-cyan' },
-  offer: { label: 'Оферта', icon: CurrencyCircleDollar, className: 'text-warning' },
-  maturity: { label: 'Погашение', icon: FlagCheckered, className: 'text-text-secondary' },
+const TYPE_META: Record<CalendarEvent['type'], { label: string; icon: typeof HandCoins; dot: string; chip: string }> = {
+  coupon: { label: 'Купон', icon: HandCoins, dot: 'bg-accent-cyan', chip: 'bg-accent-cyan/10 text-accent-cyan' },
+  offer: { label: 'Оферта', icon: CurrencyCircleDollar, dot: 'bg-warning', chip: 'bg-warning-bg text-warning' },
+  maturity: { label: 'Погашение', icon: FlagCheckered, dot: 'bg-text-secondary', chip: 'bg-bg-elevated text-text-secondary' },
 }
 
 const FILTERS: Array<{ value: CalendarEvent['type'] | 'all'; label: string }> = [
@@ -27,6 +28,14 @@ function dayLabel(dateStr: string): string {
   if (isToday(d)) return 'Сегодня'
   if (isTomorrow(d)) return 'Завтра'
   return format(d, 'd MMMM, EEEE', { locale: ru })
+}
+
+function daysUntilLabel(dateStr: string): string {
+  const n = differenceInCalendarDays(new Date(`${dateStr}T00:00:00`), new Date(new Date().toDateString()))
+  if (n <= 0) return 'сегодня'
+  if (n === 1) return 'завтра'
+  if (n >= 2 && n <= 4) return `через ${n} дня`
+  return `через ${n} дней`
 }
 
 /**
@@ -70,23 +79,59 @@ export function CalendarView() {
     return [...byDate.entries()]
   }, [filtered])
 
+  const stats = useMemo(() => {
+    if (!events) return null
+    const today = new Date(new Date().toDateString())
+    const within7 = events.filter((e) => {
+      const d = differenceInCalendarDays(new Date(`${e.date}T00:00:00`), today)
+      return d >= 0 && d <= 7
+    })
+    const payout7d = within7
+      .filter((e) => e.type !== 'maturity' && e.value != null)
+      .reduce((sum, e) => sum + (e.value ?? 0), 0)
+    const nextEvent = events[0]
+    return {
+      total: events.length,
+      within7: within7.length,
+      payout7d,
+      nextLabel: nextEvent ? dayLabel(nextEvent.date) : '—',
+    }
+  }, [events])
+
   return (
-    <div className="h-full overflow-auto p-4">
-      <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div className="h-full overflow-auto bg-bg-base p-5">
+      <div className="mx-auto flex max-w-4xl flex-col gap-5">
         <div>
-          <h1 className="font-display text-lg font-bold text-text-primary">Календарь</h1>
-          <p className="text-xs text-text-muted">
+          <h1 className="text-lg font-bold uppercase tracking-widest text-text-primary">Календарь</h1>
+          <p className="mt-0.5 text-xs text-text-muted">
             Ближайшие купонные выплаты, оферты и погашения по ликвидным облигациям МосБиржи
           </p>
         </div>
 
-        <div className="flex gap-1.5">
+        {stats && (
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="relative overflow-hidden border border-border-color bg-bg-panel px-3.5 py-2.5 before:absolute before:left-0 before:top-0 before:h-0.5 before:w-7 before:bg-accent before:content-['']">
+              <div className="text-[9px] uppercase tracking-wide text-text-muted">Ближайшее событие</div>
+              <div className="mt-1 font-tabular text-base font-bold text-text-primary">{stats.nextLabel}</div>
+            </div>
+            <div className="relative overflow-hidden border border-border-color bg-bg-panel px-3.5 py-2.5 before:absolute before:left-0 before:top-0 before:h-0.5 before:w-7 before:bg-accent before:content-['']">
+              <div className="text-[9px] uppercase tracking-wide text-text-muted">Событий в ближайшие 7 дней</div>
+              <div className="mt-1 font-tabular text-base font-bold text-text-primary">{stats.within7}</div>
+            </div>
+            <div className="relative overflow-hidden border border-border-color bg-bg-panel px-3.5 py-2.5 before:absolute before:left-0 before:top-0 before:h-0.5 before:w-7 before:bg-accent before:content-['']">
+              <div className="text-[9px] uppercase tracking-wide text-text-muted">Выплаты за 7 дней</div>
+              <div className="mt-1 font-tabular text-base font-bold text-buy">{formatMoney(stats.payout7d)}</div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-1 border-b border-border-subtle">
           {FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                filter === f.value ? 'bg-accent text-accent-contrast' : 'border border-border-color text-text-secondary hover:bg-bg-hover'
+              className={`border-b-2 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+                filter === f.value ? 'border-accent text-accent' : 'border-transparent text-text-muted hover:text-text-secondary'
               }`}
             >
               {f.label}
@@ -97,7 +142,7 @@ export function CalendarView() {
         {events === null && !error && <SkeletonRows rows={10} />}
 
         {error && (
-          <div className="rounded-md border border-sell bg-sell-bg px-3 py-2.5 text-sm text-sell">
+          <div className="border border-sell bg-sell-bg px-3 py-2.5 text-sm text-sell">
             Не удалось загрузить календарь. Попробуйте обновить страницу.
           </div>
         )}
@@ -109,41 +154,56 @@ export function CalendarView() {
           </div>
         )}
 
-        {groups.map(([date, dayEvents]) => (
-          <div key={date}>
-            <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-muted">{dayLabel(date)}</div>
-            <div className="overflow-hidden rounded-md border border-border-color">
-              {dayEvents.map((e, i) => {
-                const meta = TYPE_META[e.type]
-                const Icon = meta.icon
-                return (
-                  <button
-                    key={`${e.ticker}-${e.type}-${i}`}
-                    onClick={() => {
-                      selectTicker(e.ticker)
-                      setView('terminal')
-                    }}
-                    className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-bg-hover ${
-                      i > 0 ? 'border-t border-border-subtle' : ''
-                    }`}
-                  >
-                    <Icon size={16} className={`shrink-0 ${meta.className}`} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-text-primary">{e.name}</div>
-                      <div className="text-xs text-text-muted">{e.ticker}</div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className={`text-xs font-medium ${meta.className}`}>{meta.label}</div>
-                      {e.value != null && (
-                        <div className="font-tabular text-xs text-text-secondary">{formatMoney(e.value, e.currency)}</div>
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
+        <div className="relative flex flex-col gap-6 pb-4">
+          {groups.length > 0 && <div className="absolute bottom-2 left-[7px] top-2 w-px bg-border-subtle" />}
+          {groups.map(([date, dayEvents], gi) => (
+            <div key={date} className="relative pl-7">
+              <div
+                className={`absolute left-0 top-0.5 h-3.5 w-3.5 rounded-full border-2 ${
+                  gi === 0 ? 'border-accent bg-accent/20' : 'border-border-color bg-bg-base'
+                }`}
+              />
+              <div className="mb-2 flex items-baseline gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-text-primary">{dayLabel(date)}</span>
+                <span className="font-tabular text-[10px] text-text-muted">{daysUntilLabel(date)}</span>
+              </div>
+              <div className="overflow-hidden border border-border-color bg-bg-panel">
+                {dayEvents.map((e, i) => {
+                  const meta = TYPE_META[e.type]
+                  return (
+                    <button
+                      key={`${e.ticker}-${e.type}-${i}`}
+                      onClick={() => {
+                        selectTicker(e.ticker)
+                        setView('terminal')
+                      }}
+                      className={`flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-bg-hover ${
+                        i > 0 ? 'border-t border-border-subtle' : ''
+                      }`}
+                    >
+                      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${meta.dot}`} />
+                      <InstrumentLogo ticker={e.ticker} isin={e.isin} size={26} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold text-text-primary">{e.name}</div>
+                        <div className="font-tabular text-[11px] text-text-muted">{e.ticker}</div>
+                      </div>
+                      <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${meta.chip}`}>
+                        {meta.label}
+                      </span>
+                      <div className="w-24 shrink-0 text-right">
+                        {e.value != null && (
+                          <div className="font-tabular text-xs font-semibold text-text-secondary">
+                            {formatMoney(e.value, e.currency)}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )
