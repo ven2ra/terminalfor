@@ -6,8 +6,10 @@ import {
   ChartLineUp,
   ClipboardText,
   GridFour,
+  GridNine,
   Newspaper,
   Pulse,
+  Sigma,
   Wallet,
 } from '@phosphor-icons/react'
 import { ChartArea } from '@/components/chart/ChartArea'
@@ -20,6 +22,8 @@ import { NewsFeed } from '@/components/news/NewsFeed'
 import { PriceAlerts } from '@/components/alerts/PriceAlerts'
 import { MarketOverview } from '@/components/market/MarketOverview'
 import { Heatmap } from '@/components/market/Heatmap'
+import { OptionsPanel } from '@/components/options/OptionsPanel'
+import { OptionsBoard } from '@/components/options/OptionsBoard'
 
 export type WidgetType =
   | 'chart'
@@ -32,6 +36,8 @@ export type WidgetType =
   | 'alerts'
   | 'marketOverview'
   | 'heatmap'
+  | 'options'
+  | 'optionsBoard'
 
 interface WidgetLayoutDefaults {
   x: number
@@ -113,6 +119,18 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
     icon: <GridFour size={14} />,
     layout: { x: 3, y: 32, w: 4, h: 10, minW: 3, minH: 6 },
     render: ({ onRemove }) => <Heatmap onRemove={onRemove} />,
+  },
+  options: {
+    label: 'Опционы',
+    icon: <Sigma size={14} />,
+    layout: { x: 0, y: 42, w: 4, h: 12, minW: 3, minH: 7 },
+    render: ({ onRemove }) => <OptionsPanel onRemove={onRemove} />,
+  },
+  optionsBoard: {
+    label: 'Доска опционов',
+    icon: <GridNine size={14} />,
+    layout: { x: 4, y: 42, w: 6, h: 12, minW: 4, minH: 7 },
+    render: ({ onRemove }) => <OptionsBoard onRemove={onRemove} />,
   },
 }
 

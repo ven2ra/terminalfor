@@ -4,6 +4,7 @@ import { getSecurities, getExtraSecurities, getCandles, getOlderCandles, getTrad
 import { getNews } from './news.js'
 import { getCalendar } from './calendar.js'
 import { proxyLogo } from './logos.js'
+import { getOptionAssets, getOptionsForAsset, getOptionChain } from './options.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
 
@@ -101,6 +102,33 @@ app.get('/api/news', async (_req, res) => {
 
 app.get('/api/logo/:isin', (req, res) => {
   proxyLogo(req.params.isin.toUpperCase(), res)
+})
+
+app.get('/api/options/assets', async (_req, res) => {
+  try {
+    res.json(await getOptionAssets())
+  } catch (err) {
+    console.error('options assets error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+app.get('/api/options/list/:asset', async (req, res) => {
+  try {
+    res.json(await getOptionsForAsset(req.params.asset, req.query.expiry))
+  } catch (err) {
+    console.error('options list error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+app.get('/api/options/chain/:asset', async (req, res) => {
+  try {
+    res.json(await getOptionChain(req.params.asset, req.query.expiry))
+  } catch (err) {
+    console.error('options chain error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
 })
 
 app.get('/api/calendar', async (_req, res) => {

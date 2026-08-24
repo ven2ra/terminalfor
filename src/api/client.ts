@@ -1,4 +1,4 @@
-import { AssetType, CalendarEvent, Candle, NewsItem, Trade } from '@/types'
+import { AssetType, CalendarEvent, Candle, NewsItem, OptionAsset, OptionChain, OptionContract, Trade } from '@/types'
 
 /** Сырые данные инструмента, приходящие с бэкенда (MOEX ISS) */
 export interface SecurityDto {
@@ -84,4 +84,21 @@ export function fetchTapeQuotes(symbols: string[]): Promise<TapeQuote[]> {
 /** Ближайшие оферты/купоны/погашения по ликвидным облигациям МосБиржи */
 export function fetchCalendar(): Promise<CalendarEvent[]> {
   return getJson('/api/calendar')
+}
+
+/** Базовые активы опционов FORTS, отсортированы по числу торгуемых контрактов */
+export function fetchOptionAssets(): Promise<OptionAsset[]> {
+  return getJson('/api/options/assets')
+}
+
+/** Плоский список опционных контрактов по базовому активу (опционально — по одной экспирации) */
+export function fetchOptionsList(asset: string, expiry?: string): Promise<OptionContract[]> {
+  const query = expiry ? `?expiry=${encodeURIComponent(expiry)}` : ''
+  return getJson(`/api/options/list/${encodeURIComponent(asset)}${query}`)
+}
+
+/** Доска опционов (call/put по страйкам) по базовому активу и экспирации (ближайшая, если не указана) */
+export function fetchOptionChain(asset: string, expiry?: string): Promise<OptionChain> {
+  const query = expiry ? `?expiry=${encodeURIComponent(expiry)}` : ''
+  return getJson(`/api/options/chain/${encodeURIComponent(asset)}${query}`)
 }

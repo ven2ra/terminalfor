@@ -39,6 +39,38 @@ export interface Candle {
   volume: number
 }
 
+/** Базовый актив опционов FORTS — список и человекочитаемое название доступны через /api/options/assets */
+export interface OptionAsset {
+  code: string
+  name: string
+  count: number
+}
+
+/** Один опционный контракт (FORTS, доска ROPD) — витрина рынка, без размещения заявок */
+export interface OptionContract {
+  ticker: string
+  name: string
+  asset: string
+  underlyingFuture: string
+  strike: number
+  type: 'call' | 'put'
+  expiry: string
+  bid: number | null
+  offer: number | null
+  lastPrice: number | null
+  changePercent: number
+  volume: number
+  openInterest: number
+}
+
+/** Доска опционов: шахматка call/put по страйкам для одной экспирации базового актива */
+export interface OptionChain {
+  asset: string
+  expiry: string | null
+  expiries: string[]
+  rows: Array<{ strike: number; call: OptionContract | null; put: OptionContract | null }>
+}
+
 export type OrderSide = 'buy' | 'sell'
 export type OrderType = 'market' | 'limit' | 'stop'
 export type OrderStatus = 'new' | 'partial' | 'filled' | 'cancelled'
