@@ -57,7 +57,7 @@ async function loadOptions() {
   const marketdata = new Map(rowsToObjects(json.marketdata).map((r) => [r.SECID, r]))
 
   const today = new Date().toISOString().slice(0, 10)
-  return securities
+  const parsed = securities
     .filter((s) => s.LASTTRADEDATE >= today)
     .map((s) => {
       const md = marketdata.get(s.SECID)
@@ -77,6 +77,43 @@ async function loadOptions() {
         openInterest: md?.OPENPOSITION ?? 0,
       }
     })
+
+  return dropSecondaryUnderlyings(parsed)
+}
+
+/**
+ * У MOEX один и тот же ASSETCODE+экспирация нередко содержит ДВА разных
+ * набора контрактов: опционы на саму акцию/индекс (UNDERLYINGASSET — тикер
+ * без цифры на конце, например SBER) и опционы на фьючерс на неё
+ * (UNDERLYINGASSET — тикер фьючерса вида SRU6/GZU6, буква месяца + цифра
+ * года). У них принципиально разная шкала страйков (у SBRF, например,
+ * 220–330 против 20000–38000 в тот же день) — без разделения шахматка
+ * "Доски опционов" превращалась в кашу из двух несовместимых серий.
+ * Оставляем только "прямую" серию (акция/индекс), а если её нет для этой
+ * экспирации — самую многочисленную из доступных.
+ */
+function dropSecondaryUnderlyings(options) {
+  const groups = new Map()
+  for (const o of options) {
+    const key = `${o.asset}:${o.expiry}`
+    const byUnderlying = groups.get(key) ?? new Map()
+    const list = byUnderlying.get(o.underlyingFuture) ?? []
+    list.push(o)
+    byUnderlying.set(o.underlyingFuture, list)
+    groups.set(key, byUnderlying)
+  }
+
+  const result = []
+  for (const byUnderlying of groups.values()) {
+    if (byUnderlying.size <= 1) {
+      result.push(...[...byUnderlying.values()][0])
+      continue
+    }
+    const direct = [...byUnderlying.entries()].filter(([underlying]) => !/\d$/.test(underlying))
+    const chosen = direct.length === 1 ? direct[0][1] : [...byUnderlying.values()].sort((a, b) => b.length - a.length)[0]
+    result.push(...chosen)
+  }
+  return result
 }
 
 // Опционная доска почти не меняется поминутно (в отличие от акций) —
