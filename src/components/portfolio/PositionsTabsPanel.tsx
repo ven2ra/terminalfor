@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Check, X } from '@phosphor-icons/react'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useOrderStore } from '@/store/useOrderStore'
+import { useEquityHistoryStore } from '@/store/useEquityHistoryStore'
 import { Panel } from '@/components/common/Panel'
+import { Sparkline } from '@/components/common/Sparkline'
 import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
 import { ORDER_TYPE_LABELS } from '@/lib/orderLabels'
 
@@ -10,12 +12,15 @@ interface PositionsTabsPanelProps {
   onRemove?: () => void
 }
 
-type Tab = 'positions' | 'active' | 'history'
+type Tab = 'positions' | 'active' | 'history' | 'structure'
 
-/** Единая панель под графиком: открытые позиции, активные заявки и история сделок — три вкладки одного виджета */
+const ASSET_COLORS = ['#3b82f6', '#10b981', '#fbbf24', '#a367f5', '#f87171']
+
+/** Единая панель под графиком: капитал/P&L, открытые позиции, активные заявки, история сделок и структура портфеля — вкладки одного виджета */
 export function PositionsTabsPanel({ onRemove }: PositionsTabsPanelProps) {
-  const { positions } = usePortfolioStore()
+  const { positions, account } = usePortfolioStore()
   const { orders, cancelOrder } = useOrderStore()
+  const equityPoints = useEquityHistoryStore((s) => s.points)
   const [tab, setTab] = useState<Tab>('positions')
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
@@ -24,6 +29,15 @@ export function PositionsTabsPanel({ onRemove }: PositionsTabsPanelProps) {
   const lastUpdate = orders[0]
     ? new Date(orders[0].createdAt).toLocaleTimeString('ru-RU', { hour12: false })
     : new Date().toLocaleTimeString('ru-RU', { hour12: false })
+  const pnlPositive = account.todayPnl >= 0
+  const sparkValues = equityPoints.slice(-60).map((p) => p.equity)
+
+  const structure = positions.map((p, idx) => ({
+    ticker: p.ticker,
+    value: p.size * p.currentPrice,
+    color: ASSET_COLORS[idx % ASSET_COLORS.length],
+  }))
+  const totalValue = structure.reduce((sum, s) => sum + s.value, 0) || 1
 
   return (
     <Panel
@@ -31,7 +45,18 @@ export function PositionsTabsPanel({ onRemove }: PositionsTabsPanelProps) {
       noPadding
       draggable={!!onRemove}
       onRemove={onRemove}
-      actions={<span className="font-tabular text-[10px] text-text-muted">Обновлено {lastUpdate}</span>}
+      actions={
+        <div className="flex items-center gap-3">
+          <div className="hidden items-baseline gap-1.5 sm:flex">
+            <span className="font-tabular text-xs font-semibold text-text-primary">{formatMoney(account.equity)}</span>
+            <span className={`font-tabular text-[10px] ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
+              {pnlPositive ? '+' : ''}
+              {formatMoney(account.todayPnl)} ({formatPercent(account.todayPnlPercent)})
+            </span>
+          </div>
+          <span className="font-tabular text-[10px] text-text-muted">Обновлено {lastUpdate}</span>
+        </div>
+      }
     >
       <div className="flex h-full flex-col">
         <div className="flex h-9 shrink-0 items-stretch border-b border-border-subtle bg-bg-head px-2.5">
@@ -40,6 +65,7 @@ export function PositionsTabsPanel({ onRemove }: PositionsTabsPanelProps) {
               ['positions', 'Позиции', positions.length],
               ['active', 'Активные заявки', activeOrders.length],
               ['history', 'История сделок', null],
+              ['structure', 'Структура', null],
             ] as [Tab, string, number | null][]
           ).map(([value, label, count]) => (
             <button
@@ -221,6 +247,48 @@ export function PositionsTabsPanel({ onRemove }: PositionsTabsPanelProps) {
                 )}
               </tbody>
             </table>
+          )}
+
+          {tab === 'structure' && (
+            <div className="flex flex-col gap-3 p-3.5">
+              <div className="flex items-center gap-4 border border-border-color bg-bg-head px-3.5 py-2.5">
+                <div>
+                  <div className="text-[9px] uppercase tracking-wide text-text-muted">Капитал</div>
+                  <div className="font-tabular text-base font-bold text-text-primary">{formatMoney(account.equity)}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-wide text-text-muted">P&L сегодня</div>
+                  <div className={`font-tabular text-xs font-semibold ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
+                    {pnlPositive ? '+' : ''}
+                    {formatMoney(account.todayPnl)} <span className="opacity-80">({formatPercent(account.todayPnlPercent)})</span>
+                  </div>
+                </div>
+                <Sparkline values={sparkValues} width={90} height={30} className="ml-auto shrink-0" />
+              </div>
+
+              {structure.length === 0 ? (
+                <div className="p-4 text-center text-xs text-text-muted">Открытых позиций нет</div>
+              ) : (
+                <>
+                  <div className="flex h-3 overflow-hidden bg-bg-elevated">
+                    {structure.map((s) => (
+                      <div key={s.ticker} style={{ width: `${(s.value / totalValue) * 100}%`, backgroundColor: s.color }} />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {structure.map((s) => (
+                      <div key={s.ticker} className="flex items-center justify-between border border-border-subtle bg-bg-head px-2.5 py-2 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
+                          <span className="font-medium text-text-primary">{s.ticker}</span>
+                        </div>
+                        <span className="font-tabular text-text-secondary">{((s.value / totalValue) * 100).toFixed(1)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -10,14 +10,11 @@ import {
   Newspaper,
   Pulse,
   Sigma,
-  Wallet,
 } from '@phosphor-icons/react'
 import { ChartArea } from '@/components/chart/ChartArea'
 import { OrderBook } from '@/components/orderbook/OrderBook'
 import { TradesTape } from '@/components/orderbook/TradesTape'
 import { OrderPanel } from '@/components/orders/OrderPanel'
-import { ActiveOrdersPanel } from '@/components/orders/ActiveOrdersPanel'
-import { PortfolioPanel } from '@/components/portfolio/PortfolioPanel'
 import { PositionsTabsPanel } from '@/components/portfolio/PositionsTabsPanel'
 import { NewsFeed } from '@/components/news/NewsFeed'
 import { PriceAlerts } from '@/components/alerts/PriceAlerts'
@@ -31,8 +28,6 @@ export type WidgetType =
   | 'orderbook'
   | 'trades'
   | 'orderPanel'
-  | 'activeOrders'
-  | 'portfolio'
   | 'positionsTabs'
   | 'news'
   | 'alerts'
@@ -66,12 +61,6 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
     layout: { x: 0, y: 0, w: 7, h: 14, minW: 4, minH: 8 },
     render: ({ onRemove }) => <ChartArea onRemove={onRemove} />,
   },
-  portfolio: {
-    label: 'Портфель',
-    icon: <Wallet size={14} />,
-    layout: { x: 0, y: 14, w: 7, h: 8, minW: 4, minH: 5 },
-    render: ({ onRemove }) => <PortfolioPanel onRemove={onRemove} />,
-  },
   positionsTabs: {
     label: 'Позиции и заявки',
     icon: <ClipboardText size={14} />,
@@ -97,12 +86,6 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
     // Высота с запасом: кнопки, тип, цена, объём, быстрые кнопки, сумма/остаток и submit целиком помещаются без обрезки
     layout: { x: 7, y: 17, w: 3, h: 17, minW: 2, minH: 13 },
     render: ({ onRemove }) => <OrderPanel onRemove={onRemove} />,
-  },
-  activeOrders: {
-    label: 'Активные заявки',
-    icon: <ClipboardText size={14} />,
-    layout: { x: 7, y: 34, w: 3, h: 7, minW: 2, minH: 5 },
-    render: ({ onRemove }) => <ActiveOrdersPanel onRemove={onRemove} />,
   },
   news: {
     label: 'Новости',

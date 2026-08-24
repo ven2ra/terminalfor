@@ -86,14 +86,19 @@ export function CalendarView() {
       const d = differenceInCalendarDays(new Date(`${e.date}T00:00:00`), today)
       return d >= 0 && d <= 7
     })
-    const payout7d = within7
+    // Сумма купонов разных бумаг математически бессмысленна — это цена за
+    // ОДНУ облигацию у каждого эмитента (разный номинал/лот), а не сумма
+    // реальных выплат по чьему-то портфелю. Вместо фиктивного "итого"
+    // показываем самую крупную отдельную выплату периода — сравнение двух
+    // "цена за бумагу" величин между собой корректно, в отличие от их суммы
+    const biggestPayout = within7
       .filter((e) => e.type !== 'maturity' && e.value != null)
-      .reduce((sum, e) => sum + (e.value ?? 0), 0)
+      .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0]
     const nextEvent = events[0]
     return {
       total: events.length,
       within7: within7.length,
-      payout7d,
+      biggestPayout,
       nextLabel: nextEvent ? dayLabel(nextEvent.date) : '—',
     }
   }, [events])
@@ -119,8 +124,17 @@ export function CalendarView() {
               <div className="mt-1 font-tabular text-base font-bold text-text-primary">{stats.within7}</div>
             </div>
             <div className="relative overflow-hidden border border-border-color bg-bg-panel px-3.5 py-2.5 before:absolute before:left-0 before:top-0 before:h-0.5 before:w-7 before:bg-accent before:content-['']">
-              <div className="text-[9px] uppercase tracking-wide text-text-muted">Выплаты за 7 дней</div>
-              <div className="mt-1 font-tabular text-base font-bold text-buy">{formatMoney(stats.payout7d)}</div>
+              <div className="text-[9px] uppercase tracking-wide text-text-muted">Крупнейшая выплата на бумагу, 7 дней</div>
+              {stats.biggestPayout ? (
+                <>
+                  <div className="mt-1 font-tabular text-base font-bold text-buy">
+                    {formatMoney(stats.biggestPayout.value ?? 0, stats.biggestPayout.currency)}
+                  </div>
+                  <div className="truncate text-[10px] text-text-muted">{stats.biggestPayout.name}</div>
+                </>
+              ) : (
+                <div className="mt-1 font-tabular text-base font-bold text-text-muted">—</div>
+              )}
             </div>
           </div>
         )}
