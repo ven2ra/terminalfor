@@ -18,6 +18,7 @@ import { TradesTape } from '@/components/orderbook/TradesTape'
 import { OrderPanel } from '@/components/orders/OrderPanel'
 import { ActiveOrdersPanel } from '@/components/orders/ActiveOrdersPanel'
 import { PortfolioPanel } from '@/components/portfolio/PortfolioPanel'
+import { PositionsTabsPanel } from '@/components/portfolio/PositionsTabsPanel'
 import { NewsFeed } from '@/components/news/NewsFeed'
 import { PriceAlerts } from '@/components/alerts/PriceAlerts'
 import { MarketOverview } from '@/components/market/MarketOverview'
@@ -32,6 +33,7 @@ export type WidgetType =
   | 'orderPanel'
   | 'activeOrders'
   | 'portfolio'
+  | 'positionsTabs'
   | 'news'
   | 'alerts'
   | 'marketOverview'
@@ -69,6 +71,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
     icon: <Wallet size={14} />,
     layout: { x: 0, y: 14, w: 7, h: 8, minW: 4, minH: 5 },
     render: ({ onRemove }) => <PortfolioPanel onRemove={onRemove} />,
+  },
+  positionsTabs: {
+    label: 'Позиции и заявки',
+    icon: <ClipboardText size={14} />,
+    layout: { x: 0, y: 14, w: 7, h: 8, minW: 4, minH: 5 },
+    render: ({ onRemove }) => <PositionsTabsPanel onRemove={onRemove} />,
   },
   orderbook: {
     label: 'Стакан заявок',
@@ -136,10 +144,9 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDefinition> = {
 
 export const DEFAULT_WIDGETS: WidgetType[] = [
   'chart',
-  'portfolio',
+  'positionsTabs',
   'orderbook',
   'trades',
   'orderPanel',
-  'activeOrders',
   'news',
 ]

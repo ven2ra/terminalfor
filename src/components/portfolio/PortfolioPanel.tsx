@@ -63,30 +63,30 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto p-3">
+        <div className="min-h-0 flex-1 overflow-auto">
           {tab === 'positions' && (
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-text-muted">
-                  <th className="pb-2 font-medium">Тикер</th>
-                  <th className="pb-2 font-medium">Сторона</th>
-                  <th className="pb-2 text-right font-medium">Объём</th>
-                  <th className="pb-2 text-right font-medium">Ср. цена</th>
-                  <th className="pb-2 text-right font-medium">Тек. цена</th>
-                  <th className="pb-2 text-right font-medium">P&L</th>
+                <tr className="border-b border-border-subtle bg-bg-head text-left text-[9px] uppercase tracking-wide text-text-muted">
+                  <th className="h-7 px-3 font-semibold">Тикер</th>
+                  <th className="h-7 px-3 font-semibold">Сторона</th>
+                  <th className="h-7 px-3 text-right font-semibold">Объём</th>
+                  <th className="h-7 px-3 text-right font-semibold">Ср. цена</th>
+                  <th className="h-7 px-3 text-right font-semibold">Тек. цена</th>
+                  <th className="h-7 px-3 text-right font-semibold">P&L</th>
                 </tr>
               </thead>
               <tbody>
                 {positions.map((p) => (
-                  <tr key={p.ticker} className="border-t border-border-subtle">
-                    <td className="py-2 font-semibold text-text-primary">{p.ticker}</td>
-                    <td className={`py-2 font-medium ${p.side === 'buy' ? 'text-buy' : 'text-sell'}`}>
+                  <tr key={p.ticker} className="border-b border-border-subtle hover:bg-accent/[.045]">
+                    <td className="h-[34px] px-3 font-semibold text-text-primary">{p.ticker}</td>
+                    <td className={`h-[34px] px-3 font-medium ${p.side === 'buy' ? 'text-buy' : 'text-sell'}`}>
                       {p.side === 'buy' ? 'Лонг' : 'Шорт'}
                     </td>
-                    <td className="py-2 text-right font-tabular text-text-secondary">{p.size}</td>
-                    <td className="py-2 text-right font-tabular text-text-secondary">{formatPrice(p.avgPrice)}</td>
-                    <td className="py-2 text-right font-tabular text-text-secondary">{formatPrice(p.currentPrice)}</td>
-                    <td className={`py-2 text-right font-tabular font-semibold ${p.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                    <td className="h-[34px] px-3 text-right font-tabular text-text-secondary">{p.size}</td>
+                    <td className="h-[34px] px-3 text-right font-tabular text-text-secondary">{formatPrice(p.avgPrice)}</td>
+                    <td className="h-[34px] px-3 text-right font-tabular text-text-secondary">{formatPrice(p.currentPrice)}</td>
+                    <td className={`h-[34px] px-3 text-right font-tabular font-semibold ${p.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
                       {formatMoney(p.pnl)}
                       <span className="ml-1 text-[11px] font-normal opacity-80">({formatPercent(p.pnlPercent)})</span>
                     </td>
@@ -97,7 +97,7 @@ export function PortfolioPanel({ onRemove }: PortfolioPanelProps) {
           )}
 
           {tab === 'structure' && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 p-3">
               <div className="flex h-3 overflow-hidden rounded-full bg-bg-elevated">
                 {structure.map((s) => (
                   <div key={s.ticker} style={{ width: `${(s.value / totalValue) * 100}%`, backgroundColor: s.color }} />

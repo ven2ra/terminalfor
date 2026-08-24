@@ -20,19 +20,17 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Onest — современный геометрический гротеск с полной поддержкой
-        // кириллицы (предыдущие Hanken Grotesk/Bricolage Grotesque её не имели,
-        // текст молча падал на системный шрифт; Sofia Sans Condensed после
-        // проверки оказалась слишком узкой/сплющенной). Одна гарнитура на всё,
-        // только вес меняется между текстом и заголовками
-        sans: ['Onest', 'system-ui', 'sans-serif'],
-        display: ['Onest', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', '"Roboto Mono"', 'monospace'],
       },
       colors: {
         bg: {
           base: 'var(--bg-base)',
+          rail: 'var(--bg-rail)',
+          head: 'var(--bg-head)',
           panel: 'var(--bg-panel)',
+          raised: 'var(--bg-raised)',
           elevated: 'var(--bg-elevated)',
           hover: 'var(--bg-hover)',
         },

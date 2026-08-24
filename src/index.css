@@ -10,49 +10,47 @@
    ========================================================================== */
 :root,
 [data-theme='dark'] {
-  /* Более глубокий, почти OLED-чёрный с холодным подтоном — премиальнее и
-     контрастнее типового "тёмно-серого" SaaS-фона, ближе к языку приборной панели */
-  --bg-base: #06070c;
-  --bg-panel: #0b0e16;
-  --bg-elevated: #10141f;
-  --bg-hover: #161b28;
+  --bg-base: #090b0f;
+  --bg-rail: #0a0d11;
+  --bg-panel: #10141b;
+  --bg-raised: #141a22;
+  --bg-head: #0d1117;
+  --bg-elevated: #141a22;
+  --bg-hover: #151b23;
 
-  --border-color: #242938;
-  --border-subtle: #161b26;
+  --border-color: #28303b;
+  --border-subtle: #1b222c;
 
-  --text-primary: #ffffff;
-  --text-secondary: #8e96a8;
-  /* Контраст поднят с 2.9:1 до 4.85:1 к bg-panel/bg-elevated — WCAG AA
-     для обычного текста (аудит через impeccable/audit.md, dimension A11y) */
-  --text-muted: #78808f;
+  --text-primary: #f0f2f5;
+  --text-secondary: #a7afbb;
+  --text-muted: #747f8c;
 
   /* Фирменный акцент — тёплый янтарь вместо типового синего SaaS-акцента:
-     считываемо как "терминал/пульт", а не очередная синяя админка.
-     Насыщенность сознательно снижена (~90% → ~74%) — по аудиту redesign-skill
-     ("keep saturation below 80%"): выверенный акцент, а не кричащий неон */
-  --accent: #df9b2e;
-  --accent-hover: #e4aa4d;
-  --accent-rgb: 223, 155, 46;
-  /* Белый текст на янтарном фоне даёт 2.4:1 — далеко от WCAG AA. Тёмный
-     текст поверх акцента: 8.1:1 */
-  --on-accent: #0b0e16;
+     считываемо как "терминал/пульт", а не очередная синяя админка */
+  --accent: #e9a63a;
+  --accent-hover: #f0b355;
+  --accent-rgb: 233, 166, 58;
+  --on-accent: #191108;
 
-  --buy: #10b981;
-  --buy-bg: rgba(16, 185, 129, 0.12);
-  --sell: #f87171;
-  --sell-bg: rgba(248, 113, 113, 0.12);
-  --warning: #f0b429;
-  --warning-bg: rgba(240, 180, 41, 0.12);
+  --buy: #43ca8b;
+  --buy-bg: rgba(67, 202, 139, 0.13);
+  --sell: #f06770;
+  --sell-bg: rgba(240, 103, 112, 0.13);
+  --warning: #e9a63a;
+  --warning-bg: rgba(233, 166, 58, 0.13);
   --accent-cyan: #22d3ee;
 
-  --flash-color: rgba(223, 155, 46, 0.22);
+  --flash-color: rgba(233, 166, 58, 0.22);
 
   color-scheme: dark;
 }
 
 [data-theme='light'] {
   --bg-base: #f4f6f9;
+  --bg-rail: #eef1f6;
   --bg-panel: #ffffff;
+  --bg-raised: #ffffff;
+  --bg-head: #f7f9fb;
   --bg-elevated: #ffffff;
   --bg-hover: #eef1f6;
 
@@ -117,13 +115,11 @@ body,
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: 'Onest', system-ui, sans-serif;
-  font-feature-settings: 'cv11', 'ss01', 'tnum';
-  font-optical-sizing: auto;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  letter-spacing: -0.008em;
   overflow: hidden;
 }
 
@@ -137,7 +133,7 @@ body {
 /* Фирменное начертание для логотипа и заголовков разделов — тот же Onest,
    что и в теле текста (единая гарнитура, отличие только в весе) */
 .font-display {
-  font-family: 'Onest', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -162,34 +158,6 @@ body {
   background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 37%, var(--bg-elevated) 63%);
   background-size: 400px 100%;
   animation: shimmer 1.4s infinite linear;
-}
-
-/* Фирменный "уголковый" мотив панелей — все четыре угла обрамлены тонкими
-   HUD-засечками (background-image, не border/pseudo — так помещаются все 4
-   сразу без конфликта с bg-*-цветом самой панели), а не типовая карточка
-   с ровной рамкой и тенью, как у любого другого дашборда */
-.panel-frame {
-  position: relative;
-  background-repeat: no-repeat;
-  background-image:
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85)),
-    linear-gradient(rgba(var(--accent-rgb), 0.85), rgba(var(--accent-rgb), 0.85));
-  background-size:
-    10px 2px, 2px 10px,
-    10px 2px, 2px 10px,
-    10px 2px, 2px 10px,
-    10px 2px, 2px 10px;
-  background-position:
-    top left, top left,
-    top right, top right,
-    bottom left, bottom left,
-    bottom right, bottom right;
 }
 
 /* Библиотека resizable-панелей рисует свой сплиттер — стилизуем под тему */

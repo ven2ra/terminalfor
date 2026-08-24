@@ -67,7 +67,7 @@ export function TradesTape({ onRemove }: TradesTapeProps) {
             </button>
           ))}
         </div>
-        <div className="grid shrink-0 grid-cols-3 gap-1 px-3 py-1.5 text-text-muted">
+        <div className="grid shrink-0 grid-cols-3 gap-1 border-b border-border-subtle bg-bg-head px-3 py-1.5 text-[9px] uppercase tracking-wide text-text-muted">
           <span>Время</span>
           <span className="text-right">Цена</span>
           <span className="text-right">Объём</span>

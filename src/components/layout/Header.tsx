@@ -57,9 +57,35 @@ export function Header() {
   const pnlPositive = account.todayPnl >= 0
 
   return (
-    <header className="relative flex h-12 shrink-0 items-center gap-2 border-b border-border-color bg-bg-panel px-3">
+    <header className="relative flex h-[46px] shrink-0 items-center gap-3 border-b border-border-color bg-bg-head px-3.5">
+      <div className="shrink-0 whitespace-nowrap text-[10px] font-bold uppercase tracking-widest text-text-primary">
+        Terminalfor<em className="ml-1 font-medium not-italic text-accent">// терминал</em>
+      </div>
+
+      <div className="hidden shrink-0 items-center gap-1.5 border border-border-color bg-bg-head px-2.5 text-[11px] text-text-secondary lg:flex">
+        <span className="font-semibold text-text-primary">Демо-счёт</span>
+      </div>
+
+      <div className="hidden items-stretch lg:flex">
+        <div className="flex min-w-[110px] flex-col justify-center whitespace-nowrap border-l border-border-subtle px-3">
+          <span className="text-[8px] uppercase tracking-wide text-text-muted">Стоимость портфеля</span>
+          <span className="mt-0.5 font-tabular text-xs font-semibold text-text-primary">{formatMoney(account.equity)}</span>
+        </div>
+        <div className="flex min-w-[110px] flex-col justify-center whitespace-nowrap border-l border-border-subtle px-3">
+          <span className="text-[8px] uppercase tracking-wide text-text-muted">Свободно</span>
+          <span className="mt-0.5 font-tabular text-xs font-semibold text-text-primary">{formatMoney(account.availableMargin)}</span>
+        </div>
+        <div className="flex min-w-[110px] flex-col justify-center whitespace-nowrap border-l border-border-subtle px-3">
+          <span className="text-[8px] uppercase tracking-wide text-text-muted">Прибыль за день</span>
+          <span className={`mt-0.5 font-tabular text-xs font-semibold ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
+            {pnlPositive ? '+' : ''}
+            {formatMoney(account.todayPnl)}
+          </span>
+        </div>
+      </div>
+
       {/* Десктоп: поисковая строка всегда развёрнута */}
-      <div className="relative hidden w-80 md:block">
+      <div className="relative ml-auto hidden w-72 md:block">
         <MagnifyingGlass size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
           value={query}
@@ -67,7 +93,7 @@ export function Header() {
           onFocus={() => setSearchFocused(true)}
           onBlur={() => setTimeout(() => setSearchFocused(false), 120)}
           placeholder="Поиск инструмента..."
-          className="w-full border border-border-color bg-bg-base py-1.5 pl-8 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
+          className="h-[30px] w-full border border-border-color bg-bg-head py-1.5 pl-8 pr-3 text-xs text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
         />
         {searchFocused && filtered.length > 0 && (
           <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden border border-border-color bg-bg-elevated shadow-panel">
@@ -136,13 +162,14 @@ export function Header() {
 
       <FeedStatusIndicator />
 
-      <div className="ml-auto flex items-center leading-tight">
-        <span className="font-tabular text-sm font-semibold text-text-primary">{formatMoney(account.equity)}</span>
-        <span className={`ml-2 font-tabular text-xs ${pnlPositive ? 'text-buy' : 'text-sell'}`}>
-          {pnlPositive ? '+' : ''}
-          {formatMoney(account.todayPnl)} ({formatPercent(account.todayPnlPercent)})
-        </span>
+      <div className="hidden shrink-0 items-center gap-1.5 border border-border-color bg-bg-head px-2.5 py-1.5 text-[9px] uppercase tracking-wide text-text-secondary lg:flex">
+        <span className="h-1.5 w-1.5 rounded-full bg-buy" />
+        RUS · {formatPercent(account.todayPnlPercent)}
       </div>
+
+      <button className="hidden h-[30px] shrink-0 border-0 bg-accent px-3 text-[11px] font-bold text-accent-contrast transition-colors hover:bg-accent-hover sm:block">
+        Пополнить
+      </button>
     </header>
   )
 }

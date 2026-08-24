@@ -25,18 +25,20 @@ export function Panel({
   children,
 }: PropsWithChildren<PanelProps>) {
   return (
-    <div className={`panel-frame flex h-full flex-col bg-bg-panel ${className}`}>
+    <div
+      className={`relative flex h-full flex-col overflow-hidden border border-border-color bg-bg-panel shadow-panel before:absolute before:left-0 before:top-0 before:z-10 before:h-0.5 before:w-7 before:bg-accent before:content-[''] ${className}`}
+    >
       <div
-        className={`widget-drag-handle flex shrink-0 items-center justify-between gap-2 border-b border-border-subtle px-3 py-2 ${
+        className={`widget-drag-handle flex h-9 shrink-0 items-center gap-2 border-b border-border-subtle bg-bg-head px-3 ${
           draggable ? 'cursor-move select-none' : ''
         }`}
       >
-        <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+        <div className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-text-primary">
           {draggable && <DotsSixVertical size={13} className="shrink-0 text-text-muted" />}
           {icon}
           <span className="truncate">{title}</span>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {actions}
           {onRemove && (
             <button

@@ -47,8 +47,8 @@ function WatchlistRow({ inst, active, onSelect, onToggleFavorite }: RowProps) {
           onSelect()
         }
       }}
-      className={`group flex cursor-pointer items-center gap-2 border-b border-border-subtle px-3 py-2 text-left transition-colors ${
-        active ? 'bg-bg-hover' : 'hover:bg-bg-hover'
+      className={`group flex min-h-[48px] cursor-pointer items-center gap-2 border-b border-l-2 border-border-subtle px-3 py-1.5 text-left transition-colors ${
+        active ? 'border-l-accent bg-gradient-to-r from-accent/10 to-transparent' : 'border-l-transparent hover:bg-bg-hover'
       }`}
     >
       <button

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLiveClock } from '@/hooks/useLiveClock'
 import { Plus, X } from '@phosphor-icons/react'
 import { fetchTapeCatalog, fetchTapeQuotes, TapeCatalogEntry, TapeQuote } from '@/api/client'
 import { useTapeStore } from '@/store/useTapeStore'
@@ -26,6 +27,7 @@ function clampMenuX(x: number, menuWidth: number): number {
 export function TickerTape() {
   const { symbols, addSymbol, removeSymbol } = useTapeStore()
   const { instruments } = useMarketStore()
+  const clock = useLiveClock()
   const [quotes, setQuotes] = useState<TapeQuote[]>([])
   const [catalog, setCatalog] = useState<TapeCatalogEntry[]>([])
   const [itemMenu, setItemMenu] = useState<ItemMenu | null>(null)
@@ -110,10 +112,10 @@ export function TickerTape() {
                 setAddMenu(null)
                 setItemMenu({ x: clampMenuX(rect.left, 200), y: rect.bottom, symbol })
               }}
-              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-4 text-xs"
+              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap border-r border-border-subtle px-3 text-[10px]"
               title="Клик или ПКМ — убрать из ленты"
             >
-              <span className="font-semibold text-text-secondary">{q?.name ?? symbol}</span>
+              <span className="font-semibold tracking-wide text-text-secondary">{q?.name ?? symbol}</span>
               {q ? (
                 <>
                   <span className="font-tabular text-text-primary">{formatPrice(q.lastPrice)}</span>
@@ -127,6 +129,9 @@ export function TickerTape() {
             </button>
           )
         })}
+        <span className="flex shrink-0 items-center whitespace-nowrap px-3 font-tabular text-[10px] text-accent">
+          {clock} · МСК
+        </span>
       </div>
 
       <button

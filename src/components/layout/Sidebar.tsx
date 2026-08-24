@@ -36,16 +36,11 @@ export function Sidebar() {
   const unseenCount = triggeredAlerts.filter((a) => !a.seen).length
 
   return (
-    <aside className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-border-color bg-bg-panel py-3">
-      {/* Фирменный знак — рамка-прицел вместо иконки из общей библиотеки: та же
-          "уголковая" логика, что и на панелях, но в масштабе логотипа */}
-      <svg width="26" height="26" viewBox="0 0 30 30" className="mb-4 shrink-0" aria-hidden>
-        <path d="M2 9V3.5A1.5 1.5 0 0 1 3.5 2H9" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d="M28 9V3.5A1.5 1.5 0 0 0 26.5 2H21" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d="M2 21v5.5A1.5 1.5 0 0 0 3.5 28H9" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d="M28 21v5.5a1.5 1.5 0 0 1-1.5 1.5H21" stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <circle cx="15" cy="15" r="3" fill="var(--accent)" />
-      </svg>
+    <aside className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border-color bg-bg-rail py-2">
+      {/* Фирменный знак — повёрнутый амберовый квадрат, как в исходном макете терминала */}
+      <div className="mb-2.5 mt-0.5 grid h-7 w-7 shrink-0 rotate-45 place-items-center bg-accent" aria-hidden>
+        <span className="-rotate-45 text-[13px] font-bold text-accent-contrast">T</span>
+      </div>
 
       <nav className="flex flex-1 flex-col items-center gap-1">
         {NAV_ITEMS.map((item) => (
@@ -54,24 +49,24 @@ export function Sidebar() {
             onClick={() => setView(item.value)}
             title={item.label}
             aria-label={item.label}
-            className={`flex h-10 w-10 items-center justify-center transition-all active:scale-90 ${
+            className={`relative flex h-[34px] w-[34px] items-center justify-center rounded-sm transition-all active:scale-90 ${
               view === item.value
-                ? 'bg-accent/15 text-accent'
-                : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+                ? 'bg-accent/[.09] text-accent before:absolute before:-left-2 before:top-[9px] before:h-4 before:w-0.5 before:bg-accent before:content-[\'\']'
+                : 'text-text-muted hover:bg-bg-hover hover:text-text-secondary'
             }`}
           >
-            <item.icon size={18} />
+            <item.icon size={16} />
           </button>
         ))}
       </nav>
 
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-1">
         <button
           onClick={toggleTheme}
           aria-label="Переключить тему"
-          className="flex h-9 w-9 items-center justify-center text-text-secondary transition-all active:scale-90 hover:bg-bg-hover hover:text-text-primary"
+          className="flex h-[34px] w-[34px] items-center justify-center rounded-sm text-text-muted transition-all active:scale-90 hover:bg-bg-hover hover:text-text-secondary"
         >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
 
         <div className="relative">
@@ -81,9 +76,9 @@ export function Sidebar() {
               if (!notifOpen) markAllSeen()
             }}
             aria-label="Уведомления по алертам"
-            className="relative flex h-9 w-9 items-center justify-center text-text-secondary transition-all active:scale-90 hover:bg-bg-hover hover:text-text-primary"
+            className="relative flex h-[34px] w-[34px] items-center justify-center rounded-sm text-text-muted transition-all active:scale-90 hover:bg-bg-hover hover:text-text-secondary"
           >
-            <Bell size={16} />
+            <Bell size={15} />
             {unseenCount > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-sell" />}
           </button>
 
@@ -126,7 +121,7 @@ export function Sidebar() {
             title="Аккаунт"
             aria-label="Аккаунт"
             aria-expanded={accountOpen}
-            className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-accent-contrast transition-transform active:scale-90 hover:brightness-110"
+            className="mt-1 flex h-7 w-7 items-center justify-center border border-border-color bg-bg-raised text-[9px] font-bold text-text-secondary transition-transform active:scale-90 hover:border-accent hover:text-accent"
           >
             КК
           </button>

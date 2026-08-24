@@ -59,7 +59,7 @@ export function OrderBook({ onRemove }: OrderBookProps) {
           <span className="font-tabular text-sell">{(100 - bidShare).toFixed(0)}%</span>
         </div>
 
-        <div className="grid shrink-0 grid-cols-3 gap-1 px-3 py-1.5 text-text-muted">
+        <div className="grid shrink-0 grid-cols-3 gap-1 border-b border-border-subtle bg-bg-head px-3 py-1.5 text-[9px] uppercase tracking-wide text-text-muted">
           <span>Цена</span>
           <span className="text-right">Объём</span>
           <span className="text-right">Итого</span>
