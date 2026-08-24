@@ -5,6 +5,7 @@ import { getNews } from './news.js'
 import { getCalendar } from './calendar.js'
 import { proxyLogo } from './logos.js'
 import { getOptionAssets, getOptionsForAsset, getOptionChain } from './options.js'
+import { getInstrumentFlags } from './qualifiedInvestor.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
 
@@ -29,6 +30,19 @@ app.get('/api/securities/extra', async (_req, res) => {
     res.json(await getExtraSecurities())
   } catch (err) {
     console.error('extra securities error:', err.message)
+    res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+// Признаки бумаги "только для квалифицированных инвесторов" / "повышенный
+// инвестиционный риск" — запрашивается лениво по конкретному тикеру
+app.get('/api/instrument-flags/:ticker', async (req, res) => {
+  const ticker = req.params.ticker.toUpperCase()
+  if (!isValidTicker(ticker)) return res.status(400).json({ error: 'invalid_ticker' })
+  try {
+    res.json(await getInstrumentFlags(ticker))
+  } catch (err) {
+    console.error('instrument flags error:', err.message)
     res.status(502).json({ error: 'moex_unavailable' })
   }
 })

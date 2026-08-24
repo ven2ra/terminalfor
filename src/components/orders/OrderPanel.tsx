@@ -4,6 +4,7 @@ import { useMarketStore } from '@/store/useMarketStore'
 import { useOrderStore } from '@/store/useOrderStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useOrderDraftStore } from '@/store/useOrderDraftStore'
+import { useInstrumentFlags } from '@/store/useInstrumentFlagsStore'
 import { OrderType } from '@/types'
 import { Panel } from '@/components/common/Panel'
 import { formatMoney, formatPrice } from '@/lib/format'
@@ -29,6 +30,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   const { account } = usePortfolioStore()
   const { draft } = useOrderDraftStore()
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
+  const flags = useInstrumentFlags(selectedTicker)
 
   const [side, setSide] = useState<'buy' | 'sell'>('buy')
   const [type, setType] = useState<OrderType>('limit')
@@ -36,13 +38,19 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   const [size, setSize] = useState('10')
   const [flash, setFlash] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  // Подтверждение статуса квал.инвестора — своё на каждую бумагу, чтобы
+  // случайно не унести его на следующий, ничем не ограниченный тикер
+  const [qualConfirmed, setQualConfirmed] = useState(false)
 
   // При смене инструмента (или первой загрузке его котировки) подставляем цену по умолчанию
   useEffect(() => {
     if (instrument) setPrice(instrument.lastPrice.toFixed(2))
     setConfirming(false)
+    setQualConfirmed(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTicker, instrument === undefined])
+
+  const qualBlocked = !!flags?.isQualifiedOnly && !qualConfirmed
 
   // Клик по строке стакана заявок подставляет цену и сторону сюда
   useEffect(() => {
@@ -96,7 +104,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   }
 
   const handleConfirm = () => {
-    if (!instrument || numericSize <= 0) return
+    if (!instrument || numericSize <= 0 || qualBlocked) return
     placeOrder({ ticker: instrument.ticker, side, type, price: numericPrice, size: numericSize })
     setConfirming(false)
     setFlash(`Заявка ${side === 'buy' ? 'на покупку' : 'на продажу'} отправлена`)
@@ -150,6 +158,21 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
+          {flags?.isQualifiedOnly && (
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border border-sell bg-sell-bg px-2.5 py-2 text-xs text-sell">
+              <input
+                type="checkbox"
+                checked={qualConfirmed}
+                onChange={(e) => setQualConfirmed(e.target.checked)}
+                className="mt-0.5 shrink-0 accent-sell"
+              />
+              <span>
+                <b>{instrument?.ticker}</b> доступна только квалифицированным инвесторам. Подтверждаю, что имею этот
+                статус.
+              </span>
+            </label>
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setSide('buy')}
@@ -277,7 +300,8 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
 
           <button
             onClick={() => setConfirming(true)}
-            disabled={!instrument || numericSize <= 0 || !!priceError || !!sizeError || !!marginError}
+            disabled={!instrument || numericSize <= 0 || !!priceError || !!sizeError || !!marginError || qualBlocked}
+            title={qualBlocked ? 'Подтвердите статус квалифицированного инвестора выше' : undefined}
             className={`rounded-md py-2.5 text-sm font-bold text-accent-contrast transition-transform active:scale-[0.98] disabled:opacity-50 ${
               side === 'buy' ? 'bg-buy hover:brightness-110' : 'bg-sell hover:brightness-110'
             }`}

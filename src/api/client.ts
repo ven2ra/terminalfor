@@ -88,6 +88,18 @@ export function fetchCalendar(): Promise<CalendarEvent[]> {
   return getJson('/api/calendar')
 }
 
+export interface InstrumentFlags {
+  /** Бумага доступна только квалифицированным инвесторам */
+  isQualifiedOnly: boolean
+  /** Сектор компаний повышенного инвестиционного риска (ПИР) */
+  highRisk: boolean
+}
+
+/** Признаки "квал.инвестор"/"повышенный риск" по конкретной бумаге — запрашивается лениво по тикеру, не для всего списка сразу */
+export function fetchInstrumentFlags(ticker: string): Promise<InstrumentFlags> {
+  return getJson(`/api/instrument-flags/${encodeURIComponent(ticker)}`)
+}
+
 /** Базовые активы опционов FORTS, отсортированы по числу торгуемых контрактов */
 export function fetchOptionAssets(): Promise<OptionAsset[]> {
   return getJson('/api/options/assets')

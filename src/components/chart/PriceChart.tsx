@@ -27,6 +27,7 @@ import {
 import { Candle } from '@/types'
 import { CandleInterval, fetchCandles } from '@/api/client'
 import { useMarketStore } from '@/store/useMarketStore'
+import { useInstrumentFlags } from '@/store/useInstrumentFlagsStore'
 import { useThemeStore } from '@/store/useThemeStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { SentimentBadge } from '@/components/chart/SentimentBadge'
@@ -107,6 +108,7 @@ export function PriceChart({
 
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
+  const flags = useInstrumentFlags(selectedTicker)
 
   // Актуальный тикер/цена/создание алерта для обработчика двойного клика по
   // графику, который подписывается на chart один раз при монтировании
@@ -461,6 +463,22 @@ export function PriceChart({
           <div className="flex items-center gap-2">
             <InstrumentLogo ticker={selectedTicker} isin={instrument?.isin ?? null} size={22} isOfz={instrument?.isOfz} />
             <span className="text-lg font-bold text-text-primary">{instrument?.name ?? '…'}</span>
+            {flags?.isQualifiedOnly && (
+              <span
+                title="Бумага доступна только квалифицированным инвесторам"
+                className="rounded bg-sell-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sell"
+              >
+                Квал. инвестор
+              </span>
+            )}
+            {!flags?.isQualifiedOnly && flags?.highRisk && (
+              <span
+                title="Сектор компаний повышенного инвестиционного риска"
+                className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning"
+              >
+                Повышенный риск
+              </span>
+            )}
           </div>
           <div className="text-xs text-text-muted">
             {instrument?.ticker ?? selectedTicker} · {instrument?.exchange ?? 'MOEX'}
