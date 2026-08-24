@@ -8,6 +8,7 @@
 import { cached } from './cache.js'
 import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
 import { registerInstrument } from './instrumentRegistry.js'
+import { tinvestEnabled, getLastPrices as getTinvestLastPrices, getClosePrices as getTinvestClosePrices } from './tinvest.js'
 
 const BOARDS = ['TQOB', 'TQCB']
 const MAX_BONDS = 150
@@ -65,6 +66,28 @@ async function loadBonds() {
 
   for (const bond of top) {
     registerInstrument(bond.ticker, { engine: 'stock', market: 'bonds', board: bond.board, assetType: 'bond' })
+  }
+
+  // Как и с акциями (moex.js) — MOEX ISS без авторизации отдаёт котировки
+  // облигаций с задержкой ~15 минут, при наличии токена подменяем на
+  // актуальные цены T-Invest (у них тот же % от номинала, что и у ISS)
+  if (tinvestEnabled()) {
+    try {
+      const tickers = top.map((b) => b.ticker)
+      const [live, closePrices] = await Promise.all([
+        getTinvestLastPrices(tickers, 'bonds'),
+        getTinvestClosePrices(tickers, 'bonds'),
+      ])
+      for (const bond of top) {
+        const quote = live.get(bond.ticker)
+        if (quote) bond.lastPrice = quote.price
+        const prevPrice = closePrices.get(bond.ticker) ?? bond.lastPrice - bond.change
+        bond.change = bond.lastPrice - prevPrice
+        bond.changePercent = prevPrice !== 0 ? (bond.change / prevPrice) * 100 : 0
+      }
+    } catch (err) {
+      console.error('tinvest live bond prices error:', err.message)
+    }
   }
 
   return top.map(({ board, ...rest }) => rest)

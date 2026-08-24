@@ -38,28 +38,39 @@ function quotationToNumber(q) {
   return Number(q.units) + (q.nano ?? 0) / 1e9
 }
 
-async function loadTickerToFigiMap() {
-  const json = await post('InstrumentsService', 'Shares', { instrumentStatus: 'INSTRUMENT_STATUS_BASE' })
+// Тикер у T-Invest совпадает с SECID на MOEX ISS для акций и облигаций (тот
+// же код доски биржи, classCode). У фьючерсов — нет: T-Invest использует
+// свой "синтетический" тикер (напр. SBERF с lastTradeDate 2099-12-31),
+// а не биржевой SECID месячного контракта (SRU6 и т.п.) — прямое
+// сопоставление по тикеру для фьючерсов даст неверные FIGI, поэтому
+// фьючерсы здесь не подключены вообще, только акции и облигации
+const FIGI_MAP_SOURCES = {
+  shares: { method: 'Shares', classCodes: new Set(['TQBR']) },
+  bonds: { method: 'Bonds', classCodes: new Set(['TQOB', 'TQCB']) },
+}
+
+async function loadTickerToFigiMap(kind) {
+  const { method, classCodes } = FIGI_MAP_SOURCES[kind]
+  const json = await post('InstrumentsService', method, { instrumentStatus: 'INSTRUMENT_STATUS_BASE' })
   const map = new Map()
   for (const s of json.instruments ?? []) {
-    // TQBR — тот же основной режим торгов акциями МосБиржи, что мы используем в ISS
-    if (s.classCode === 'TQBR' && !map.has(s.ticker)) map.set(s.ticker, s.figi)
+    if (classCodes.has(s.classCode) && !map.has(s.ticker)) map.set(s.ticker, s.figi)
   }
   return map
 }
 
 /** Карта тикер→FIGI меняется крайне редко — кэшируем на час */
-function getFigiMap() {
-  return cached('tinvest:figi-map', 3600000, loadTickerToFigiMap)
+function getFigiMap(kind) {
+  return cached(`tinvest:figi-map:${kind}`, 3600000, () => loadTickerToFigiMap(kind))
 }
 
 /**
  * Актуальные (без задержки) последние цены по списку тикеров.
  * Возвращает Map<ticker, { price, time }>; тикеры без FIGI/данных просто отсутствуют в ответе.
  */
-export async function getLastPrices(tickers) {
+export async function getLastPrices(tickers, kind = 'shares') {
   if (!tinvestEnabled() || tickers.length === 0) return new Map()
-  const figiMap = await getFigiMap()
+  const figiMap = await getFigiMap(kind)
   const figiToTicker = new Map()
   const figis = []
   for (const t of tickers) {
@@ -90,9 +101,9 @@ export async function getLastPrices(tickers) {
  * считать дневной % от биржевого закрытия, он не совпадёт с тем, что
  * показывают брокерские приложения по выходным.
  */
-export async function getClosePrices(tickers) {
+export async function getClosePrices(tickers, kind = 'shares') {
   if (!tinvestEnabled() || tickers.length === 0) return new Map()
-  const figiMap = await getFigiMap()
+  const figiMap = await getFigiMap(kind)
   const figiToTicker = new Map()
   const instruments = []
   for (const t of tickers) {
@@ -122,7 +133,7 @@ export async function getClosePrices(tickers) {
  */
 export async function getLastTrades(ticker) {
   if (!tinvestEnabled()) return []
-  const figiMap = await getFigiMap()
+  const figiMap = await getFigiMap('shares')
   const figi = figiMap.get(ticker)
   if (!figi) return []
 
