@@ -16,7 +16,7 @@ export function tinvestEnabled() {
   return Boolean(TOKEN)
 }
 
-async function post(service, method, body) {
+async function postOnce(service, method, body) {
   const res = await fetch(`${BASE}.${service}/${method}`, {
     method: 'POST',
     headers: {
@@ -30,6 +30,24 @@ async function post(service, method, body) {
     throw new Error(`T-Invest ${service}.${method} ${res.status}: ${text.slice(0, 200)}`)
   }
   return res.json()
+}
+
+// У T-Invest изредка (чаще всего на самых тяжёлых запросах — полный список
+// инструментов, это сотни КБ-единицы МБ JSON) рвётся соединение или upstream
+// отвечает 503 "upstream connect error" — и то, и другое проходит одним
+// ретраем почти всегда; разовый сетевой сбой не должен ронять весь запрос
+// и откатывать нас на задержанный ISS до следующего цикла опроса
+async function post(service, method, body) {
+  const attempts = 3
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await postOnce(service, method, body)
+    } catch (err) {
+      if (attempt === attempts) throw err
+      console.error(`tinvest ${service}.${method} попытка ${attempt} не удалась (${err.message}), повторяю…`)
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt))
+    }
+  }
 }
 
 /** Quotation/MoneyValue из T-Invest API — units (строка) + nano (доля) */
@@ -59,9 +77,27 @@ async function loadTickerToFigiMap(kind) {
   return map
 }
 
-/** Карта тикер→FIGI меняется крайне редко — кэшируем на час */
-function getFigiMap(kind) {
-  return cached(`tinvest:figi-map:${kind}`, 3600000, () => loadTickerToFigiMap(kind))
+// Последняя успешно построенная карта на каждый kind — тикер→FIGI меняется
+// крайне редко, поэтому при сбое обновления (после ретрая в post() всё
+// равно не прошло) отдаём вчерашнюю карту вместо пустой: иначе один неудачный
+// запрос раз в час полностью откатывает акции/облигации/фьючерсы на
+// задержанный ISS до следующей удачной попытки
+const lastGoodFigiMap = new Map()
+
+/** Карта тикер→FIGI меняется крайне редко — кэшируем на час, при сбое обновления держимся за прошлую */
+async function getFigiMap(kind) {
+  try {
+    const map = await cached(`tinvest:figi-map:${kind}`, 3600000, () => loadTickerToFigiMap(kind))
+    lastGoodFigiMap.set(kind, map)
+    return map
+  } catch (err) {
+    const stale = lastGoodFigiMap.get(kind)
+    if (stale) {
+      console.error(`tinvest figi-map(${kind}) refresh error, используем прошлую карту:`, err.message)
+      return stale
+    }
+    throw err
+  }
 }
 
 /**
