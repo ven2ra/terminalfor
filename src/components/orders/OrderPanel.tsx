@@ -55,7 +55,16 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   const lastPrice = instrument?.lastPrice ?? 0
   const numericPrice = type === 'market' ? lastPrice : Number(price) || 0
   const numericSize = Number(size) || 0
-  const total = numericPrice * numericSize
+  // У облигаций numericPrice — это % от номинала (котируются в процентах,
+  // не в валюте), а не сама сумма сделки. Реальная цена одной бумаги —
+  // (цена% / 100) × номинал. Раньше здесь считали total = numericPrice *
+  // numericSize напрямую, то есть "покупка за 85,80 ₽" вместо настоящих
+  // 858 ₽ при номинале 1000 — трейдер видел сумму сделки в 10 раз меньше
+  // реальной. Номинал по умолчанию 1000 ₽ — стандартный для большинства
+  // рублёвых облигаций на MOEX, на случай если ISS не отдал FACEVALUE.
+  const unitPrice =
+    instrument?.priceUnit === 'percent' ? (numericPrice / 100) * (instrument.faceValue ?? 1000) : numericPrice
+  const total = unitPrice * numericSize
   const commission = total * COMMISSION_RATE
   const estimatedTotal = side === 'buy' ? total + commission : total - commission
   const step = instrument?.lotSize ?? 1
@@ -80,9 +89,9 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   }
 
   const applyPercent = (pct: number) => {
-    if (numericPrice <= 0) return
+    if (unitPrice <= 0) return
     const budget = (account.availableMargin * pct) / 100
-    const lots = Math.max(step, Math.floor(budget / numericPrice / step) * step)
+    const lots = Math.max(step, Math.floor(budget / unitPrice / step) * step)
     setSize(String(lots))
   }
 
@@ -175,7 +184,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
           </div>
 
           <label className="block text-xs text-text-muted">
-            Цена, {instrument?.currency ?? 'RUB'}
+            Цена, {instrument?.priceUnit === 'percent' ? '% от номинала' : (instrument?.currency ?? 'RUB')}
             <input
               disabled={type === 'market'}
               value={type === 'market' ? lastPrice.toFixed(2) : price}

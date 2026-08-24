@@ -9,6 +9,7 @@ export interface SecurityDto {
   currency: string
   assetType: AssetType
   priceUnit: 'currency' | 'percent'
+  faceValue?: number | null
   lotSize: number
   lastPrice: number
   change: number

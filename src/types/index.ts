@@ -16,6 +16,8 @@ export interface Instrument {
   assetType: AssetType
   /** Облигации котируются в % от номинала, а не в валюте */
   priceUnit: 'currency' | 'percent'
+  /** Номинал облигации — нужен, чтобы перевести цену из % в реальную сумму сделки. Есть только у priceUnit === 'percent' */
+  faceValue: number | null
   lotSize: number
   lastPrice: number
   change: number

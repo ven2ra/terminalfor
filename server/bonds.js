@@ -35,9 +35,11 @@ async function loadBoard(board) {
         name: s.SHORTNAME,
         isin: s.ISIN ?? null,
         exchange: 'MOEX',
-        currency: s.CURRENCYID ?? 'RUB',
+        // ISS отдаёт рубли под историческим кодом SUR, а не RUB
+        currency: s.CURRENCYID === 'SUR' ? 'RUB' : (s.CURRENCYID ?? 'RUB'),
         assetType: 'bond',
         priceUnit: 'percent', // цена — % от номинала, не абсолютная валюта
+        faceValue: s.FACEVALUE ?? null,
         lotSize: s.LOTSIZE ?? 1,
         lastPrice,
         change,

@@ -15,6 +15,7 @@ function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Inst
     currency: dto.currency,
     assetType: dto.assetType,
     priceUnit: dto.priceUnit,
+    faceValue: dto.faceValue ?? null,
     lotSize: dto.lotSize,
     lastPrice: dto.lastPrice,
     change: dto.change,
