@@ -4,7 +4,18 @@ import { useMarketStore } from '@/store/useMarketStore'
 import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useViewStore } from '@/store/useViewStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
-import { formatMoney, formatPercent } from '@/lib/format'
+import { formatMoney } from '@/lib/format'
+import { isMarketOpenNow } from '@/lib/tradingHours'
+
+/** Тикается раз в минуту — статус сессии (открыта/закрыта) в шапке не должен требовать перезагрузки страницы на границе часов торгов */
+function useMarketOpen(): boolean {
+  const [open, setOpen] = useState(() => isMarketOpenNow())
+  useEffect(() => {
+    const id = setInterval(() => setOpen(isMarketOpenNow()), 60000)
+    return () => clearInterval(id)
+  }, [])
+  return open
+}
 
 /** Секунд с последнего успешного обновления фида — тикается раз в секунду, только пока индикатор реально виден (status !== 'ready') */
 function useSecondsSince(timestamp: number | null): number | null {
@@ -44,6 +55,7 @@ export function Header() {
   const { instruments, selectTicker } = useMarketStore()
   const { account } = usePortfolioStore()
   const { setView } = useViewStore()
+  const marketOpen = useMarketOpen()
   const [query, setQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -162,9 +174,12 @@ export function Header() {
 
       <FeedStatusIndicator />
 
-      <div className="hidden shrink-0 items-center gap-1.5 border border-border-color bg-bg-head px-2.5 py-1.5 text-[9px] uppercase tracking-wide text-text-secondary lg:flex">
-        <span className="h-1.5 w-1.5 rounded-full bg-buy" />
-        RUS · {formatPercent(account.todayPnlPercent)}
+      <div
+        title={marketOpen ? 'Основная сессия МосБиржи идёт' : 'Биржа сейчас закрыта'}
+        className="hidden shrink-0 items-center gap-1.5 border border-border-color bg-bg-head px-2.5 py-1.5 text-[9px] uppercase tracking-wide text-text-secondary lg:flex"
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${marketOpen ? 'bg-buy' : 'bg-text-muted'}`} />
+        RUS · {marketOpen ? 'Открыто' : 'Закрыто'}
       </div>
 
       <button className="hidden h-[30px] shrink-0 border-0 bg-accent px-3 text-[11px] font-bold text-accent-contrast transition-colors hover:bg-accent-hover sm:block">
