@@ -6,6 +6,8 @@ import { useOptionAssets } from '@/hooks/useOptionAssets'
 import { Panel } from '@/components/common/Panel'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import { formatPercent, formatPrice } from '@/lib/format'
+import { useMarketStore } from '@/store/useMarketStore'
+import { useViewStore } from '@/store/useViewStore'
 import { OptionContract } from '@/types'
 
 interface OptionsPanelProps {
@@ -18,9 +20,16 @@ type SideFilter = 'all' | 'call' | 'put'
 /** Плоский список опционных контрактов FORTS по выбранному базовому активу — витрина котировок, без размещения заявок */
 export function OptionsPanel({ onRemove }: OptionsPanelProps) {
   const assets = useOptionAssets()
+  const selectOption = useMarketStore((s) => s.selectOption)
+  const setView = useViewStore((s) => s.setView)
   const [asset, setAsset] = useState('')
   const [side, setSide] = useState<SideFilter>('all')
   const [options, setOptions] = useState<OptionContract[] | null>(null)
+
+  const openInTerminal = (contract: OptionContract) => {
+    selectOption(contract)
+    setView('terminal')
+  }
 
   // Самый ликвидный актив по умолчанию — первый в списке (он отсортирован по числу контрактов на бэкенде)
   useEffect(() => {
@@ -111,7 +120,19 @@ export function OptionsPanel({ onRemove }: OptionsPanelProps) {
               {filtered.map((o) => {
                 const positive = o.changePercent >= 0
                 return (
-                  <tr key={o.ticker} className="border-b border-border-subtle hover:bg-bg-hover">
+                  <tr
+                    key={o.ticker}
+                    tabIndex={0}
+                    role="button"
+                    onClick={() => openInTerminal(o)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        openInTerminal(o)
+                      }
+                    }}
+                    className="cursor-pointer border-b border-border-subtle outline-none hover:bg-bg-hover focus-visible:bg-bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+                  >
                     <td className="px-3 py-1.5 font-tabular font-semibold text-text-primary">{formatPrice(o.strike, 0)}</td>
                     <td className={`px-3 py-1.5 font-medium ${o.type === 'call' ? 'text-buy' : 'text-sell'}`}>
                       {o.type === 'call' ? 'Call' : 'Put'}

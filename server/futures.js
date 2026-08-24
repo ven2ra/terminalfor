@@ -7,6 +7,7 @@
 import { cached } from './cache.js'
 import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
 import { registerInstrument } from './instrumentRegistry.js'
+import { tinvestEnabled, getLastPrices as getTinvestLastPrices, getClosePrices as getTinvestClosePrices } from './tinvest.js'
 
 const BOARD = 'RFUD'
 const MAX_FUTURES = 100
@@ -60,6 +61,29 @@ async function loadFutures() {
   for (const f of top) {
     registerInstrument(f.ticker, { engine: 'futures', market: 'forts', board: BOARD, assetType: 'future' })
   }
+
+  // Как и с акциями/облигациями — ISS без авторизации отдаёт котировки с
+  // задержкой ~15 минут, при наличии токена подменяем на актуальные цены
+  // T-Invest (тикеры "настоящих" месячных фьючерсов совпадают с SECID)
+  if (tinvestEnabled()) {
+    try {
+      const tickers = top.map((f) => f.ticker)
+      const [live, closePrices] = await Promise.all([
+        getTinvestLastPrices(tickers, 'futures'),
+        getTinvestClosePrices(tickers, 'futures'),
+      ])
+      for (const future of top) {
+        const quote = live.get(future.ticker)
+        if (quote) future.lastPrice = quote.price
+        const prevPrice = closePrices.get(future.ticker) ?? future.lastPrice - future.change
+        future.change = future.lastPrice - prevPrice
+        future.changePercent = prevPrice !== 0 ? (future.change / prevPrice) * 100 : 0
+      }
+    } catch (err) {
+      console.error('tinvest live futures prices error:', err.message)
+    }
+  }
+
   return top
 }
 

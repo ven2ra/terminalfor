@@ -7,6 +7,7 @@
  */
 import { cached } from './cache.js'
 import { ISS_BASE, fetchJson, rowsToObjects } from './issClient.js'
+import { registerInstrument } from './instrumentRegistry.js'
 
 const BOARD = 'ROPD'
 
@@ -78,7 +79,14 @@ async function loadOptions() {
       }
     })
 
-  return dropSecondaryUnderlyings(parsed)
+  const result = dropSecondaryUnderlyings(parsed)
+  // Регистрируем в общем реестре — иначе клик по опциону откроет график
+  // "вслепую": /api/candles и /api/trades по умолчанию считают тикер акцией
+  // на TQBR, а опционы торгуются на engine=futures/market=options/board=ROPD
+  for (const o of result) {
+    registerInstrument(o.ticker, { engine: 'futures', market: 'options', board: BOARD, assetType: 'option' })
+  }
+  return result
 }
 
 /**

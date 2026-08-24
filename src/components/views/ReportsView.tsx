@@ -23,6 +23,7 @@ const ASSET_TYPE_LABELS: Record<AssetType, string> = {
   fund: 'Фонды',
   bond: 'Облигации',
   future: 'Фьючерсы',
+  option: 'Опционы',
 }
 
 type Period = 'day' | 'week' | 'month' | 'all'

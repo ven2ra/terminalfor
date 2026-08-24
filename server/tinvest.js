@@ -38,15 +38,15 @@ function quotationToNumber(q) {
   return Number(q.units) + (q.nano ?? 0) / 1e9
 }
 
-// Тикер у T-Invest совпадает с SECID на MOEX ISS для акций и облигаций (тот
-// же код доски биржи, classCode). У фьючерсов — нет: T-Invest использует
-// свой "синтетический" тикер (напр. SBERF с lastTradeDate 2099-12-31),
-// а не биржевой SECID месячного контракта (SRU6 и т.п.) — прямое
-// сопоставление по тикеру для фьючерсов даст неверные FIGI, поэтому
-// фьючерсы здесь не подключены вообще, только акции и облигации
+// Тикер у T-Invest совпадает с SECID на MOEX ISS для акций, облигаций и
+// "настоящих" месячных фьючерсов (classCode SPBFUT, напр. SRU6 — и там,
+// и там). У T-Invest в Futures.instruments вперемешку есть ещё "вечные"/
+// weekend-контракты (classCode SPBDMFUT, напр. SBERFperp) — их тикеры не
+// совпадают с биржевыми SECID, поэтому берём только SPBFUT
 const FIGI_MAP_SOURCES = {
   shares: { method: 'Shares', classCodes: new Set(['TQBR']) },
   bonds: { method: 'Bonds', classCodes: new Set(['TQOB', 'TQCB']) },
+  futures: { method: 'Futures', classCodes: new Set(['SPBFUT']) },
 }
 
 async function loadTickerToFigiMap(kind) {
@@ -131,9 +131,9 @@ export async function getClosePrices(tickers, kind = 'shares') {
  * карте FIGI или сделок за окно не было — вызывающий код в этом случае
  * должен сам упасть обратно на ISS.
  */
-export async function getLastTrades(ticker) {
+export async function getLastTrades(ticker, kind = 'shares') {
   if (!tinvestEnabled()) return []
-  const figiMap = await getFigiMap('shares')
+  const figiMap = await getFigiMap(kind)
   const figi = figiMap.get(ticker)
   if (!figi) return []
 

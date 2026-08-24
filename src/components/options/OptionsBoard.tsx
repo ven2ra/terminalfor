@@ -6,6 +6,8 @@ import { useOptionAssets } from '@/hooks/useOptionAssets'
 import { Panel } from '@/components/common/Panel'
 import { SkeletonRows } from '@/components/common/Skeleton'
 import { formatPrice } from '@/lib/format'
+import { useMarketStore } from '@/store/useMarketStore'
+import { useViewStore } from '@/store/useViewStore'
 import { OptionChain, OptionContract } from '@/types'
 
 interface OptionsBoardProps {
@@ -14,11 +16,30 @@ interface OptionsBoardProps {
 
 const POLL_MS = 10000
 
-function Cell({ contract, align }: { contract: OptionContract | null; align: 'left' | 'right' }) {
+function Cell({
+  contract,
+  align,
+  onOpen,
+}: {
+  contract: OptionContract | null
+  align: 'left' | 'right'
+  onOpen: (contract: OptionContract) => void
+}) {
   if (!contract) return <td className="px-2 py-1.5 text-text-muted">—</td>
   const positive = contract.changePercent >= 0
   return (
-    <td className={`px-2 py-1.5 font-tabular ${align === 'right' ? 'text-right' : 'text-left'}`}>
+    <td
+      tabIndex={0}
+      role="button"
+      onClick={() => onOpen(contract)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen(contract)
+        }
+      }}
+      className={`cursor-pointer px-2 py-1.5 font-tabular outline-none hover:bg-bg-hover focus-visible:bg-bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent ${align === 'right' ? 'text-right' : 'text-left'}`}
+    >
       <div className={contract.lastPrice != null ? (positive ? 'text-buy' : 'text-sell') : 'text-text-muted'}>
         {contract.lastPrice != null ? formatPrice(contract.lastPrice) : '—'}
       </div>
@@ -30,9 +51,16 @@ function Cell({ contract, align }: { contract: OptionContract | null; align: 'le
 /** Доска опционов FORTS: шахматка call/put по страйкам для одной экспирации базового актива */
 export function OptionsBoard({ onRemove }: OptionsBoardProps) {
   const assets = useOptionAssets()
+  const selectOption = useMarketStore((s) => s.selectOption)
+  const setView = useViewStore((s) => s.setView)
   const [asset, setAsset] = useState('')
   const [expiry, setExpiry] = useState<string | undefined>(undefined)
   const [chain, setChain] = useState<OptionChain | null>(null)
+
+  const openInTerminal = (contract: OptionContract) => {
+    selectOption(contract)
+    setView('terminal')
+  }
 
   useEffect(() => {
     if (!asset && assets.length > 0) setAsset(assets[0].code)
@@ -120,11 +148,11 @@ export function OptionsBoard({ onRemove }: OptionsBoardProps) {
             <tbody>
               {chain.rows.map((row) => (
                 <tr key={row.strike} className="border-b border-border-subtle hover:bg-bg-hover">
-                  <Cell contract={row.call} align="left" />
+                  <Cell contract={row.call} align="left" onOpen={openInTerminal} />
                   <td className="px-2 py-1.5 text-center font-tabular font-semibold text-text-primary">
                     {formatPrice(row.strike, 0)}
                   </td>
-                  <Cell contract={row.put} align="right" />
+                  <Cell contract={row.put} align="right" onOpen={openInTerminal} />
                 </tr>
               ))}
               {chain.rows.length === 0 && (

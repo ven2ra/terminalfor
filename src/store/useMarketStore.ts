@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Instrument, OrderBookData, Trade } from '@/types'
+import { Instrument, OptionContract, OrderBookData, Trade } from '@/types'
 import { fetchExtraSecurities, fetchSecurities, fetchTrades, SecurityDto } from '@/api/client'
 import { synthesizeOrderBook } from '@/mock/orderbook'
 import { isWeekendSessionOpen } from '@/lib/tradingHours'
@@ -50,6 +50,7 @@ interface MarketState {
   refreshOrderBook: () => void
   loadTrades: () => Promise<void>
   selectTicker: (ticker: string) => void
+  selectOption: (contract: OptionContract) => void
   toggleFavorite: (ticker: string) => void
 }
 
@@ -73,8 +74,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       const prevByTicker = new Map(get().instruments.map((i) => [i.ticker, i.isFavorite]))
       const fresh = dtos.map((dto) => toInstrument(dto, prevByTicker.get(dto.ticker) ?? DEFAULT_FAVORITES.has(dto.ticker)))
       // Акции/фонды заменяем целиком, а ранее подгруженные облигации/фьючерсы
-      // (из loadExtraSecurities) сохраняем — у них свой, более редкий опрос
-      const extra = get().instruments.filter((i) => i.assetType === 'bond' || i.assetType === 'future')
+      // (из loadExtraSecurities) и открытый через клик опционный контракт
+      // (из selectOption, своего опроса не имеет) сохраняем как есть
+      const extra = get().instruments.filter(
+        (i) => i.assetType === 'bond' || i.assetType === 'future' || i.assetType === 'option'
+      )
       set({ instruments: [...fresh, ...extra], status: 'ready', lastUpdatedAt: Date.now(), consecutiveErrors: 0 })
       get().refreshOrderBook()
     } catch {
@@ -128,6 +132,38 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({ selectedTicker: ticker, trades: [], orderBook: { bids: [], asks: [] } })
     get().refreshOrderBook()
     get().loadTrades()
+  },
+
+  // Опционы — витрина рынка (нет своей записи в общем списке инструментов,
+  // их сотни на один базовый актив), поэтому при клике по контракту
+  // "на лету" подмешиваем его в instruments, чтобы график/шапка получили
+  // название и последнюю цену, как для обычной бумаги
+  selectOption: (contract) => {
+    const instrument: Instrument = {
+      ticker: contract.ticker,
+      name: contract.name,
+      isin: null,
+      exchange: 'MOEX',
+      currency: 'RUB',
+      assetType: 'option',
+      priceUnit: 'currency',
+      faceValue: null,
+      lotSize: 1,
+      lastPrice: contract.lastPrice ?? 0,
+      change: 0,
+      changePercent: contract.changePercent,
+      volume: contract.volume,
+      turnover: 0,
+      bid: contract.bid,
+      offer: contract.offer,
+      dayHigh: null,
+      dayLow: null,
+      dayOpen: null,
+    }
+    set((state) => ({
+      instruments: [...state.instruments.filter((i) => i.ticker !== instrument.ticker), instrument],
+    }))
+    get().selectTicker(instrument.ticker)
   },
 
   toggleFavorite: (ticker) => {

@@ -5,7 +5,7 @@ export type ThemeMode = 'dark' | 'light'
 /** Раздел терминала, выбранный в верхней навигации */
 export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports' | 'calendar'
 
-export type AssetType = 'share' | 'fund' | 'bond' | 'future'
+export type AssetType = 'share' | 'fund' | 'bond' | 'future' | 'option'
 
 export interface Instrument {
   ticker: string

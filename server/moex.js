@@ -296,10 +296,16 @@ async function loadTrades(ticker) {
     }))
 }
 
+// Опционов у T-Invest в их карте инструментов нет вовсе (это витрина ISS) —
+// для них даже не пытаемся, чтобы не тратить запрос на заведомый промах
+const TRADES_KIND_BY_ASSET_TYPE = { share: 'shares', fund: 'shares', bond: 'bonds', future: 'futures' }
+
 async function loadTradesPreferringLive(ticker) {
-  if (tinvestEnabled()) {
+  const { assetType } = getInstrumentMeta(ticker)
+  const kind = TRADES_KIND_BY_ASSET_TYPE[assetType]
+  if (kind && tinvestEnabled()) {
     try {
-      const live = await getTinvestLastTrades(ticker)
+      const live = await getTinvestLastTrades(ticker, kind)
       if (live.length > 0) return live
     } catch (err) {
       console.error('tinvest live trades error:', err.message)
