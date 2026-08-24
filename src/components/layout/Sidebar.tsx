@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarBlank, ChartBar, Bell, ChartLine, FileText, SquaresFour, Moon, Sun, Trash } from '@phosphor-icons/react'
+import { CalendarBlank, ChartBar, Bell, ChartLine, FileText, Lightning, SquaresFour, Moon, Sun, Trash } from '@phosphor-icons/react'
 import { useThemeStore } from '@/store/useThemeStore'
 import { useViewStore } from '@/store/useViewStore'
 import { useAlertsStore } from '@/store/useAlertsStore'
@@ -9,6 +9,7 @@ import { formatMoney, formatPercent, formatPrice } from '@/lib/format'
 
 const NAV_ITEMS: Array<{ value: ViewMode; label: string; icon: typeof SquaresFour }> = [
   { value: 'terminal', label: 'Терминал', icon: SquaresFour },
+  { value: 'scalper', label: 'Скальперский', icon: Lightning },
   { value: 'charts', label: 'Графики', icon: ChartLine },
   { value: 'analytics', label: 'Аналитика', icon: ChartBar },
   { value: 'reports', label: 'Отчёты', icon: FileText },

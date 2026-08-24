@@ -4,6 +4,7 @@ import { ChartsView } from '@/components/views/ChartsView'
 import { AnalyticsView } from '@/components/views/AnalyticsView'
 import { ReportsView } from '@/components/views/ReportsView'
 import { CalendarView } from '@/components/views/CalendarView'
+import { ScalperView } from '@/components/views/ScalperView'
 
 /**
  * Основная рабочая область. Раздел «Терминал» — свободно компонуемый dashboard
@@ -20,6 +21,7 @@ export function MainGrid() {
       {view === 'analytics' && <AnalyticsView />}
       {view === 'reports' && <ReportsView />}
       {view === 'calendar' && <CalendarView />}
+      {view === 'scalper' && <ScalperView />}
     </div>
   )
 }

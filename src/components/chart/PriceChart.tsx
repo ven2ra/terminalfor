@@ -39,10 +39,7 @@ import { ChartSkeleton } from '@/components/chart/ChartSkeleton'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
 import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
-
-function readCssVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-}
+import { readCssVar } from '@/lib/cssVar'
 
 interface PriceChartProps {
   candles: Candle[]

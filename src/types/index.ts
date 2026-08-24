@@ -3,7 +3,7 @@
 export type ThemeMode = 'dark' | 'light'
 
 /** Раздел терминала, выбранный в верхней навигации */
-export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports' | 'calendar'
+export type ViewMode = 'terminal' | 'charts' | 'analytics' | 'reports' | 'calendar' | 'scalper'
 
 export type AssetType = 'share' | 'fund' | 'bond' | 'future' | 'option'
 
