@@ -16,7 +16,7 @@ export function OrderBook({ onRemove }: OrderBookProps) {
   const { setDraftFromBook } = useOrderDraftStore()
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
-  // Вне торговой сессии (будни 09:50–23:50 МСК, выходные — сессия выходного
+  // Вне торговой сессии (будни 06:50–23:50 МСК, выходные — сессия выходного
   // дня 09:50–18:59) стакан заморожен на последнем известном состоянии — показываем это явно
   const bookOpen = useMarketOpen()
   const countdown = useMarketOpenCountdown()

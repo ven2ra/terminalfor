@@ -20,7 +20,7 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
 export function TradesTape({ onRemove }: TradesTapeProps) {
   const { trades } = useMarketStore()
   const [filter, setFilter] = useState<Filter>('all')
-  // Вне торговой сессии (будни 09:50–23:50 МСК, выходные — сессия выходного
+  // Вне торговой сессии (будни 06:50–23:50 МСК, выходные — сессия выходного
   // дня 09:50–18:59) лента заморожена на последнем известном состоянии — показываем это явно
   const sessionOpen = useMarketOpen()
   const countdown = useMarketOpenCountdown()

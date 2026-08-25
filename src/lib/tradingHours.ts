@@ -29,8 +29,9 @@ export function isWeekendSessionOpen(date: Date = new Date()): boolean {
 
 /**
  * Идут ли сейчас биржевые торги вообще (для индикатора статуса рынка в
- * шапке) — в будни основная+вечерняя сессия МосБиржи 09:50–23:50 МСК,
- * по выходным то же окно сессии выходного дня, что и в isWeekendSessionOpen.
+ * шапке) — в будни утренняя+основная+вечерняя сессии МосБиржи 06:50–23:50
+ * МСК, по выходным то же окно сессии выходного дня, что и в isWeekendSessionOpen
+ * (у неё нет утренней сессии — только 09:50–18:59).
  */
 export function isMarketOpenNow(date: Date = new Date()): boolean {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -47,24 +48,41 @@ export function isMarketOpenNow(date: Date = new Date()): boolean {
   if (weekday === 'Sat' || weekday === 'Sun') {
     return minutesOfDay >= 9 * 60 + 50 && minutesOfDay < 18 * 60 + 59
   }
-  return minutesOfDay >= 9 * 60 + 50 && minutesOfDay < 23 * 60 + 50
+  return minutesOfDay >= 6 * 60 + 50 && minutesOfDay < 23 * 60 + 50
 }
 
 // Россия с 2014 года не переходит на летнее время — МСК круглый год UTC+3,
 // поэтому для арифметики с датами достаточно фиксированного смещения, без Intl
 const MSK_OFFSET_MS = 3 * 60 * 60 * 1000
-const OPEN_MINUTES = 9 * 60 + 50 // окно открытия 09:50 МСК — каждый день, включая выходные (сессия выходного дня)
+const WEEKDAY_OPEN_MINUTES = 6 * 60 + 50 // будни — с утренней сессии
+const WEEKEND_OPEN_MINUTES = 9 * 60 + 50 // выходные — только сессия выходного дня, без утренней
+
+function openMinutesForWeekday(utcDay: number): number {
+  // utcDay 0=вс, 6=сб (см. getUTCDay) — так как mskNow ниже уже сдвинут на смещение МСК,
+  // его getUTCDay() отражает день недели именно в московском времени
+  return utcDay === 0 || utcDay === 6 ? WEEKEND_OPEN_MINUTES : WEEKDAY_OPEN_MINUTES
+}
 
 /**
- * Сколько миллисекунд осталось до следующего открытия торгов (09:50 МСК) —
- * если рынок уже открыт, возвращает 0. Открытие в 09:50 каждый день без
- * исключений (по будням и по сессии выходного дня), поэтому промежуток
- * между закрытием и следующим открытием всегда меньше суток.
+ * Сколько миллисекунд осталось до следующего открытия торгов — если рынок
+ * уже открыт, возвращает 0. Время открытия зависит от дня недели (будни —
+ * 06:50, выходные — 09:50), поэтому вычисляется отдельно для "сегодня" и
+ * "завтра"; промежуток между закрытием и следующим открытием всегда меньше суток.
  */
 export function msUntilMarketOpen(date: Date = new Date()): number {
   const mskNow = new Date(date.getTime() + MSK_OFFSET_MS)
   const minutesOfDay = mskNow.getUTCHours() * 60 + mskNow.getUTCMinutes()
-  const daysAhead = minutesOfDay < OPEN_MINUTES ? 0 : 1
-  const nextOpenMsk = Date.UTC(mskNow.getUTCFullYear(), mskNow.getUTCMonth(), mskNow.getUTCDate() + daysAhead, 9, 50, 0, 0)
+  const todayOpenMinutes = openMinutesForWeekday(mskNow.getUTCDay())
+  const daysAhead = minutesOfDay < todayOpenMinutes ? 0 : 1
+  const targetOpenMinutes = daysAhead === 0 ? todayOpenMinutes : openMinutesForWeekday((mskNow.getUTCDay() + 1) % 7)
+  const nextOpenMsk = Date.UTC(
+    mskNow.getUTCFullYear(),
+    mskNow.getUTCMonth(),
+    mskNow.getUTCDate() + daysAhead,
+    Math.floor(targetOpenMinutes / 60),
+    targetOpenMinutes % 60,
+    0,
+    0
+  )
   return Math.max(0, nextOpenMsk - MSK_OFFSET_MS - date.getTime())
 }
