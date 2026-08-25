@@ -6,18 +6,26 @@
  * 6-7 недель), поэтому кэшируем надолго.
  */
 import { XMLParser } from 'fast-xml-parser'
+import { Agent, fetch as undiciFetch } from 'undici'
 import { cached } from './cache.js'
 
 const parser = new XMLParser({ ignoreAttributes: false })
+
+// Прямой (без прокси) диспетчер — независимо от globalThis.fetch, которую
+// proxy.js может подменить на проксируемую. У некоторых пользователей прокси
+// умеет туннелировать не все домены (например, отдаёт 502 конкретно на
+// cbr.ru, хотя MOEX ISS и Telegram через тот же прокси работают) — cbr.ru
+// это российский госдомен, часто доступен напрямую даже там, где прокси
+// нужен для остального интернета
+const directAgent = new Agent({ connectTimeout: 5000 })
 
 function isoDate(d) {
   return d.toISOString().slice(0, 10)
 }
 
-async function fetchKeyRateOnce() {
+function buildRequest() {
   const to = new Date()
   const from = new Date(to.getTime() - 30 * 24 * 3600000) // запас на длинные праздники без обновления ленты
-
   const body = `<?xml version="1.0" encoding="utf-8"?>
 <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <soap12:Body>
@@ -27,12 +35,24 @@ async function fetchKeyRateOnce() {
     </KeyRate>
   </soap12:Body>
 </soap12:Envelope>`
+  return {
+    url: 'https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx',
+    init: { method: 'POST', headers: { 'Content-Type': 'application/soap+xml; charset=utf-8' }, body },
+  }
+}
 
-  const res = await fetch('https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/soap+xml; charset=utf-8' },
-    body,
-  })
+async function fetchKeyRateOnce() {
+  const { url, init } = buildRequest()
+
+  // Сначала пробуем напрямую, в обход глобального (проксируемого) fetch —
+  // если сеть вообще не даёт прямых подключений, быстро (5с) отваливаемся
+  // и уходим на обычный globalThis.fetch (через прокси, если он настроен)
+  let res
+  try {
+    res = await undiciFetch(url, { ...init, dispatcher: directAgent })
+  } catch {
+    res = await fetch(url, init)
+  }
   if (!res.ok) throw new Error(`CBR KeyRate ${res.status}`)
 
   const xml = await res.text()
