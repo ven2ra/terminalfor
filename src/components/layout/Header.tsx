@@ -5,7 +5,7 @@ import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useViewStore } from '@/store/useViewStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { formatMoney } from '@/lib/format'
-import { useMarketOpen } from '@/hooks/useMarketOpen'
+import { useMarketOpen, useMarketOpenCountdown } from '@/hooks/useMarketOpen'
 
 /** Секунд с последнего успешного обновления фида — тикается раз в секунду, только пока индикатор реально виден (status !== 'ready') */
 function useSecondsSince(timestamp: number | null): number | null {
@@ -46,6 +46,7 @@ export function Header() {
   const { account } = usePortfolioStore()
   const { setView } = useViewStore()
   const marketOpen = useMarketOpen()
+  const openCountdown = useMarketOpenCountdown()
   const [query, setQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -170,6 +171,7 @@ export function Header() {
       >
         <span className={`h-1.5 w-1.5 rounded-full ${marketOpen ? 'bg-buy' : 'bg-text-muted'}`} />
         RUS · {marketOpen ? 'Открыто' : 'Закрыто'}
+        {openCountdown && <span className="font-tabular normal-case text-text-muted">· через {openCountdown}</span>}
       </div>
 
       <button className="hidden h-[30px] shrink-0 border-0 bg-accent px-3 text-[11px] font-bold text-accent-contrast transition-colors hover:bg-accent-hover sm:block">

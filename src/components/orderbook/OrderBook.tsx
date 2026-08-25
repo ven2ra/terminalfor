@@ -3,7 +3,7 @@ import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { Panel } from '@/components/common/Panel'
 import { OrderBookDepthChart } from './OrderBookDepthChart'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
-import { useMarketOpen } from '@/hooks/useMarketOpen'
+import { useMarketOpen, useMarketOpenCountdown } from '@/hooks/useMarketOpen'
 import { formatPrice } from '@/lib/format'
 
 interface OrderBookProps {
@@ -19,6 +19,7 @@ export function OrderBook({ onRemove }: OrderBookProps) {
   // Вне торговой сессии (будни 09:50–23:50 МСК, выходные — сессия выходного
   // дня 09:50–18:59) стакан заморожен на последнем известном состоянии — показываем это явно
   const bookOpen = useMarketOpen()
+  const countdown = useMarketOpenCountdown()
 
   const maxTotal = Math.max(
     orderBook.bids[orderBook.bids.length - 1]?.total ?? 1,
@@ -37,9 +38,12 @@ export function OrderBook({ onRemove }: OrderBookProps) {
     <Panel title="Стакан заявок" noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="relative flex h-full flex-col text-xs">
         {!bookOpen && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel/90 text-center">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel text-center">
             <span className="font-medium text-text-secondary">Торги закрыты</span>
-            <span className="text-[11px] text-text-muted">Стакан заморожен на последнем известном состоянии</span>
+            {countdown && (
+              <span className="font-tabular text-lg font-bold text-accent">{countdown}</span>
+            )}
+            <span className="text-[11px] text-text-muted">до открытия торгов</span>
           </div>
         )}
         <div className="shrink-0 border-b border-border-subtle px-2 pt-2">

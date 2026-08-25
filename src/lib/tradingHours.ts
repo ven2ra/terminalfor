@@ -49,3 +49,22 @@ export function isMarketOpenNow(date: Date = new Date()): boolean {
   }
   return minutesOfDay >= 9 * 60 + 50 && minutesOfDay < 23 * 60 + 50
 }
+
+// Россия с 2014 года не переходит на летнее время — МСК круглый год UTC+3,
+// поэтому для арифметики с датами достаточно фиксированного смещения, без Intl
+const MSK_OFFSET_MS = 3 * 60 * 60 * 1000
+const OPEN_MINUTES = 9 * 60 + 50 // окно открытия 09:50 МСК — каждый день, включая выходные (сессия выходного дня)
+
+/**
+ * Сколько миллисекунд осталось до следующего открытия торгов (09:50 МСК) —
+ * если рынок уже открыт, возвращает 0. Открытие в 09:50 каждый день без
+ * исключений (по будням и по сессии выходного дня), поэтому промежуток
+ * между закрытием и следующим открытием всегда меньше суток.
+ */
+export function msUntilMarketOpen(date: Date = new Date()): number {
+  const mskNow = new Date(date.getTime() + MSK_OFFSET_MS)
+  const minutesOfDay = mskNow.getUTCHours() * 60 + mskNow.getUTCMinutes()
+  const daysAhead = minutesOfDay < OPEN_MINUTES ? 0 : 1
+  const nextOpenMsk = Date.UTC(mskNow.getUTCFullYear(), mskNow.getUTCMonth(), mskNow.getUTCDate() + daysAhead, 9, 50, 0, 0)
+  return Math.max(0, nextOpenMsk - MSK_OFFSET_MS - date.getTime())
+}

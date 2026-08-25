@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { Panel } from '@/components/common/Panel'
 import { formatPrice } from '@/lib/format'
-import { useMarketOpen } from '@/hooks/useMarketOpen'
+import { useMarketOpen, useMarketOpenCountdown } from '@/hooks/useMarketOpen'
 
 interface TradesTapeProps {
   onRemove?: () => void
@@ -23,6 +23,7 @@ export function TradesTape({ onRemove }: TradesTapeProps) {
   // Вне торговой сессии (будни 09:50–23:50 МСК, выходные — сессия выходного
   // дня 09:50–18:59) лента заморожена на последнем известном состоянии — показываем это явно
   const sessionOpen = useMarketOpen()
+  const countdown = useMarketOpenCountdown()
 
   // "Крупная" сделка — заметно выше среднего объёма в текущей видимой ленте
   const largeThreshold = useMemo(() => {
@@ -48,9 +49,12 @@ export function TradesTape({ onRemove }: TradesTapeProps) {
     <Panel title="Лента сделок" noPadding draggable={!!onRemove} onRemove={onRemove}>
       <div className="relative flex h-full flex-col text-xs">
         {!sessionOpen && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel/90 text-center">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel text-center">
             <span className="font-medium text-text-secondary">Торги закрыты</span>
-            <span className="text-[11px] text-text-muted">Лента заморожена на последнем известном состоянии</span>
+            {countdown && (
+              <span className="font-tabular text-lg font-bold text-accent">{countdown}</span>
+            )}
+            <span className="text-[11px] text-text-muted">до открытия торгов</span>
           </div>
         )}
         <div className="flex shrink-0 gap-1 border-b border-border-subtle px-2 py-1.5">
@@ -71,8 +75,8 @@ export function TradesTape({ onRemove }: TradesTapeProps) {
           <span className="text-right">Цена</span>
           <span className="text-right">Объём</span>
         </div>
-        {filtered.length === 0 && <div className="p-4 text-center text-text-muted">Нет сделок</div>}
-        {filtered.map((t) => {
+        {sessionOpen && filtered.length === 0 && <div className="p-4 text-center text-text-muted">Нет сделок</div>}
+        {sessionOpen && filtered.map((t) => {
           const large = t.size >= largeThreshold
           return (
             <div
