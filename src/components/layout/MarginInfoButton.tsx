@@ -13,7 +13,12 @@ export function MarginInfoButton() {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const keyRate = useKeyRate()
-  const usedMargin = usePortfolioStore((s) => s.account.usedMargin)
+  // "Свободно" в шапке — то же account.availableMargin. Комиссия начисляется
+  // только когда собственных средств не хватает и этот остаток уходит в
+  // минус (непокрытая позиция за счёт брокера) — usedMargin тут не подходит,
+  // это просто средства под открытыми позициями, а не обязательно заёмные
+  const availableMargin = usePortfolioStore((s) => s.account.availableMargin)
+  const debt = availableMargin < 0 ? -availableMargin : 0
 
   useEffect(() => {
     if (!open) return
@@ -32,7 +37,7 @@ export function MarginInfoButton() {
   }, [open])
 
   const totalRate = keyRate ? keyRate.rate + LONG_MARKUP_PERCENT : null
-  const dailyCommission = totalRate != null ? (usedMargin * totalRate) / 100 / DAYS_IN_YEAR : null
+  const dailyCommission = totalRate != null && debt > 0 ? (debt * totalRate) / 100 / DAYS_IN_YEAR : null
 
   return (
     <div ref={containerRef} className="relative hidden shrink-0 lg:block">
@@ -70,26 +75,34 @@ export function MarginInfoButton() {
             Комиссия списывается ежедневно с непокрытого остатка: сумма долга × ставка ÷ 365.
           </p>
 
-          <div className="mt-2 flex items-start gap-2 border border-warning/30 bg-warning-bg px-2.5 py-2">
-            <Clock size={14} weight="bold" className="mt-0.5 shrink-0 text-warning" />
-            <p className="text-[11px] leading-snug text-text-primary">
-              Пополните счёт до <span className="font-bold">22:30</span> — после этого момента непокрытый остаток уже
-              попадёт под комиссию за сегодня.
-            </p>
-          </div>
-
-          <div className="mt-3 border-t border-border-subtle pt-2">
-            <div className="flex items-center justify-between">
-              <span className="text-text-muted">Используемая маржа</span>
-              <span className="font-tabular text-text-secondary">{formatMoney(usedMargin)}</span>
-            </div>
-            {dailyCommission != null && (
-              <div className="mt-1.5 flex items-center justify-between">
-                <span className="text-text-muted">Комиссия в день</span>
-                <span className="font-tabular text-sm font-bold text-sell">{formatMoney(dailyCommission)}</span>
+          {debt > 0 ? (
+            <>
+              <div className="mt-2 flex items-start gap-2 border border-warning/30 bg-warning-bg px-2.5 py-2">
+                <Clock size={14} weight="bold" className="mt-0.5 shrink-0 text-warning" />
+                <p className="text-[11px] leading-snug text-text-primary">
+                  Пополните счёт до <span className="font-bold">22:30</span> — после этого момента непокрытый остаток
+                  уже попадёт под комиссию за сегодня.
+                </p>
               </div>
-            )}
-          </div>
+
+              <div className="mt-3 border-t border-border-subtle pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-text-muted">Непокрытый остаток</span>
+                  <span className="font-tabular text-text-secondary">{formatMoney(debt)}</span>
+                </div>
+                {dailyCommission != null && (
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="text-text-muted">Комиссия в день</span>
+                    <span className="font-tabular text-sm font-bold text-sell">{formatMoney(dailyCommission)}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="mt-2 border-t border-border-subtle pt-2 text-[11px] leading-snug text-buy">
+              Собственных средств достаточно — комиссия не начисляется.
+            </p>
+          )}
         </div>
       )}
     </div>
