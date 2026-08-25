@@ -6,6 +6,7 @@ import { useViewStore } from '@/store/useViewStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { formatMoney } from '@/lib/format'
 import { useMarketOpen, useMarketOpenCountdown } from '@/hooks/useMarketOpen'
+import { MarginInfoButton } from './MarginInfoButton'
 
 /** Секунд с последнего успешного обновления фида — тикается раз в секунду, только пока индикатор реально виден (status !== 'ready') */
 function useSecondsSince(timestamp: number | null): number | null {
@@ -164,6 +165,8 @@ export function Header() {
       )}
 
       <FeedStatusIndicator />
+
+      <MarginInfoButton />
 
       <div
         title={marketOpen ? 'Основная сессия МосБиржи идёт' : 'Биржа сейчас закрыта'}

@@ -7,3 +7,6 @@ dist-ssr
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+# Персистентная база известных дефолтов облигаций (server/bondDefaults.js) —
+# в docker живёт в volume (docker-compose.yml), локально пишется сюда при разработке
+/data

@@ -88,6 +88,18 @@ export function fetchCalendar(): Promise<CalendarEvent[]> {
   return getJson('/api/calendar')
 }
 
+export interface KeyRate {
+  /** Ключевая ставка ЦБ РФ, % годовых */
+  rate: number
+  /** Дата, на которую актуальна ставка (YYYY-MM-DD) */
+  date: string
+}
+
+/** Ключевая ставка ЦБ РФ — основа ставки маржинального кредитования (КС + надбавка брокера) */
+export function fetchKeyRate(): Promise<KeyRate> {
+  return getJson('/api/key-rate')
+}
+
 export interface InstrumentFlags {
   /** Бумага доступна только квалифицированным инвесторам */
   isQualifiedOnly: boolean

@@ -8,6 +8,7 @@ import { getOptionAssets, getOptionsForAsset, getOptionChain } from './options.j
 import { getInstrumentFlags } from './qualifiedInvestor.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
+import { getKeyRate } from './keyRate.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -44,6 +45,16 @@ app.get('/api/instrument-flags/:ticker', async (req, res) => {
   } catch (err) {
     console.error('instrument flags error:', err.message)
     res.status(502).json({ error: 'moex_unavailable' })
+  }
+})
+
+// Ключевая ставка ЦБ РФ — для расчёта ставки маржинального кредитования (КС + 6.9%)
+app.get('/api/key-rate', async (_req, res) => {
+  try {
+    res.json(await getKeyRate())
+  } catch (err) {
+    console.error('key rate error:', err.message)
+    res.status(502).json({ error: 'cbr_unavailable' })
   }
 })
 
