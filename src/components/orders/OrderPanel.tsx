@@ -73,8 +73,14 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   const unitPrice =
     instrument?.priceUnit === 'percent' ? (numericPrice / 100) * (instrument.faceValue ?? 1000) : numericPrice
   const total = unitPrice * numericSize
+  // У фьючерсов со счёта резервируется не полная стоимость контракта, а
+  // только ГО (гарантийное обеспечение) — именно эта сумма блокируется на
+  // марже, а не total (который у фьючерса — просто справочная стоимость
+  // контракта по текущей цене, деньги за неё не списываются)
+  const isFuture = instrument?.assetType === 'future'
+  const marginRequired = isFuture ? (instrument?.initialMargin ?? unitPrice) * numericSize : total
   const commission = total * COMMISSION_RATE
-  const estimatedTotal = side === 'buy' ? total + commission : total - commission
+  const estimatedTotal = side === 'buy' ? marginRequired + commission : marginRequired - commission
   const step = instrument?.lotSize ?? 1
   const priceError = type !== 'market' && price.trim() !== '' && numericPrice <= 0 ? 'Цена должна быть больше нуля' : null
   const sizeError =
@@ -89,7 +95,7 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   // ручном вводе числа этой проверки не было вообще — трейдер мог набрать
   // объём, кратно превышающий средства, и узнать об этом только на экране
   // подтверждения (или не узнать, если бэкенд молча примет)
-  const marginError = !sizeError && total > account.availableMargin ? 'Недостаточно средств' : null
+  const marginError = !sizeError && marginRequired > account.availableMargin ? 'Недостаточно средств' : null
 
   const adjustSize = (delta: number) => {
     const next = Math.max(step, (Number(size) || 0) + delta)
@@ -97,9 +103,12 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
   }
 
   const applyPercent = (pct: number) => {
-    if (unitPrice <= 0) return
+    // Цена за лот для расчёта количества — у фьючерсов это ГО, а не полная
+    // стоимость контракта (см. marginRequired выше)
+    const perLotCost = isFuture ? (instrument?.initialMargin ?? unitPrice) : unitPrice
+    if (perLotCost <= 0) return
     const budget = (account.availableMargin * pct) / 100
-    const lots = Math.max(step, Math.floor(budget / unitPrice / step) * step)
+    const lots = Math.max(step, Math.floor(budget / perLotCost / step) * step)
     setSize(String(lots))
   }
 
@@ -127,9 +136,15 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
               </span>
             </div>
             <div className="flex justify-between text-text-muted">
-              <span>Сумма</span>
+              <span>{isFuture ? 'Стоимость контракта' : 'Сумма'}</span>
               <span className="font-tabular text-text-secondary">{formatMoney(total)}</span>
             </div>
+            {isFuture && (
+              <div className="flex justify-between text-text-muted">
+                <span>ГО (блокируется)</span>
+                <span className="font-tabular text-text-secondary">{formatMoney(marginRequired)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-text-muted">
               <span>Комиссия</span>
               <span className="font-tabular text-text-secondary">{formatMoney(commission)}</span>
@@ -285,9 +300,15 @@ export function OrderPanel({ onRemove }: OrderPanelProps) {
 
           <div className="space-y-1 rounded-md bg-bg-elevated px-3 py-2 text-xs">
             <div className="flex justify-between text-text-muted">
-              <span>Сумма</span>
+              <span>{isFuture ? 'Стоимость контракта' : 'Сумма'}</span>
               <span className="font-tabular text-text-secondary">{formatMoney(total)}</span>
             </div>
+            {isFuture && (
+              <div className="flex justify-between text-text-muted">
+                <span title="Блокируется на счёте вместо полной стоимости контракта">ГО (блокируется)</span>
+                <span className="font-tabular text-text-secondary">{formatMoney(marginRequired)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-text-muted">
               <span>Комиссия</span>
               <span className="font-tabular text-text-secondary">{formatMoney(commission)}</span>
