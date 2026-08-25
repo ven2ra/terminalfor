@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMarketStore } from '@/store/useMarketStore'
 import { Panel } from '@/components/common/Panel'
 import { formatPrice } from '@/lib/format'
-import { isWeekendSessionOpen } from '@/lib/tradingHours'
+import { useMarketOpen } from '@/hooks/useMarketOpen'
 
 interface TradesTapeProps {
   onRemove?: () => void
@@ -20,10 +20,9 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
 export function TradesTape({ onRemove }: TradesTapeProps) {
   const { trades } = useMarketStore()
   const [filter, setFilter] = useState<Filter>('all')
-  // По выходным вне сессии выходного дня МосБиржи (09:50–18:59 МСК) у
-  // брокера нет внебиржевых торгов (в отличие от Т-Инвестиций) — лента
-  // заморожена, показываем это явно
-  const sessionOpen = isWeekendSessionOpen()
+  // Вне торговой сессии (будни 09:50–23:50 МСК, выходные — сессия выходного
+  // дня 09:50–18:59) лента заморожена на последнем известном состоянии — показываем это явно
+  const sessionOpen = useMarketOpen()
 
   // "Крупная" сделка — заметно выше среднего объёма в текущей видимой ленте
   const largeThreshold = useMemo(() => {
@@ -51,7 +50,7 @@ export function TradesTape({ onRemove }: TradesTapeProps) {
         {!sessionOpen && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel/90 text-center">
             <span className="font-medium text-text-secondary">Торги закрыты</span>
-            <span className="text-[11px] text-text-muted">По выходным лента сделок работает с 09:50 до 18:59 МСК</span>
+            <span className="text-[11px] text-text-muted">Лента заморожена на последнем известном состоянии</span>
           </div>
         )}
         <div className="flex shrink-0 gap-1 border-b border-border-subtle px-2 py-1.5">

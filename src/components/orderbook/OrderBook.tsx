@@ -3,8 +3,8 @@ import { useOrderDraftStore } from '@/store/useOrderDraftStore'
 import { Panel } from '@/components/common/Panel'
 import { OrderBookDepthChart } from './OrderBookDepthChart'
 import { usePriceFlash } from '@/hooks/usePriceFlash'
+import { useMarketOpen } from '@/hooks/useMarketOpen'
 import { formatPrice } from '@/lib/format'
-import { isWeekendSessionOpen } from '@/lib/tradingHours'
 
 interface OrderBookProps {
   onRemove?: () => void
@@ -16,10 +16,9 @@ export function OrderBook({ onRemove }: OrderBookProps) {
   const { setDraftFromBook } = useOrderDraftStore()
   const instrument = instruments.find((i) => i.ticker === selectedTicker)
   const priceFlash = usePriceFlash(instrument?.lastPrice ?? 0)
-  // По выходным вне сессии выходного дня МосБиржи (09:50–18:59 МСК) у
-  // брокера нет внебиржевых торгов (в отличие от Т-Инвестиций) — стакан
-  // заморожен, показываем это явно
-  const bookOpen = isWeekendSessionOpen()
+  // Вне торговой сессии (будни 09:50–23:50 МСК, выходные — сессия выходного
+  // дня 09:50–18:59) стакан заморожен на последнем известном состоянии — показываем это явно
+  const bookOpen = useMarketOpen()
 
   const maxTotal = Math.max(
     orderBook.bids[orderBook.bids.length - 1]?.total ?? 1,
@@ -40,7 +39,7 @@ export function OrderBook({ onRemove }: OrderBookProps) {
         {!bookOpen && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-bg-panel/90 text-center">
             <span className="font-medium text-text-secondary">Торги закрыты</span>
-            <span className="text-[11px] text-text-muted">По выходным биржевой стакан работает с 09:50 до 18:59 МСК</span>
+            <span className="text-[11px] text-text-muted">Стакан заморожен на последнем известном состоянии</span>
           </div>
         )}
         <div className="shrink-0 border-b border-border-subtle px-2 pt-2">

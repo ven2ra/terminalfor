@@ -5,17 +5,7 @@ import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { useViewStore } from '@/store/useViewStore'
 import { InstrumentLogo } from '@/components/common/InstrumentLogo'
 import { formatMoney } from '@/lib/format'
-import { isMarketOpenNow } from '@/lib/tradingHours'
-
-/** Тикается раз в минуту — статус сессии (открыта/закрыта) в шапке не должен требовать перезагрузки страницы на границе часов торгов */
-function useMarketOpen(): boolean {
-  const [open, setOpen] = useState(() => isMarketOpenNow())
-  useEffect(() => {
-    const id = setInterval(() => setOpen(isMarketOpenNow()), 60000)
-    return () => clearInterval(id)
-  }, [])
-  return open
-}
+import { useMarketOpen } from '@/hooks/useMarketOpen'
 
 /** Секунд с последнего успешного обновления фида — тикается раз в секунду, только пока индикатор реально виден (status !== 'ready') */
 function useSecondsSince(timestamp: number | null): number | null {
