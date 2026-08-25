@@ -19,10 +19,12 @@ services:
       # к invest-public-api.tinkoff.ru падает с "self-signed certificate in chain".
       NODE_EXTRA_CA_CERTS: "/app/certs/russian_trusted_ca_bundle.pem"
     volumes:
-      # Список уже известных техдефолтов/дефолтов облигаций (server/bondDefaults.js) —
-      # без этого при каждом пересоздании контейнера (git pull && ... up -d --build)
-      # список "уже видели" обнулялся бы, и старые исторические флаги MOEX
-      # заново попадали бы в новости как будто случились только что
+      # Персистентные данные бэкенда: SQLite с демо-счётом/позициями (server/db.js)
+      # и список уже известных техдефолтов облигаций (server/bondDefaults.js).
+      # Без volume оба обнулялись бы при каждом пересоздании контейнера
+      # (git pull && ... up -d --build) — баланс сбрасывался бы к значениям
+      # по умолчанию, а старые исторические флаги MOEX заново попадали бы в
+      # новости как будто случились только что
       - bond-default-baseline:/app/data
 
   web:

@@ -151,3 +151,11 @@ export interface AccountSummary {
   todayPnl: number
   todayPnlPercent: number
 }
+
+/** Стартовая позиция портфеля — offsetPercent задаёт, насколько цена входа отличается от текущей рыночной (см. usePortfolioStore.revalue) */
+export interface PositionSeed {
+  ticker: string
+  side: 'buy' | 'sell'
+  size: number
+  offsetPercent: number
+}

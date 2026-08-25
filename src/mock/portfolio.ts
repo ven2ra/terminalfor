@@ -1,5 +1,10 @@
 import { AccountSummary } from '@/types'
 
+/**
+ * Значения для первой отрисовки до того, как usePortfolioStore.loadAccount()
+ * подтянет реальные данные с бэкенда (server/db.js, SQLite) — и запасной
+ * вариант, если бэкенд временно недоступен. Источник истины — база, не этот файл.
+ */
 export const INITIAL_ACCOUNT: AccountSummary = {
   balance: 1_248_930.5,
   equity: 1_262_410.2,
@@ -8,16 +13,3 @@ export const INITIAL_ACCOUNT: AccountSummary = {
   todayPnl: 13_479.7,
   todayPnlPercent: 1.08,
 }
-
-/**
- * Стартовые позиции портфеля — реальные тикеры МосБиржи. offsetPercent задаёт,
- * насколько цена входа отличается от текущей рыночной — сама avgPrice
- * вычисляется от первой живой котировки (см. usePortfolioStore), а не хардкодится,
- * чтобы портфель оставался реалистичным вне зависимости от того, где сейчас рынок.
- */
-export const POSITION_SEEDS: Array<{ ticker: string; side: 'buy' | 'sell'; size: number; offsetPercent: number }> = [
-  { ticker: 'SBER', side: 'buy', size: 1200, offsetPercent: -2.9 },
-  { ticker: 'LKOH', side: 'buy', size: 20, offsetPercent: -2.4 },
-  { ticker: 'GAZP', side: 'sell', size: 800, offsetPercent: 2.5 },
-  { ticker: 'ROSN', side: 'buy', size: 150, offsetPercent: -4.6 },
-]

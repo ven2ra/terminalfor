@@ -1,4 +1,15 @@
-import { AssetType, CalendarEvent, Candle, NewsItem, OptionAsset, OptionChain, OptionContract, Trade } from '@/types'
+import {
+  AccountSummary,
+  AssetType,
+  CalendarEvent,
+  Candle,
+  NewsItem,
+  OptionAsset,
+  OptionChain,
+  OptionContract,
+  PositionSeed,
+  Trade,
+} from '@/types'
 
 /** Сырые данные инструмента, приходящие с бэкенда (MOEX ISS) */
 export interface SecurityDto {
@@ -86,6 +97,16 @@ export function fetchTapeQuotes(symbols: string[]): Promise<TapeQuote[]> {
 /** Ближайшие оферты/купоны/погашения по ликвидным облигациям МосБиржи */
 export function fetchCalendar(): Promise<CalendarEvent[]> {
   return getJson('/api/calendar')
+}
+
+/** Демо-счёт (баланс/маржа) — хранится в SQLite на бэкенде (server/db.js), правится напрямую в базе без деплоя */
+export function fetchAccount(): Promise<AccountSummary> {
+  return getJson('/api/account')
+}
+
+/** Стартовые позиции портфеля (тоже из SQLite) — реальный P&L считается на фронте от текущих котировок, см. usePortfolioStore */
+export function fetchPositionSeeds(): Promise<PositionSeed[]> {
+  return getJson('/api/position-seeds')
 }
 
 export interface KeyRate {

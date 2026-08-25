@@ -9,11 +9,22 @@ import { getInstrumentFlags } from './qualifiedInvestor.js'
 import { tinvestEnabled } from './tinvest.js'
 import { getTapeCatalog, getTapeQuotes } from './tape.js'
 import { getKeyRate } from './keyRate.js'
+import { getAccount, updateAccount, getPositionSeeds } from './db.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
 
+app.use(express.json())
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
+
+// Демо-счёт (баланс/маржа) и стартовые позиции портфеля — хранятся в SQLite
+// (server/db.js), правятся напрямую в базе без деплоя
+app.get('/api/account', (_req, res) => res.json(getAccount()))
+
+app.patch('/api/account', (req, res) => res.json(updateAccount(req.body)))
+
+app.get('/api/position-seeds', (_req, res) => res.json(getPositionSeeds()))
 
 app.get('/api/securities', async (_req, res) => {
   try {

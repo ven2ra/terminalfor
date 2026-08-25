@@ -15,9 +15,13 @@ const BOOK_AND_TRADES_POLL_MS = 1500
  */
 export function useMarketFeed() {
   const { loadSecurities, loadExtraSecurities, refreshOrderBook, loadTrades, instruments } = useMarketStore()
-  const { revalue, account } = usePortfolioStore()
+  const { revalue, account, loadAccount } = usePortfolioStore()
   const recordEquity = useEquityHistoryStore((s) => s.record)
   const recordPrice = usePriceHistoryStore((s) => s.record)
+
+  useEffect(() => {
+    loadAccount()
+  }, [loadAccount])
 
   useEffect(() => {
     loadSecurities()
