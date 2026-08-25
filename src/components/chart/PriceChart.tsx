@@ -315,18 +315,30 @@ export function PriceChart({
       candles.map((c) => ({ time: c.time as never, value: c.volume, color: c.close >= c.open ? buyColor : sellColor }))
     )
 
-    const ma20Data: LineData[] = calcSMA(candles, 20).map((p) => ({ time: p.time as never, value: p.value }))
-    const ma50Data: LineData[] = calcSMA(candles, 50).map((p) => ({ time: p.time as never, value: p.value }))
-    ma20SeriesRef.current?.setData(ma20Data)
-    ma50SeriesRef.current?.setData(ma50Data)
+    // MA/Bollinger/VWAP пересчитываются по ВСЕМУ массиву свечей — если после
+    // долгой прокрутки назад история разрослась до тысяч баров, это заметная
+    // синхронная работа на каждое обновление (в т.ч. на каждую подгрузку
+    // истории during скролла). Считаем только то, что реально включено и
+    // видно — раньше считали все три всегда, даже выключенные по умолчанию
+    // Bollinger/VWAP, впустую нагружая главный поток именно во время скролла
+    if (showMA) {
+      const ma20Data: LineData[] = calcSMA(candles, 20).map((p) => ({ time: p.time as never, value: p.value }))
+      const ma50Data: LineData[] = calcSMA(candles, 50).map((p) => ({ time: p.time as never, value: p.value }))
+      ma20SeriesRef.current?.setData(ma20Data)
+      ma50SeriesRef.current?.setData(ma50Data)
+    }
 
-    const bollinger = calcBollinger(candles, 20, 2)
-    bollUpperRef.current?.setData(bollinger.upper.map((p) => ({ time: p.time as never, value: p.value })))
-    bollMiddleRef.current?.setData(bollinger.middle.map((p) => ({ time: p.time as never, value: p.value })))
-    bollLowerRef.current?.setData(bollinger.lower.map((p) => ({ time: p.time as never, value: p.value })))
+    if (showBollinger) {
+      const bollinger = calcBollinger(candles, 20, 2)
+      bollUpperRef.current?.setData(bollinger.upper.map((p) => ({ time: p.time as never, value: p.value })))
+      bollMiddleRef.current?.setData(bollinger.middle.map((p) => ({ time: p.time as never, value: p.value })))
+      bollLowerRef.current?.setData(bollinger.lower.map((p) => ({ time: p.time as never, value: p.value })))
+    }
 
-    const vwapData: LineData[] = calcVWAP(candles).map((p) => ({ time: p.time as never, value: p.value }))
-    vwapSeriesRef.current?.setData(vwapData)
+    if (showVWAP) {
+      const vwapData: LineData[] = calcVWAP(candles).map((p) => ({ time: p.time as never, value: p.value }))
+      vwapSeriesRef.current?.setData(vwapData)
+    }
 
     // Автоподгонка масштаба — только при смене инструмента/таймфрейма, а не на
     // каждый периодический опрос (иначе зум/прокрутку пользователя сбрасывало бы каждые пару секунд).
@@ -348,7 +360,7 @@ export function PriceChart({
     } else if (wasAtRealTime) {
       timeScale?.scrollToRealTime()
     }
-  }, [candles, selectedTicker, timeframe.interval, isFullscreen])
+  }, [candles, selectedTicker, timeframe.interval, isFullscreen, showMA, showBollinger, showVWAP])
 
   useEffect(() => {
     ma20SeriesRef.current?.applyOptions({ visible: showMA })
