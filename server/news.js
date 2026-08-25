@@ -3,6 +3,7 @@ import { cached } from './cache.js'
 import { stripHtml } from './text.js'
 import { getTelegramGroups } from './telegram.js'
 import { classifyTag, isImportantNews } from './classify.js'
+import { getBondDefaultAlerts } from './bondDefaults.js'
 
 const parser = new XMLParser({ ignoreAttributes: false })
 
@@ -64,13 +65,17 @@ function mergeFairly(groups) {
 }
 
 async function loadAllNews() {
-  const [feedResults, telegramGroups] = await Promise.all([
+  const [feedResults, telegramGroups, defaultAlerts] = await Promise.all([
     Promise.allSettled(FEEDS.map(loadFeed)),
     getTelegramGroups(),
+    getBondDefaultAlerts().catch(() => []),
   ])
   const groups = [
     ...feedResults.filter((r) => r.status === 'fulfilled').map((r) => r.value),
     ...telegramGroups,
+    // Не режем гарантированной долей PER_SOURCE_GUARANTEED — алертов о
+    // дефолтах в любой момент немного (единицы), пусть попадают в ленту все
+    defaultAlerts,
   ]
   return mergeFairly(groups)
 }

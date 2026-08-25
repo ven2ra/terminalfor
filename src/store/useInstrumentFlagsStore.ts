@@ -20,7 +20,14 @@ export const useInstrumentFlagsStore = create<InstrumentFlagsState>((set, get) =
     set((state) => ({ byTicker: { ...state.byTicker, [ticker]: null } }))
     fetchInstrumentFlags(ticker)
       .then((flags) => set((state) => ({ byTicker: { ...state.byTicker, [ticker]: flags } })))
-      .catch(() => set((state) => ({ byTicker: { ...state.byTicker, [ticker]: { isQualifiedOnly: false, highRisk: false } } })))
+      .catch(() =>
+        set((state) => ({
+          byTicker: {
+            ...state.byTicker,
+            [ticker]: { isQualifiedOnly: false, highRisk: false, hasDefault: false, hasTechnicalDefault: false },
+          },
+        }))
+      )
   },
 }))
 
