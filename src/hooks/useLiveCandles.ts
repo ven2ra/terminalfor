@@ -7,6 +7,13 @@ const DAILY_PLUS_POLL_MS = 60000
 // Коды 1/10/60 — реальные минуты, 24/7/31 — "код" дня/недели/месяца (а не 24/7/31 минут)
 const MINUTE_INTERVALS = new Set([1, 10, 60])
 
+// Кэш на весь сеанс вкладки (переживает переключение между бумагами/таймфреймами,
+// но не перезагрузку страницы) — переключение туда-обратно показывает график
+// мгновенно вместо скелетона, пока сеть подгружает свежие данные фоном.
+// Ключ — "тикер:интервал", значение — уже смёрженный ряд (включая историю,
+// довыгруженную прокруткой назад через loadOlder)
+const candleCache = new Map<string, Candle[]>()
+
 /**
  * Загружает реальные свечи с МосБиржи для инструмента/таймфрейма, периодически
  * обновляет хвост ряда и умеет довыгружать более старую историю по запросу
@@ -14,8 +21,9 @@ const MINUTE_INTERVALS = new Set([1, 10, 60])
  * грузятся только за недавний период, чтобы не тянуть миллионы баров сразу).
  */
 export function useLiveCandles(ticker: string, interval: CandleInterval) {
-  const [candles, setCandles] = useState<Candle[]>([])
-  const [loading, setLoading] = useState(true)
+  const cacheKey = `${ticker}:${interval}`
+  const [candles, setCandles] = useState<Candle[]>(() => candleCache.get(cacheKey) ?? [])
+  const [loading, setLoading] = useState(() => !candleCache.has(cacheKey))
   const [loadingMore, setLoadingMore] = useState(false)
   // Для дневных+ интервалов вся история уже грузится целиком за один раз —
   // довыгружать нечего. Для минутных изначально не знаем, есть ли ещё данные раньше.
@@ -27,14 +35,24 @@ export function useLiveCandles(ticker: string, interval: CandleInterval) {
   const fetchingOlderRef = useRef(false)
 
   useEffect(() => {
+    const key = `${ticker}:${interval}`
     cancelledRef.current = false
     fetchingOlderRef.current = false
-    setLoading(true)
     setHasMore(MINUTE_INTERVALS.has(interval))
-    // Сбрасываем предыдущие свечи сразу: иначе до завершения загрузки в стейте
-    // остаются бары ПРЕЖНЕГО тикера/таймфрейма, и график успевает подогнать
-    // масштаб под них ещё до прихода актуальных данных нового интервала.
-    setCandles([])
+
+    const cached = candleCache.get(key)
+    if (cached) {
+      // Уже видели этот тикер/таймфрейм в этом сеансе — показываем сразу,
+      // без скелетона, свежие данные придут следующим шагом фоном
+      setCandles(cached)
+      setLoading(false)
+    } else {
+      // Сбрасываем сразу: иначе до завершения загрузки в стейте остаются
+      // бары ПРЕЖНЕГО тикера/таймфрейма, и график успевает подогнать
+      // масштаб под них ещё до прихода актуальных данных нового интервала
+      setCandles([])
+      setLoading(true)
+    }
 
     const load = async () => {
       try {
@@ -45,9 +63,9 @@ export function useLiveCandles(ticker: string, interval: CandleInterval) {
           // довыгруженную прокруткой назад через loadOlder, — сохраняем более
           // старые бары и обновляем только актуальный "хвост".
           setCandles((prev) => {
-            if (prev.length === 0 || data.length === 0) return data
-            const older = prev.filter((c) => c.time < data[0].time)
-            return older.length > 0 ? [...older, ...data] : data
+            const merged = prev.length === 0 || data.length === 0 ? data : mergeTail(prev, data)
+            candleCache.set(key, merged)
+            return merged
           })
           setLoading(false)
         }
@@ -76,7 +94,12 @@ export function useLiveCandles(ticker: string, interval: CandleInterval) {
       if (older.length === 0) {
         setHasMore(false)
       } else {
-        setCandles((prev) => (prev.length && prev[0].time === earliest ? [...older, ...prev] : prev))
+        setCandles((prev) => {
+          if (prev.length === 0 || prev[0].time !== earliest) return prev
+          const merged = [...older, ...prev]
+          candleCache.set(cacheKey, merged)
+          return merged
+        })
       }
     } catch {
       // сеть подвела — попробуем ещё раз при следующей прокрутке
@@ -84,7 +107,12 @@ export function useLiveCandles(ticker: string, interval: CandleInterval) {
       fetchingOlderRef.current = false
       if (!cancelledRef.current) setLoadingMore(false)
     }
-  }, [ticker, interval, candles, hasMore])
+  }, [ticker, interval, cacheKey, candles, hasMore])
 
   return { candles, loading, loadOlder, loadingMore, hasMore }
+}
+
+function mergeTail(prev: Candle[], fresh: Candle[]): Candle[] {
+  const older = prev.filter((c) => c.time < fresh[0].time)
+  return older.length > 0 ? [...older, ...fresh] : fresh
 }

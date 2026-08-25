@@ -1,4 +1,4 @@
-import { ProxyAgent, fetch as undiciFetch, setGlobalDispatcher } from 'undici'
+import { Agent, ProxyAgent, fetch as undiciFetch, setGlobalDispatcher } from 'undici'
 
 /**
  * Если сервер сидит в сети, откуда t.me (или вообще внешние домены) недоступны
@@ -20,4 +20,24 @@ if (proxyUrl) {
   // существующий код (вызывающий обычный fetch()) реально пошёл через прокси.
   globalThis.fetch = undiciFetch
   console.log(`[proxy] исходящие запросы бэкенда идут через ${proxyUrl}`)
+}
+
+// Диспетчер БЕЗ прокси — для доменов, которые обычно доступны напрямую, даже
+// когда HTTPS_PROXY настроен ради чего-то одного конкретного (изначально —
+// только ради t.me). MOEX ISS и cbr.ru — российские, лишний хоп через прокси
+// на каждый запрос заметно (секунды) замедляет вообще всё в терминале.
+const directAgent = new Agent({ connectTimeout: 4000 })
+
+/**
+ * Сначала пробует подключиться напрямую (короткий таймаут), и только при
+ * неудаче — через globalThis.fetch (проксируемый, если прокси настроен).
+ * Используйте для доменов, которые не были причиной завести прокси —
+ * не факт, что им вообще нужен лишний хоп.
+ */
+export async function fetchDirectFirst(url, init) {
+  try {
+    return await undiciFetch(url, { ...init, dispatcher: directAgent })
+  } catch {
+    return fetch(url, init)
+  }
 }

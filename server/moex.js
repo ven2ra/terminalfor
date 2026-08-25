@@ -129,16 +129,16 @@ const MINUTE_INTERVALS = new Set([1, 10, 60])
 const PAGE_SIZE = 500
 
 /**
- * Интрадей — глубина/лимит страниц под "последние торговые сессии" (нужно
- * только перекрыть выходные), дневные/недельные/месячные — под всю историю
- * бумаги с торгов (MOEX ISS не отдаёт данные раньше конца 2000-х).
+ * Интрадей — глубина под "последние торговые сессии" (keepLast баров хватает
+ * для первой отрисовки, дальше история подгружается прокруткой назад через
+ * loadOlderCandles), дневные/недельные/месячные — под всю историю бумаги с
+ * торгов (MOEX ISS не отдаёт данные раньше конца 2000-х).
  */
 function candleWindow(interval) {
   const intraday = MINUTE_INTERVALS.has(interval)
   return {
     intraday,
     fromYearsBack: intraday ? 0 : 30,
-    fromDaysBack: intraday ? 5 : 0, // с запасом на длинные выходные/праздники
     keepLast: intraday ? 500 : 8000,
   }
 }
@@ -147,22 +147,14 @@ const BATCH_SIZE = 8 // страниц за один параллельный з
 const MAX_BATCHES = 6 // 6×8×500 = 24000 строк — с большим запасом на любой реальный диапазон
 
 /**
- * Свечи по бумаге. MOEX ISS отдаёт не больше 500 строк за запрос, считая от
- * начала запрошенного диапазона — при широком окне (год-десятилетия для
- * дневных, либо просто чтобы перекрыть выходные/вечернюю сессию для интрадей)
- * это утыкается в самое старое, а не в актуальное. Поэтому досылаем страницы
- * через `start=` батчами по несколько параллельных запросов, пока очередной
- * батч не вернёт страницу короче полной (это и есть конец доступных данных) —
- * так не нужно заранее угадывать, сколько страниц реально понадобится.
+ * Одно окно [from, till]. MOEX ISS отдаёт не больше 500 строк за запрос,
+ * считая от начала запрошенного диапазона — при широком окне это утыкается
+ * в самое старое, а не в актуальное. Поэтому досылаем страницы через
+ * `start=` батчами по несколько параллельных запросов, пока очередной батч
+ * не вернёт страницу короче полной (это и есть конец доступных данных).
  */
-async function loadCandles(ticker, interval) {
-  const { fromYearsBack, fromDaysBack, keepLast } = candleWindow(interval)
-  const till = new Date()
-  const from = new Date(till)
-  from.setUTCFullYear(from.getUTCFullYear() - fromYearsBack)
-  from.setUTCDate(from.getUTCDate() - fromDaysBack)
+async function fetchCandleWindow(ticker, interval, from, till) {
   const fmt = (d) => d.toISOString().slice(0, 10)
-
   const { engine, market, board } = getInstrumentMeta(ticker)
   const baseUrl =
     `${ISS_BASE}/engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}/candles.json` +
@@ -184,6 +176,34 @@ async function loadCandles(ticker, interval) {
       if (pageRows.length < PAGE_SIZE) reachedEnd = true
     }
     if (reachedEnd) break
+  }
+  return rows
+}
+
+// Окна для первой загрузки интрадей, по возрастанию — обычно 2 дней с
+// запасом хватает под keepLast=500 баров одной торговой сессии, расширяем
+// только если реально не хватило (короткая неделя, длинные праздники).
+// Раньше сразу тянули 5 дней на каждое открытие/переключение бумаги —
+// в разы больше страниц ISS ради данных, которые всё равно обрезаются
+// до последних 500 баров
+const INTRADAY_WINDOWS_DAYS = [2, 5, 10]
+
+async function loadCandles(ticker, interval) {
+  const { intraday, fromYearsBack, keepLast } = candleWindow(interval)
+  const till = new Date()
+
+  let rows = []
+  if (intraday) {
+    for (const daysBack of INTRADAY_WINDOWS_DAYS) {
+      const from = new Date(till)
+      from.setUTCDate(from.getUTCDate() - daysBack)
+      rows = await fetchCandleWindow(ticker, interval, from, till)
+      if (rows.length >= keepLast) break
+    }
+  } else {
+    const from = new Date(till)
+    from.setUTCFullYear(from.getUTCFullYear() - fromYearsBack)
+    rows = await fetchCandleWindow(ticker, interval, from, till)
   }
 
   // Время МосБиржи в ISS приходит в MSK (UTC+3) без указания зоны
