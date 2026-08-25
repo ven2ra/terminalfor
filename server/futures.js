@@ -15,7 +15,7 @@ const MAX_FUTURES = 100
 async function loadFutures() {
   const url =
     `${ISS_BASE}/engines/futures/markets/forts/boards/${BOARD}/securities.json` +
-    `?iss.meta=off&securities.columns=SECID,SHORTNAME,ASSETCODE,LASTTRADEDATE,PREVSETTLEPRICE,LOTVOLUME` +
+    `?iss.meta=off&securities.columns=SECID,SHORTNAME,ASSETCODE,LASTTRADEDATE,PREVSETTLEPRICE,LOTVOLUME,INITIALMARGIN` +
     `&marketdata.columns=SECID,LAST,VOLTODAY,VALTODAY,HIGH,LOW,OPEN,BID,OFFER,UPDATETIME`
 
   const json = await fetchJson(url)
@@ -40,6 +40,12 @@ async function loadFutures() {
         currency: 'RUB',
         assetType: 'future',
         priceUnit: 'currency',
+        // Базовое биржевое ГО (гарантийное обеспечение) на 1 контракт, ₽ —
+        // соответствует стандартному уровню риска клиента (КСУР). Точные
+        // коэффициенты для КНУР/КПУР считаются биржей по SPAN-подобной
+        // модели индивидуально на контракт и не публикуются в открытом
+        // бесплатном API — только это единственное значение и есть у ISS
+        initialMargin: s.INITIALMARGIN ?? null,
         lotSize: s.LOTVOLUME ?? 1,
         lastPrice,
         change,

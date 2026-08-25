@@ -22,6 +22,7 @@ export interface SecurityDto {
   priceUnit: 'currency' | 'percent'
   faceValue?: number | null
   isOfz?: boolean
+  initialMargin?: number | null
   lotSize: number
   lastPrice: number
   change: number

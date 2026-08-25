@@ -37,7 +37,7 @@ import { calcSupportResistance } from '@/lib/levels'
 import { useAlertsStore } from '@/store/useAlertsStore'
 import { ChartSkeleton } from '@/components/chart/ChartSkeleton'
 import { crosshairTimeFormatter, tickMarkFormatter } from '@/lib/mskTime'
-import { formatCompact, formatPercent, formatPrice } from '@/lib/format'
+import { formatCompact, formatMoney, formatPercent, formatPrice } from '@/lib/format'
 import { TIMEFRAMES } from '@/lib/timeframes'
 import { readCssVar } from '@/lib/cssVar'
 
@@ -550,6 +550,12 @@ export function PriceChart({
               {instrument ? `${formatCompact(instrument.turnover)} ₽` : '—'}
             </div>
           </div>
+          {instrument?.initialMargin != null && (
+            <div title="Гарантийное обеспечение биржи на 1 контракт — базовое значение для стандартного уровня риска (КСУР). Для КНУР выше, для КПУР ниже — точные коэффициенты биржа считает индивидуально по контракту и не публикует в открытом API">
+              <div className="text-text-muted">ГО (КСУР)</div>
+              <div className="font-tabular text-text-secondary">{formatMoney(instrument.initialMargin)}</div>
+            </div>
+          )}
         </div>
 
         <div className="ml-auto flex max-w-full flex-nowrap items-center gap-1 overflow-x-auto [&>*]:shrink-0">

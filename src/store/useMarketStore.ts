@@ -17,6 +17,7 @@ function toInstrument(dto: SecurityDto, prevFavorite: boolean | undefined): Inst
     priceUnit: dto.priceUnit,
     faceValue: dto.faceValue ?? null,
     isOfz: dto.isOfz,
+    initialMargin: dto.initialMargin ?? null,
     lotSize: dto.lotSize,
     lastPrice: dto.lastPrice,
     change: dto.change,

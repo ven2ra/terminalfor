@@ -20,6 +20,8 @@ export interface Instrument {
   faceValue: number | null
   /** Государственная облигация (ОФЗ, доска TQOB, эмитент — Минфин) — показываем герб Минфина вместо обычного логотипа */
   isOfz?: boolean
+  /** ГО (гарантийное обеспечение) на 1 контракт, ₽ — только у фьючерсов. Биржевое базовое значение (≈КСУР) */
+  initialMargin?: number | null
   lotSize: number
   lastPrice: number
   change: number
