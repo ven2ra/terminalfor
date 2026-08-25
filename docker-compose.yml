@@ -18,6 +18,12 @@ services:
       # его нет в стандартном доверенном наборе Node/Alpine, без этого TLS
       # к invest-public-api.tinkoff.ru падает с "self-signed certificate in chain".
       NODE_EXTRA_CA_CERTS: "/app/certs/russian_trusted_ca_bundle.pem"
+    volumes:
+      # Список уже известных техдефолтов/дефолтов облигаций (server/bondDefaults.js) —
+      # без этого при каждом пересоздании контейнера (git pull && ... up -d --build)
+      # список "уже видели" обнулялся бы, и старые исторические флаги MOEX
+      # заново попадали бы в новости как будто случились только что
+      - bond-default-baseline:/app/data
 
   web:
     build: .
@@ -28,3 +34,6 @@ services:
     ports:
       # слева — порт на хосте, который сейчас смотрит наружу (nginx/прокси/domain).
       - "8080:80"
+
+volumes:
+  bond-default-baseline:

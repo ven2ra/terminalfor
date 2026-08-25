@@ -474,18 +474,18 @@ export function PriceChart({
             <span className="text-lg font-bold text-text-primary">{instrument?.name ?? '…'}</span>
             {flags?.hasDefault && (
               <span
-                title="Эмитент допустил дефолт — просрочка исполнения обязательств не устранена за 10 рабочих дней"
+                title="По данным MOEX, в истории эмитента был зафиксирован дефолт (не обязательно по этому выпуску и не обязательно продолжается сейчас) — проверьте актуальный статус перед решением"
                 className="rounded bg-sell-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sell"
               >
-                ⚠ Дефолт
+                Был дефолт
               </span>
             )}
             {!flags?.hasDefault && flags?.hasTechnicalDefault && (
               <span
-                title="Технический дефолт — просрочка исполнения обязательств эмитентом (в пределах грейс-периода)"
-                className="rounded bg-sell-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sell"
+                title="По данным MOEX, в истории эмитента был зафиксирован технический дефолт (не обязательно по этому выпуску и не обязательно продолжается сейчас) — проверьте актуальный статус перед решением"
+                className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning"
               >
-                ⚠ Техдефолт
+                Был техдефолт
               </span>
             )}
             {flags?.isQualifiedOnly && (
