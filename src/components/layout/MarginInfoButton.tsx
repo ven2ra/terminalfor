@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Percent, Clock } from '@phosphor-icons/react'
 import { useKeyRate } from '@/hooks/useKeyRate'
+import { usePortfolioStore } from '@/store/usePortfolioStore'
 import { formatMoney } from '@/lib/format'
 
 // Надбавка брокера к ключевой ставке ЦБ по необеспеченным (маржинальным) лонгам
 const LONG_MARKUP_PERCENT = 6.9
 const DAYS_IN_YEAR = 365
 
-/** Кнопка "Маржа" в шапке — по клику показывает ставку по плечу (КС + надбавка) и калькулятор дневной комиссии */
+/** Кнопка "Маржа" в шапке — по клику показывает ставку по плечу (КС + надбавка) и дневную комиссию по фактическому долгу счёта */
 export function MarginInfoButton() {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const keyRate = useKeyRate()
-  const [debtAmount, setDebtAmount] = useState('20000')
+  const usedMargin = usePortfolioStore((s) => s.account.usedMargin)
 
   useEffect(() => {
     if (!open) return
@@ -31,8 +32,7 @@ export function MarginInfoButton() {
   }, [open])
 
   const totalRate = keyRate ? keyRate.rate + LONG_MARKUP_PERCENT : null
-  const debt = Math.abs(Number(debtAmount.replace(',', '.'))) || 0
-  const dailyCommission = totalRate != null ? (debt * totalRate) / 100 / DAYS_IN_YEAR : null
+  const dailyCommission = totalRate != null ? (usedMargin * totalRate) / 100 / DAYS_IN_YEAR : null
 
   return (
     <div ref={containerRef} className="relative hidden shrink-0 lg:block">
@@ -79,15 +79,12 @@ export function MarginInfoButton() {
           </div>
 
           <div className="mt-3 border-t border-border-subtle pt-2">
-            <label className="block text-[10px] uppercase tracking-wide text-text-muted">Сумма долга, ₽</label>
-            <input
-              value={debtAmount}
-              onChange={(e) => setDebtAmount(e.target.value.replace(/[^0-9.,]/g, ''))}
-              inputMode="decimal"
-              className="mt-1 h-7 w-full border border-border-color bg-bg-head px-2 font-tabular text-xs text-text-primary focus:border-accent focus:outline-none"
-            />
+            <div className="flex items-center justify-between">
+              <span className="text-text-muted">Используемая маржа</span>
+              <span className="font-tabular text-text-secondary">{formatMoney(usedMargin)}</span>
+            </div>
             {dailyCommission != null && (
-              <div className="mt-2 flex items-center justify-between">
+              <div className="mt-1.5 flex items-center justify-between">
                 <span className="text-text-muted">Комиссия в день</span>
                 <span className="font-tabular text-sm font-bold text-sell">{formatMoney(dailyCommission)}</span>
               </div>
