@@ -86,7 +86,7 @@ export function TickerTape() {
         setItemMenu(null)
         setAddMenu({ x: clampMenuX(e.clientX, 256), y: e.clientY })
       }}
-      className="group relative flex h-8 shrink-0 items-center overflow-hidden border-b border-border-color bg-bg-base"
+      className="group relative flex h-[34px] shrink-0 items-center overflow-hidden border-b border-border-color bg-bg-base"
     >
       <div className="flex shrink-0 animate-tape-scroll items-center group-hover:[animation-play-state:paused]">
         {loopItems.map((symbol, idx) => {

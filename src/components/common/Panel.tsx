@@ -26,7 +26,7 @@ export function Panel({
 }: PropsWithChildren<PanelProps>) {
   return (
     <div
-      className={`relative flex h-full flex-col overflow-hidden border border-border-color bg-bg-panel shadow-panel before:absolute before:left-0 before:top-0 before:z-10 before:h-0.5 before:w-7 before:bg-accent before:content-[''] ${className}`}
+      className={`relative flex h-full flex-col overflow-hidden rounded-xl border border-border-color bg-bg-panel shadow-panel before:absolute before:left-0 before:top-3 before:z-10 before:h-4 before:w-[3px] before:rounded-full before:bg-accent before:content-[''] ${className}`}
     >
       <div
         className={`widget-drag-handle flex h-9 shrink-0 items-center gap-2 border-b border-border-subtle bg-bg-head px-3 ${

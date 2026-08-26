@@ -10,37 +10,39 @@
    ========================================================================== */
 :root,
 [data-theme='dark'] {
-  --bg-base: #090b0f;
-  --bg-rail: #0a0d11;
-  --bg-panel: #10141b;
-  --bg-raised: #141a22;
-  --bg-head: #0d1117;
-  --bg-elevated: #141a22;
-  --bg-hover: #151b23;
+  /* Палитра из дизайн-системы (tokens/colors.css): n-1000..n-750 шкала
+     нейтралей, фирменный акцент — фиолетовый вместо прежнего янтаря */
+  --bg-base: #050608;
+  --bg-rail: #07080b;
+  --bg-panel: #0b0d10;
+  --bg-raised: #171a20;
+  --bg-head: #0e1013;
+  --bg-elevated: #12151a;
+  --bg-hover: rgba(255, 255, 255, 0.045);
 
-  --border-color: #28303b;
-  --border-subtle: #1b222c;
+  --border-color: rgba(255, 255, 255, 0.09);
+  --border-subtle: rgba(255, 255, 255, 0.06);
 
-  --text-primary: #f0f2f5;
-  --text-secondary: #a7afbb;
-  --text-muted: #747f8c;
+  --text-primary: #f4f5f7;
+  --text-secondary: #b7bcc7;
+  --text-muted: #8b90a0;
 
-  /* Фирменный акцент — тёплый янтарь вместо типового синего SaaS-акцента:
-     считываемо как "терминал/пульт", а не очередная синяя админка */
-  --accent: #e9a63a;
-  --accent-hover: #f0b355;
-  --accent-rgb: 233, 166, 58;
-  --on-accent: #191108;
+  /* Фирменный акцент — единственный "горячий" цвет интерфейса (CTA, тик
+     на панелях, активный фильтр), из дизайн-системы (violet-500) */
+  --accent: #6b5cff;
+  --accent-hover: #8b7bff;
+  --accent-rgb: 107, 92, 255;
+  --on-accent: #f4f5f7;
 
-  --buy: #43ca8b;
-  --buy-bg: rgba(67, 202, 139, 0.13);
-  --sell: #f06770;
-  --sell-bg: rgba(240, 103, 112, 0.13);
-  --warning: #e9a63a;
-  --warning-bg: rgba(233, 166, 58, 0.13);
-  --accent-cyan: #22d3ee;
+  --buy: #4ade80;
+  --buy-bg: rgba(34, 197, 94, 0.13);
+  --sell: #fb7185;
+  --sell-bg: rgba(239, 68, 68, 0.13);
+  --warning: #f5b638;
+  --warning-bg: rgba(245, 182, 56, 0.13);
+  --accent-cyan: #4a90e2;
 
-  --flash-color: rgba(233, 166, 58, 0.22);
+  --flash-color: rgba(107, 92, 255, 0.22);
 
   color-scheme: dark;
 }
@@ -62,10 +64,12 @@
   /* Контраст поднят с 2.9:1 до 4.6:1+ к белому/bg-base — WCAG AA */
   --text-muted: #697080;
 
-  --accent: #a87619;
-  --accent-hover: #926615;
-  --accent-rgb: 168, 118, 25;
-  --on-accent: #000000;
+  /* Дизайн-система не описывает светлую тему — синхронизирован только
+     фирменный акцент (тот же violet, что и в тёмной), затемнён для контраста на белом */
+  --accent: #5346e0;
+  --accent-hover: #3f34b4;
+  --accent-rgb: 83, 70, 224;
+  --on-accent: #ffffff;
 
   --buy: #0ea472;
   --buy-bg: rgba(16, 185, 129, 0.1);
@@ -115,29 +119,30 @@ body,
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', sans-serif;
   font-feature-settings: 'tnum';
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow: hidden;
 }
 
-/* Числа и тикеры — тот же Inter, что и весь интерфейс (без смешения с
-   моноширинным начертанием), выравнивание разрядов даёт tabular-nums:
-   все цифры одинаковой ширины, но с "человеческим" начертанием — в
-   частности, ноль без засечки/точки внутри, как в моноширинных шрифтах */
+/* Числа/цифры в таблицах и ценах — отдельная моноширинная гарнитура
+   (JetBrains Mono), по дизайн-системе: разряды выравниваются самим шрифтом,
+   плюс tabular-nums на случай, если конкретный вес шрифта ещё не подгрузился */
 .font-tabular {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
+  letter-spacing: 0.04em;
 }
 
-/* Фирменное начертание для логотипа и заголовков разделов — тот же Onest,
-   что и в теле текста (единая гарнитура, отличие только в весе) */
+/* Фирменное начертание для логотипа и заголовков разделов */
 .font-display {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 ::-webkit-scrollbar {

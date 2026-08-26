@@ -61,7 +61,7 @@ export function Header() {
   const pnlPositive = account.todayPnl >= 0
 
   return (
-    <header className="relative flex h-[46px] shrink-0 items-center gap-3 border-b border-border-color bg-bg-head px-3.5">
+    <header className="relative flex h-[52px] shrink-0 items-center gap-3 border-b border-border-color bg-bg-head px-3.5">
       <div className="shrink-0 whitespace-nowrap text-[10px] font-bold uppercase tracking-widest text-text-primary">
         Terminalfor<em className="ml-1 font-medium not-italic text-accent">// терминал</em>
       </div>

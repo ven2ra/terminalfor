@@ -3,25 +3,24 @@ export default {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
-    // Заменяем весь масштаб скруглений (не extend — именно замена): вместо
-    // мягких SaaS-карточек — почти прямые углы приборной панели. rounded-full
-    // остаётся для аватаров/точек-индикаторов, всё остальное становится
-    // технически строгим одним центральным изменением, без правки компонентов
+    // Масштаб скруглений из дизайн-системы (tokens/radius.css): 4/6/10/12/16/20/pill —
+    // мягкие карточки вместо прежних почти прямых углов "пульта управления"
     borderRadius: {
       none: '0px',
-      sm: '1px',
-      DEFAULT: '2px',
-      md: '2px',
-      lg: '3px',
-      xl: '4px',
-      '2xl': '5px',
-      '3xl': '6px',
+      sm: '6px',
+      DEFAULT: '10px',
+      md: '10px',
+      lg: '12px',
+      xl: '16px',
+      '2xl': '20px',
+      '3xl': '20px',
       full: '9999px',
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['Plus Jakarta Sans', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {
         bg: {
@@ -64,9 +63,11 @@ export default {
         },
       },
       boxShadow: {
-        panel: '0 1px 2px rgba(0,0,0,0.24)',
-        elevated: '0 8px 24px rgba(0,0,0,0.28)',
-        glow: '0 0 0 1px var(--accent), 0 0 16px -2px var(--accent)',
+        // Тени из дизайн-системы (tokens/elevation.css) — глубина через
+        // почти-чёрную поверхность + hairline-рамку, не через drop shadow
+        panel: '0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.45)',
+        elevated: '0 16px 40px rgba(0,0,0,.6)',
+        glow: '0 0 0 1px var(--accent), 0 8px 28px -4px var(--accent)',
       },
       keyframes: {
         flash: {

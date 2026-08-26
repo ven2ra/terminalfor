@@ -37,9 +37,9 @@ export function Sidebar() {
   const unseenCount = triggeredAlerts.filter((a) => !a.seen).length
 
   return (
-    <aside className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border-color bg-bg-rail py-2">
-      {/* Фирменный знак — повёрнутый амберовый квадрат, как в исходном макете терминала */}
-      <div className="mb-2.5 mt-0.5 grid h-7 w-7 shrink-0 rotate-45 place-items-center bg-accent" aria-hidden>
+    <aside className="flex w-16 shrink-0 flex-col items-center gap-1 border-r border-border-color bg-bg-rail py-2">
+      {/* Фирменный знак — повёрнутый фиолетовый квадрат со скруглением, в тон новой мягкой геометрии системы */}
+      <div className="mb-2.5 mt-0.5 grid h-7 w-7 shrink-0 rotate-45 place-items-center rounded-md bg-accent" aria-hidden>
         <span className="-rotate-45 text-[13px] font-bold text-accent-contrast">T</span>
       </div>
 
